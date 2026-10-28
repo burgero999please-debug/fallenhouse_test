@@ -2560,7 +2560,7 @@ const ZOMBIES={
   brute:{n:'거구',hp:42,atk:13,spd:1,xp:70,lv:6,col:'#5b6a4e',charge:1,d:'트럭을 밀어내는 몸집. 힘을 모을 때는 반드시 막아야 한다.'},
   mutant:{n:'지능형 변이체',hp:58,atk:10,spd:7,xp:110,lv:8,col:'#a34a5a',dodge:.2,charge:1,double:.25,d:'눈동자에 이성이 남아 있다. 내 움직임을 읽는다.'},
 };
-const pickZ=pool=>{ const l=zTier(), up=Math.random()<.18?4:1; let ks=(pool||Object.keys(ZOMBIES)).filter(k=>ZOMBIES[k].lv<=l+up); if(!ks.length) ks=['walker']; return stPick(ks) };
+const pickZ=pool=>{ const l=zTier(), up=Math.random()<.18?4:1; let ks=(pool||Object.keys(ZOMBIES).filter(k=>!ZOMBIES[k].evo)).filter(k=>ZOMBIES[k].lv<=l+up); if(!ks.length) ks=['walker']; return stPick(ks) };
 
 /* ================= 턴제 전투 ================= */
 function startEnc(opt){
@@ -3348,7 +3348,7 @@ function viewCodex(){
   if(k==='event'){ const ev=S.evSeen||{}, mv=S.mevSeen||{}, ds=S.discSeen||{};
     const groups=[['돌발 사건',STORIES],['특수 사건',POS_T.concat(POS_B)]];
     for(const [gn,arr] of groups){ const n=arr.filter(x=>ev[x.k]).length; h+=`<div class="sec"><div class="sec-head"><h2>${gn}</h2><p class="num">${n}/${arr.length}</p></div><div class="codex">${arr.map(x=>cxItem(ev[x.k],esc(x.n),ev[x.k]?esc(x.d).slice(0,70)+'…':'아직 겪지 못했다.')).join('')}</div></div>` }
-    { const cs=S.chSeen||{}; h+=`<div class="sec"><div class="sec-head"><h2>연속 이야기</h2><p class="num">${ALL_CH.filter(x=>cs[x.k]).length}/${ALL_CH.length}</p></div><div class="codex">${ALL_CH.map(x=>cxItem(cs[x.k],esc(x.n),cs[x.k]?(x.tag==='SURVIVORS'?'사람들을 만난 이야기':'겪은 이야기'):'아직 겪지 못했다.')).join('')}</div></div>` }
+    { const cs=S.chSeen||{}; h+=`<div class="sec"><div class="sec-head"><h2>연속 이야기</h2><p class="num">${chNS().filter(x=>cs[x.k]).length}/${chNS().length}</p></div><div class="codex">${chNS().map(x=>cxItem(cs[x.k],esc(x.n),cs[x.k]?(x.tag==='SURVIVORS'?'사람들을 만난 이야기':'겪은 이야기'):'아직 겪지 못했다.')).join('')}</div></div>` }
     const mn=Object.keys(mv).length; h+=`<div class="sec"><div class="sec-head"><h2>파견 보고</h2><p class="num">${mn}/${MEV.length}</p></div><div class="codex">${MEV.map((e,i)=>cxItem(mv[i],esc({loot:'수색',cash:'현금',item:'보급품',capture:'포획',raid:'약탈',subdue:'굴복',recruit:'구조',injury:'부상',infect:'감염',death:'사망',col:'수집품',pet:'동물',ing:'식재료',zfight:'교전',none:'허탕'}[e[0]]),mv[i]?esc(e[1].replace('{a}','대원')):'아직 받은 적 없는 보고.')).join('')}</div></div>`;
     const dn=Object.keys(ds).length; h+=`<div class="sec"><div class="sec-head"><h2>탐사 발견</h2><p class="num">${dn}/${DISCOVER.length}</p></div><div class="codex">${DISCOVER.map((d,i)=>cxItem(ds[i],'발견',ds[i]?esc(d.t):'아직 찾지 못했다.')).join('')}</div></div>`;
     return h; }
@@ -3740,7 +3740,7 @@ function leaderResolve(){ const P=rt.party, e=P.ev; if(!e) return; const ev=PEV.
   else if(k==='trader'){ ids.forEach(id=>{ per[id]=V[id].c===0?{money:-30,item:stPick(['painkiller','steroid','grenade','trap','flare','antibio','cigs','mapkit']),xp:4}:{xp:1} }); t='노인은 동전을 세며 다음 골목으로 사라졌다.' }
   else if(k==='mutant'){ const pw=ids.reduce((a,id)=>a+V[id].p,0), win=maj===0&&Math.random()<clamp(.2+pw/(40*dg),.1,.85);
     if(maj===0){ all(()=>win?{money:R(30,60),res:{elec:R(1,2)},col:1,xp:60}:{hp:-ri(25,45),xp:20}); t=win?'모두가 동시에 덤볐다. 변이체가 무릎을 꿇었다.':'놈은 우리 움직임을 읽었다. 모두 피투성이로 물러났다.' } else { all(()=>({xp:10,hp:Math.random()<.3?-ri(10,20):0})); t='흩어져 달렸다. 놈은 누구를 쫓을지 망설이다 멈췄다.' } }
-  P.ev=null; P.nextEv=Date.now()+ri(35,60)*1000; P.R.emit('pev',{type:'res',id:e.id,t,per}).catch(()=>{});
+  P.ev=null; P.nextEv=Date.now()+ri(35,60)*1000; P.R.emit('pev',{type:'res',id:e.id,t,per,ch:Object.fromEntries(ids.map(id=>[id,V[id].c]))}).catch(()=>{});
 }
 function applyPR(o,src){ const P=rt.party, fx=[]; if(!o) return;
   for(const k in o.res||{}){ const v=o.res[k]|0; if(v>0){ gain(k,v); fx.push(`${RES[k].n} +${v}`); if(P) P.gain.res[k]=(P.gain.res[k]||0)+v } else if(v<0){ const q=Math.min(S.res[k]|0,-v); S.res[k]-=q; if(q) fx.push(`${RES[k].n} -${q}`) } }
@@ -7090,8 +7090,8 @@ const LONG_ST=[
   c:[{n:'노크를 세 번 한다',r:()=>stRoll([{p:.6,t:'문이 아주 조금 열렸다. 마른 아이 둘이 서로를 끌어안고 있었다.\n"엄마가 착한 사람 오면 열어도 된댔어요."\n식량을 나눠 주자 동생이 처음으로 웃었다. 둘은 캠프로 따라왔다.',worker:2,res:{food:-10},xp:35},{p:.4,t:'문이 열리자 차가운 공기가 먼저 나왔다.\n아이는 침대 위에 있었다. 숨소리는 창문 틈의 바람이었다.\n침대 머리맡에 크레파스 그림. 손을 잡은 셋. 하나는 나처럼 생겼다.',xp:20,col:[.1,.4,.4,.1]}])},
      {n:'쪽지에 답을 써서 밀어 넣는다',r:()=>({t:'"내일 다시 올게. 먹을 것 가지고."\n다음 날 갔을 때 문 앞에 답장이 있었다. "기다릴게요."\n그 쪽지는 지금도 가방 안쪽 주머니에 있다.',xp:18,res:{food:-5},hp:5})},
      {n:'지나간다',r:()=>({t:'계단을 내려가는 동안 노크 소리가 들렸다. 세 번.\n안에서, 밖으로.',hp:-5,xp:5})}]},
- {k:'L3',n:'마지막 방송',d:'지역 방송국 송출실. 비상 전원으로 모니터 하나가 켜져 있다.\n화면 속 앵커가 같은 문장을 반복한다. "시민 여러분, 집 밖으로 나오지 마십시오."\n녹화가 아니다. 앵커의 눈이 화면 밖의 누군가를 본다. 문이 부서지는 소리.\n그녀가 카메라를 똑바로 보며 말한다. "…혹시 이걸 보고 있다면, 우리 딸 이름은 수아예요."\n화면이 꺼진다. 송출실 구석에 그녀의 신분증이 떨어져 있다.',
-  c:[{n:'신분증을 챙긴다',r:()=>({t:'신분증 뒤에 아이 사진이 끼워져 있었다.\n언젠가 수아라는 아이를 만나면 이걸 건네주자고 생각했다.\n그런 날이 올지는 모르겠다.',xp:22,col:[.2,.4,.3,.1]})},
+ {k:'L3',n:'마지막 방송',d:'지역 방송국 송출실. 비상 전원으로 모니터 하나가 켜져 있다.\n화면 속 앵커가 같은 문장을 반복한다. "시민 여러분, 집 밖으로 나오지 마십시오."\n녹화가 아니다. 앵커의 눈이 화면 밖의 누군가를 본다. 문이 부서지는 소리.\n그녀가 카메라를 똑바로 보며 말한다. "…혹시 이걸 보고 있다면, 우리 딸 이름은 Mia예요."\n화면이 꺼진다. 송출실 구석에 그녀의 신분증이 떨어져 있다.',
+  c:[{n:'신분증을 챙긴다',r:()=>({t:'신분증 뒤에 아이 사진이 끼워져 있었다.\n언젠가 Mia라는 아이를 만나면 이걸 건네주자고 생각했다.\n그런 날이 올지는 모르겠다.',xp:22,col:[.2,.4,.3,.1]})},
      {n:'방송 장비를 뜯어 간다',r:()=>({t:'전자부품이 꽤 나왔다.\n떠나기 전에 꺼진 모니터를 한 번 더 봤다. 검은 화면에 내 얼굴이 비쳤다.',res:{elec:2,scrap:12},xp:15})},
      {n:'우리 쪽 주파수로 다시 송출해 본다',r:()=>stRoll([{p:.5,t:'"여기는 레이크포드. 살아 있는 사람은 응답하라."\n잡음 끝에 아이 목소리가 들렸다. "…엄마?"\n위치를 묻기도 전에 끊겼다. 그래도 누군가 살아 있다.',xp:30,hp:10},{p:.5,t:'송출 버튼을 누르자 건물 전체에 사이렌이 울렸다.\n복도 끝에서 수십 개의 발소리가 몰려온다.',hp:-12,enc:1,xp:12}])}]},
  {k:'L4',n:'우는 소리가 나는 우물',d:'농장 뒤편 마른 우물에서 우는 소리가 난다.\n들여다보면 깜깜하다. 밧줄이 하나 걸려 있다.\n"살려 주세요… 여기 너무 추워요." 목소리가 너무 또렷하다.\n우물 가장자리에 손톱자국이 빼곡하다. 안쪽에서 바깥으로 긁힌 자국이다.\n우는 소리가 멎었다. 대신 아주 가까운 데서 숨소리가 들린다.',
@@ -7186,8 +7186,8 @@ const _onPevEv9=onPev; onPev=function(m){ _onPevEv9(m); const P=rt.party, d=m.da
 const petAff=k=>clamp(((S.petAff||{})[k])||0,0,100);
 function affAdd(k,n){ if(!k||!S.pets?.[k]) return; S.petAff=S.petAff||{}; const b=petAff(k); S.petAff[k]=clamp(b+n,0,100); if(Math.floor(S.petAff[k]/20)>Math.floor(b/20)&&n>0) toast(`${petE(k)} ${petLabel(k)}와(과) 더 가까워졌다 · 친밀도 ${Math.round(S.petAff[k])}`,true) }
 const affHearts=k=>{ const a=petAff(k), n=Math.round(a/20); return `<span class="hearts" title="친밀도 ${Math.round(a)}/100">${'♥'.repeat(n)}${'♡'.repeat(5-n)} <small class="num">${Math.round(a)}</small></span>` };
-const _petPoke8=petPoke; petPoke=function(el){ _petPoke8(el); const k=S.pet; if(k&&Date.now()-(S.affPokeT||0)>20000){ S.affPokeT=Date.now(); affAdd(k,1); markSave() } };
-setInterval(()=>{ try{ if(S&&S.pet&&S.pets?.[S.pet]&&!document.hidden){ S.affT=(S.affT||0)+1; if(S.affT>=60){ S.affT=0; affAdd(S.pet,1); markSave() } } }catch(e){} },10000);
+const _petPoke8=petPoke; petPoke=function(el){ _petPoke8(el); const k=S.pet; if(k&&Date.now()-(S.affPokeT||0)>180000){ S.affPokeT=Date.now(); affAdd(k,1); markSave() } };
+setInterval(()=>{ try{ if(S&&S.pet&&S.pets?.[S.pet]&&!document.hidden){ S.affT=(S.affT||0)+1; if(S.affT>=120){ S.affT=0; affAdd(S.pet,1); markSave() } } }catch(e){} },10000);
 const _petCard8=petCard; petCard=function(){ const h=_petCard8(); return S.pet?h.replace('</h3>',`</h3>${affHearts(S.pet)}`):h };
 const _petsHtml8=petsHtml; petsHtml=function(){ let h=_petsHtml8(); for(const k of Object.keys(S.pets||{})) h=h.replace(`<b>${esc(petLabel(k))}</b><small>`,`<b>${esc(petLabel(k))}</b>${affHearts(k)}<small>`); return h.replace('함께 다니는 펫 한 마리의 효과만 적용','함께 다니는 펫 한 마리의 효과만 적용 · 친밀도가 높을수록 빼앗기기 어려워요') };
 const _pubDoc8=pubDoc; pubDoc=function(){ const d=_pubDoc8(); if(d.pet) d.pet.a=Math.round(petAff(S.pet)); d.tmb=S.tmb||''; d.sub=S.sub&&Date.now()<S.sub.until?S.sub.by:''; return d };
@@ -7325,7 +7325,7 @@ HID[0][2][9]=['사냥 대장','퇴치 의뢰 40번',()=>(S.huntWins||0)>=40];
 const today=()=>{ const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}` };
 function jobCnt(k){ if(!S.jobDay||S.jobDay.d!==today()) S.jobDay={d:today(),n:{}}; return S.jobDay.n[k]||0 }
 function jobInc(k){ jobCnt(k); S.jobDay.n[k]=(S.jobDay.n[k]||0)+1 }
-const JOB_DAILY=2;
+const JOB_DAILY=3;
 const PAY9={kitchen:22,store:20,ware:16,watch:18,deliver:32,debt:40,bluff:36,guardvip:55,lovetest:38,lonely:34,con:38,negot:48,tout:30};
 PJOBS.forEach(j=>{ if(PAY9[j.k]) j.pay=PAY9[j.k]; if(j.pos){ j.sp=1; delete j.pos } });
 PJOBS.push(
@@ -7382,7 +7382,7 @@ const _jobEnd29=jobEnd; jobEnd=function(J,f,t,fx,ok){ const m0=S.money||0, by=rt
   if(f>0){ const m=Math.round(jobPay9(J)*f); addMoney(m); fx.unshift(`$${(S.money||0)-m0}`); addXp(8+Math.round(J.pay/3)) } S.jobT=Date.now()+60000; hx('job'); if(f>=1.2) hx('jobPerfect'); if(J.mind&&ok){ mindAdd(J.mind); fx.push(`정신 +${J.mind}`) }
   if(by){ const got=Math.max(0,(S.money||0)-m0); if(got){ S.money-=got; dSend({dl:'give',id:'j'+Date.now().toString(36),to:by,res:{},items:{},money:got,why:'cmd'}); fx.push(`${nameOf(by)}님에게 $${got} 바침`) } }
   markSave(); rt.modalLock=false; outcome({n:J.n},ok?'일 끝':'일이 꼬였다',t,fx,ok) };
-ACT.jobGo=el=>{ const J=jobFor(el.dataset.k); if(!J) return; if(subOn()&&!rt.subExec) return toast('굴복 상태에서는 지시받은 알바만 할 수 있어요.'); if(Date.now()<(S.jobT||0)) return toast(`숨 좀 돌리고 · ${mmss(S.jobT-Date.now())}`); if(jobCnt(J.k)>=JOB_DAILY) return toast('이 알바는 오늘 두 번 다 했어요. 내일 다시 오세요.'); if(J.lv&&lvlOf(S.xp)<J.lv) return toast(`Lv.${J.lv}부터 할 수 있어요.`); if(rt.enc) return toast('전투 중이에요.'); if(!$('modal').hidden) return; jobInc(J.k); markSave(); JOB_G[J.game](J) };
+ACT.jobGo=el=>{ const J=jobFor(el.dataset.k); if(!J) return; if(subOn()&&!rt.subExec) return toast('굴복 상태에서는 지시받은 알바만 할 수 있어요.'); if(Date.now()<(S.jobT||0)) return toast(`숨 좀 돌리고 · ${mmss(S.jobT-Date.now())}`); if(!rt.subExec&&jobTot()>=JOB_DAILY) return toast('오늘 알바는 세 번 다 했어요. 내일 다시 오세요.'); if(J.lv&&lvlOf(S.xp)<J.lv) return toast(`Lv.${J.lv}부터 할 수 있어요.`); if(rt.enc) return toast('전투 중이에요.'); if(!$('modal').hidden) return; jobInc(J.k); markSave(); JOB_G[J.game](J) };
 /* 관리자 알바: 보상 · 행동 조건 */
 const JN_STAT={'':'없음',str:'힘',agi:'민첩',end:'체력',per:'감각',cha:'매력',luk:'운'};
 function jobClean(j){ j=j&&typeof j==='object'?j:{}; const n=(v,a,b)=>clamp(Math.round(+v||0),a,b); return {pay:n(j.pay,0,100000),xp:n(j.xp,0,5000),it:ITEMS[j.it]?j.it:'',iq:n(j.iq||1,1,99),st:JN_STAT[j.st]!=null?j.st:'',sv:n(j.sv||0,0,20),need:ITEMS[j.need]?j.need:'',nq:n(j.nq||1,1,99),cost:n(j.cost,0,100000),hp:n(j.hp,0,90),daily:n(j.daily||2,1,20)} }
@@ -7401,10 +7401,10 @@ function cevJobBlock(e){ const J=e.job||jobClean({}); if(jobCnt('cev_'+e.id)>=J.
 ACT.jobCev=el=>{ const e=(rt.cev||[]).find(x=>x.id===el.dataset.id); if(!e) return; if(subOn()&&!rt.subExec) return toast('굴복 상태예요.'); if(Date.now()<(S.jobT||0)) return toast(`숨 좀 돌리고 · ${mmss(S.jobT-Date.now())}`); if(!$('modal').hidden||rt.enc) return; const why=cevJobBlock(e); if(why) return toast(why);
   const J=e.job||jobClean({}); if(J.need) S.inv[J.need]-=J.nq; if(J.cost) S.money-=J.cost; if(J.hp) S.hp=Math.max(1,S.hp-J.hp); S.jobT=Date.now()+60000; jobInc('cev_'+e.id); hx('job'); rt.jobRun={id:e.id,job:J}; markSave(); S.cevDone=S.cevDone||{}; if(e.once&&S.cevDone[e.id]) return toast('이미 끝낸 의뢰예요.'); runChain(cevChain(e)) };
 const _chainEnd9=chainEnd; chainEnd=function(ch,ctx,r){ const R=rt.jobRun; if(R&&ch&&ch.k==='cev_'+R.id){ rt.jobRun=null; const J=R.job, fx=[]; if(J.pay){ const b=S.money||0; addMoney(J.pay); fx.push(`일당 $${(S.money||0)-b}`) } if(J.xp){ addXp(J.xp); fx.push(`XP +${J.xp}`) } if(J.it){ S.inv[J.it]=(S.inv[J.it]||0)+J.iq; fx.push(`${ITEMS[J.it].n} +${J.iq}`) } r=Object.assign({},r,{fx:(r.fx||[]).concat(fx)}) } return _chainEnd9(ch,ctx,r) };
-viewJobs=function(){ const l=lvlOf(S.xp), cd=Math.max(0,(S.jobT||0)-Date.now()), card=J=>{ const lk=J.lv&&l<J.lv, n=jobCnt(J.k), done=n>=JOB_DAILY;
+viewJobs=function(){ const l=lvlOf(S.xp), cd=Math.max(0,(S.jobT||0)-Date.now()), card=J=>{ const lk=J.lv&&l<J.lv, n=jobTot(), done=n>=JOB_DAILY;
     return `<div class="card job${lk?' wlock':''}${J.sp?' posj':''}"><div class="row spread"><h3>${esc(J.n)}</h3><span class="tag num">$${fmt(jobPay9(J))}</span></div>${J.sp?'<span class="eyebrow posl">SPECIAL JOB</span>':''}<p>${esc(J.d)}</p><div class="row spread"><span class="note num">오늘 ${n}/${JOB_DAILY}</span><button class="btn sm${lk||done?'':' pri'}" data-act="jobGo" data-k="${J.k}" ${lk||cd||done?'disabled':''}>${lk?`Lv.${J.lv}+`:done?'오늘 끝':'일하러 가기'}</button></div></div>` };
   const gen=PJOBS.filter(j=>!j.sp), sp=PJOBS.filter(j=>j.sp), adm=(rt.cev||[]).filter(e=>e.on&&e.trig&&e.trig.k==='job'&&l>=e.lv&&(!e.pos.length||e.pos.includes(S.tmb))&&!(e.once&&(S.cevDone||{})[e.id]));
-  return `<div class="evbar ${cd?'':'ok'}"><span class="tagx ${cd?'':'ok'}">${cd?'숨 돌리는 중':'일할 수 있음'}</span><b class="num" id="jobCd">${cd?mmss(cd):'지금 바로'}</b><span class="muted">알바마다 하루 ${JOB_DAILY}번까지. 일당은 레벨에 따라 조금씩 올라요.</span></div>
+  return `<div class="evbar ${cd?'':'ok'}"><span class="tagx ${cd?'':'ok'}">${cd?'숨 돌리는 중':'일할 수 있음'}</span><b class="num" id="jobCd">${cd?mmss(cd):'지금 바로'}</b><span class="muted">알바는 모두 합쳐 하루 ${JOB_DAILY}번까지 (오늘 ${jobTot()}/${JOB_DAILY}). 일당은 레벨에 따라 조금씩 올라요.</span></div>
    <div class="sec"><div class="sec-head"><h2>일반 알바</h2><p>짧은 텍스트 미니게임</p></div><div class="grid">${gen.map(card).join('')}</div></div>
    <div class="sec"><div class="sec-head"><h2>특수 행동 알바</h2><p>선택지마다 스탯 판정이 있어요. 실패하면 몸이 상해요.</p></div><div class="grid">${sp.map(card).join('')}</div></div>
    ${adm.length?`<div class="sec"><div class="sec-head"><h2>게시판 의뢰</h2><p>운영자가 올린 의뢰</p></div><div class="grid">${adm.map(e=>{ const J=e.job||jobClean({}), why=cevJobBlock(e), conds=[J.st?`${JN_STAT[J.st]} ${J.sv}+`:'',J.need?`${ITEMS[J.need].n} ${J.nq}개 소모`:'',J.cost?`비용 $${J.cost}`:'',J.hp?`체력 -${J.hp}`:''].filter(Boolean);
@@ -7416,7 +7416,7 @@ const isHealBuy=i=>i&&(i.f||(i.r&&['food','water','med'].includes(i.r))||(i.k&&H
 const SHOP_TABS9=[['all','전체'],['heal','회복'],['tool','도구·무기'],['gear','장비'],['veh','탈것'],['sell','팔기']];
 const _viewShop9=viewShop; viewShop=function(){ const h=_viewShop9(), tp=document.createElement('template'); tp.innerHTML=h; const C=tp.content;
   C.querySelectorAll('[data-act=plunderShop] small,[data-act=plunderGear] small').forEach(e=>e.remove());
-  const tabs=C.querySelector('.shoptabs'); if(tabs) tabs.outerHTML=`<div class="shoptabs2" role="tablist">${SHOP_TABS9.map(([k,n])=>`<button class="btn sm${rt.shopTab===k?' pri':''}" data-act="shopTab" data-k="${k}" role="tab" aria-selected="${rt.shopTab===k}">${n}</button>`).join('')}</div>`;
+  const tabs=C.querySelector('.shoptabs'); if(tabs){ const t2=document.createElement('template'); t2.innerHTML=`<div class="shoptabs2" role="tablist">${SHOP_TABS9.map(([k,n])=>`<button class="btn sm${rt.shopTab===k?' pri':''}" data-act="shopTab" data-k="${k}" role="tab" aria-selected="${rt.shopTab===k}">${n}</button>`).join('')}</div>`; tabs.replaceWith(t2.content) }
   const buy=C.querySelector('.shopsec[data-sk=buy]'); if(buy){ const grid=buy.querySelector('.grid'), tool=buy.cloneNode(true); tool.dataset.sk='tool'; tool.classList.toggle('shut',!!rt.shopShut.tool); tool.querySelector('.shoph').dataset.sk='tool'; tool.querySelector('h2').innerHTML='도구·무기 <span class="chev" aria-hidden="true">▾</span>'; const tg=tool.querySelector('.grid');
     buy.dataset.sk='heal'; buy.classList.toggle('shut',!!rt.shopShut.heal); buy.querySelector('.shoph').dataset.sk='heal'; buy.querySelector('h2').innerHTML='회복 <span class="chev" aria-hidden="true">▾</span>';
     [...grid.children].forEach(card=>{ const b=card.querySelector('[data-i]'), i=b&&SHOP_BUY[+b.dataset.i]; if(!isHealBuy(i)) card.remove() }); [...tg.children].forEach(card=>{ const b=card.querySelector('[data-i]'), i=b&&SHOP_BUY[+b.dataset.i]; if(isHealBuy(i)) card.remove() }); buy.after(tool) }
@@ -7631,11 +7631,11 @@ function petDay(){ if(!S.petDay||S.petDay.d!==today()) S.petDay={d:today(),snack
 const PET_SNACK={dog:'뼈다귀 대신 말린 고기',cat:'참치 한 숟갈',rod:'해바라기씨',bird:'곡식 한 줌',big:'사과 반쪽',cold:'작은 벌레',monkey:'바나나 칩',fox:'훈제 소시지 조각'};
 ACT.petCare=el=>{ const k=S.pet, t=el.dataset.t; if(!k||!PETS[k]) return; const D=petDay(), e=petE(k), lb=petLabel(k);
   if(t==='pat'){ petPoke(null); return }
-  if(t==='snack'){ if(D.snack>=3) return toast('간식은 하루 세 번까지예요.'); if((S.res.food||0)<3) return toast('식량 3이 필요해요.'); S.res.food-=3; D.snack++; affAdd(k,5); markSave(); sfx('eat'); toast(`${e} ${lb}에게 ${PET_SNACK[PG[k]]||'간식'}을(를) 줬다 · 친밀도 +5 (오늘 ${D.snack}/3)`,true); return render() }
-  if(t==='play'){ if(D.play>=3) return toast('놀아 주기는 하루 세 번까지예요.'); if(Date.now()<(S.petPlayT||0)) return toast(`조금 쉬었다가 · ${mmss(S.petPlayT-Date.now())}`); D.play++; S.petPlayT=Date.now()+5*60000; const n=ri(3,6); affAdd(k,n); mindAdd(3); markSave(); sfx('click');
+  if(t==='snack'){ if(D.snack>=3) return toast('간식은 하루 세 번까지예요.'); if(Date.now()<(S.petSnackT||0)) return toast(`아직 배가 불러요 · ${mmss(S.petSnackT-Date.now())}`); if((S.res.food||0)<3) return toast('식량 3이 필요해요.'); S.res.food-=3; D.snack++; S.petSnackT=Date.now()+40*60000; affAdd(k,5); markSave(); sfx('eat'); toast(`${e} ${lb}에게 ${PET_SNACK[PG[k]]||'간식'}을(를) 줬다 · 친밀도 +5 (오늘 ${D.snack}/3)`,true); return render() }
+  if(t==='play'){ if(D.play>=3) return toast('놀아 주기는 하루 세 번까지예요.'); if(Date.now()<(S.petPlayT||0)) return toast(`조금 쉬었다가 · ${mmss(S.petPlayT-Date.now())}`); D.play++; S.petPlayT=Date.now()+40*60000; const n=ri(3,6); affAdd(k,n); mindAdd(3); markSave(); sfx('click');
     toast(`${e} ${lb}와(과) ${stPick(['공 던지기를 했다','숨바꼭질을 했다','캠프 한 바퀴를 같이 뛰었다','끈 놀이를 했다'])} · 친밀도 +${n}, 정신 +3 (오늘 ${D.play}/3)`,true); return render() } };
 function petCareRow(){ const k=S.pet; if(!k) return ''; const D=petDay();
-  return `<div class="petcare"><button class="btn sm" data-act="petCare" data-t="pat">쓰다듬기</button><button class="btn sm" data-act="petCare" data-t="snack" ${D.snack>=3||(S.res.food||0)<3?'disabled':''}>간식 주기 · 식량 3 <small class="num">${D.snack}/3</small></button><button class="btn sm" data-act="petCare" data-t="play" ${D.play>=3||Date.now()<(S.petPlayT||0)?'disabled':''}>놀아 주기 <small class="num">${D.play}/3</small></button></div><p class="note">친밀도는 쓰다듬기(20초에 +1), 간식(+5), 놀아 주기(+3~6), 함께 다니기(10분에 +1)로 올라요. 감염에서 살아남으면 크게 올라요.</p>` }
+  return `<div class="petcare"><button class="btn sm" data-act="petCare" data-t="pat">쓰다듬기</button><button class="btn sm" data-act="petCare" data-t="snack" ${D.snack>=3||(S.res.food||0)<3||Date.now()<(S.petSnackT||0)?'disabled':''}>간식 주기 · 식량 3 <small class="num">${Date.now()<(S.petSnackT||0)&&D.snack<3?mmss(S.petSnackT-Date.now())+' · ':''}${D.snack}/3</small></button><button class="btn sm" data-act="petCare" data-t="play" ${D.play>=3||Date.now()<(S.petPlayT||0)?'disabled':''}>놀아 주기 <small class="num">${Date.now()<(S.petPlayT||0)&&D.play<3?mmss(S.petPlayT-Date.now())+' · ':''}${D.play}/3</small></button></div><p class="note">친밀도는 쓰다듬기(3분에 +1), 간식(+5 · 40분마다, 하루 3번), 놀아 주기(+3~6 · 40분마다, 하루 3번), 함께 다니기(20분에 +1)로 천천히 올라요. 감염에서 살아남으면 크게 올라요.</p>` }
 const _petCard13=petCard; petCard=function(){ const h=_petCard13(); return S.pet?h.replace(/<\/section>$/,petCareRow()+'</section>'):h };
 const _petsHtml13=petsHtml; petsHtml=function(){ const h=_petsHtml13(); return S.pet?h.replace('<div class="petgrid">',petCareRow()+'<div class="petgrid">'):h };
 
@@ -7644,6 +7644,938 @@ const _crewCard13=crewCard; crewCard=function(c,sel){ crewInfo(c); const h=_crew
 const _crewLove13=ACT.crewLove; ACT.crewLove=el=>{ const c=crewById(el.dataset.id); if(c&&crewInfo(c).age==='어린이') return; return _crewLove13(el) };
 const _crewAsk13=crewAsk; crewAsk=function(c){ if(crewInfo(c).age==='어린이') return; return _crewAsk13(c) };
 
+/* ================= 생존 기록: 65개 이야기 (p34) ================= */
+/* 특수 감염자: 이야기에서만 나온다 (일반 탐사 무작위 등장 제외) */
+Object.assign(ZOMBIES,{
+  blind:{n:'귀만 남은 감염자',hp:30,atk:9,spd:6,xp:48,lv:4,col:'#8c8f86',double:.3,evo:1,d:'눈이 하얗게 말라붙었다. 고개가 소리 나는 쪽으로 꺾인다.'},
+  lurker:{n:'시체 사이의 잠복자',hp:26,atk:10,spd:4,xp:42,lv:3,col:'#6d6151',ambush:1,evo:1,d:'죽은 척 누워 있다가 발목을 낚아챈다.'},
+  climber:{n:'벽을 타는 자',hp:36,atk:10,spd:8,xp:70,lv:6,col:'#7a6b7e',dodge:.3,double:.25,evo:1,d:'관절이 거꾸로 꺾여 있다. 천장에 매달려 내려다본다.'},
+  sporer:{n:'포자 주머니',hp:30,atk:6,spd:2,xp:55,lv:5,col:'#a3a05a',explode:16,evo:1,d:'등에 버섯 같은 혹이 부풀어 있다. 터지면 노란 가루가 퍼진다.'},
+  wolf:{n:'감염된 들개',hp:18,atk:8,spd:10,xp:36,lv:3,col:'#6e5a46',double:.5,evo:1,d:'입가에 거품. 무리로 다니며 뒤에서 문다.'},
+  amalgam:{n:'엉겨 붙은 덩어리',hp:140,atk:16,spd:1,xp:220,lv:10,col:'#6b4a4a',armor:2,charge:1,evo:1,d:'수십 개의 팔과 얼굴이 한 몸에 엉켜 있다.'},
+  nocturne:{n:'지하의 야행성',hp:24,atk:9,spd:8,xp:44,lv:5,col:'#4c4f5c',double:.3,evo:1,d:'빛을 보면 비명을 지른다. 어둠 속에선 누구보다 빠르다.'},
+  mimic:{n:'흉내 내는 자',hp:28,atk:8,spd:6,xp:46,lv:4,col:'#9a8a9e',scream:1,evo:1,d:'"살려줘… 여기야…" 같은 말만 되풀이한다.'},
+  undertow:{n:'물밑의 그림자',hp:46,atk:11,spd:3,xp:78,lv:6,col:'#4f6b70',ambush:1,evo:1,d:'물속에서 발목을 잡아끈다. 퉁퉁 불은 손이 차갑다.'},
+  alpha:{n:'지휘하는 변이체',hp:82,atk:13,spd:7,xp:150,lv:9,col:'#93404e',dodge:.25,scream:1,charge:1,evo:1,d:'쇠파이프를 쥐고 있다. 손짓 한 번에 다른 놈들이 움직인다.'},
+  heat:{n:'온기를 쫓는 무리',hp:16,atk:7,spd:8,xp:30,lv:4,col:'#8a6f63',double:.3,evo:1,d:'얼어붙은 몸으로 불빛만 보고 달려온다.'},
+  crow:{n:'감염된 까마귀 떼',hp:14,atk:5,spd:12,xp:32,lv:3,col:'#2b2b30',double:.6,dodge:.35,evo:1,d:'하늘이 검게 내려앉는다. 목덜미를 노린다.'},
+  volt:{n:'전류가 흐르는 감염자',hp:40,atk:15,spd:3,xp:80,lv:7,col:'#5a6a8a',charge:1,evo:1,d:'몸에 전선이 감겨 있다. 닿으면 파랗게 튄다.'},
+  corroder:{n:'산성 분출자',hp:38,atk:7,spd:3,xp:72,lv:6,col:'#9bbd3a',acid:.8,evo:1,d:'뱉은 체액에 철문이 녹아내린다.'},
+  cultist:{n:'흰 옷의 광신도',hp:34,atk:9,spd:5,xp:55,lv:4,col:'#cfc9b8',human:1,evo:1,d:'"그분들께 가는 길을 막지 마라."'},
+  sniper:{n:'옥상의 저격수',hp:44,atk:16,spd:4,xp:90,lv:7,col:'#3d4535',human:1,armor:1,evo:1,d:'멀리서 한 발. 가까이 가면 칼을 뽑는다.'},
+  turret:{n:'자동 포탑',hp:70,atk:14,spd:1,xp:110,lv:8,col:'#55606a',armor:4,evo:1,d:'붉은 센서가 좌우로 돈다. 움직임이 보이면 쏜다.'},
+});
+/* 이야기 전용 연출 */
+function SGFX(v){ if(!v) return; try{ const [k,arg]=String(v).split(':'), off=()=>setTimeout(()=>FXL.vig(0),4800);
+  if(k==='red'){ FXL.flash('rgba(200,0,0,.5)',500); FXL.shake(8,420) }
+  else if(k==='flash'){ FXL.flash('#fff',420) }
+  else if(k==='shake'){ FXL.shake(7,420) }
+  else if(k==='quake'){ sfx('bang'); FXL.shake(16,1100); setTimeout(()=>FXL.shake(10,800),1000) }
+  else if(k==='dark'){ FXL.blackout(1900,arg||'') }
+  else if(k==='static'){ FXL.staticOn(800) }
+  else if(k==='flicker'){ FXL.flicker(); setTimeout(()=>FXL.flicker(),800) }
+  else if(k==='fog'){ FXL.vig(.8,'rgba(175,180,180,.92)'); off() }
+  else if(k==='cold'){ FXL.flash('rgba(170,210,255,.5)',700); FXL.vig(.6,'rgba(40,80,140,.85)'); off() }
+  else if(k==='fire'){ FXL.flash('rgba(255,140,40,.55)',600); FXL.vig(.55,'rgba(160,60,0,.85)'); off() }
+  else if(k==='water'){ FXL.flash('rgba(60,120,200,.45)',700); FXL.vig(.6,'rgba(10,40,90,.88)'); off() }
+  else if(k==='gas'){ FXL.pre('gas'); off() }
+  else if(k==='rad'){ FXL.flash('rgba(170,255,60,.45)',800); FXL.staticOn(500); FXL.vig(.5,'rgba(80,120,0,.8)'); off() }
+  else if(k==='silence'){ FXL.tension(0); FXL.vig(.7,'rgba(0,0,0,.95)'); off() }
+  else if(k==='glitch'){ FXL.staticOn(450); FXL.flicker(); FXL.shake(4,300) }
+  else if(k==='gold'){ FXL.flash('rgba(255,210,90,.45)',700); sfx('coin') }
+ }catch(e){} }
+const SG_PART=[null,
+  {n:'I. 인간군상 · 도덕적 딜레마',tag:'HUMANITY',t:'인간을 본 자',d:'좀비보다 사람이 더 어려웠다.'},
+  {n:'II. 특수 좀비 · 변칙 생태계',tag:'MUTATION',t:'변종 연구가',d:'놈들은 변하고 있다.'},
+  {n:'III. 환경 · 극단적 재해',tag:'DISASTER',t:'재난의 생존자',d:'하늘도 땅도 편이 아니었다.'},
+  {n:'IV. 탐색 · 생존 임무',tag:'MISSION',t:'임무 완수자',d:'살려면 나가야 했다.'},
+  {n:'V. 반전 · 이색 컨셉',tag:'TWIST',t:'진실의 목격자',d:'믿었던 모든 것이 뒤집혔다.'}];
+const SAGA=[];
+const PRx=p=>Math.random()<p;
+/* 판정 도우미: 스탯 판정, 확률 */
+const chk=(k,b,a,c)=>()=>PRx(sk(k,b))?a:c;
+const rol=(p,a,c)=>()=>PRx(p)?a:c;
+const costTag=c=>Object.entries(c).map(([k,v])=>k==='$'?`$${v}`:`${(RES[k]||ITEMS[k]||{n:k}).n} ${v}`).join(' · ');
+const hasCost=c=>Object.entries(c).every(([k,v])=>k==='$'?(S.money||0)>=v:RES[k]?(S.res[k]||0)>=v:(S.inv[k]||0)>=v);
+const payCost=c=>{ for(const [k,v] of Object.entries(c)){ if(k==='$') S.money=Math.max(0,(S.money||0)-v); else if(RES[k]) S.res[k]=Math.max(0,(S.res[k]||0)-v); else S.inv[k]=Math.max(0,(S.inv[k]||0)-v) } };
+function SGA(k,part,lv,n,mood,hint,s){ const ch={k:'sg_'+k,n,tag:SG_PART[part].tag,mood,saga:part,lv,hint,s:{}};
+  for(const id in s){ const fn=s[id]; ch.s[id]=ctx=>{ const node=fn(ctx); node.t=[].concat(node.t);
+      node.o.forEach(o=>{ if(o.cost){ o.tag=o.tag?o.tag+' · '+costTag(o.cost):costTag(o.cost); if(!hasCost(o.cost)) o.off=true; const pre=o.pre; o.pre=c=>{ payCost(o.cost); pre&&pre(c) } }
+        if(o.need){ const ok=o.need(); if(!ok) o.off=true } if(o.f){ const f=o.f; o.f=c=>{ const r=typeof f==='function'?f(c):f; return Object.assign({},typeof r==='function'?r(c):r) } } });
+      if(node.vfx) setTimeout(()=>SGFX(node.vfx),250); return node } }
+  SAGA.push(ch); return ch }
+
+/* ---------- I. 인간군상 & 도덕적 딜레마 ---------- */
+SGA('basement',1,1,'지하실의 비밀','horror','동료가 물린 연인을 지하에 가두고 먹이를 주던 현장.',{
+ start:c=>({t:['밤마다 사라지던 통조림을 쫓아 지하실 계단을 내려갔다.','쇠사슬 끝에 묶인 여자가 몸을 비튼다. 그 앞에서 동료 Leo가 숟가락으로 죽을 떠먹이고 있다.','"…아직 날 알아봐. 정말이야."'],sfx:'heart',vfx:'flicker',o:[
+  {n:'Leo의 말을 들어 본다',go:'talk'},
+  {n:'사슬부터 살핀다',tag:'감각',f:chk('per',.45,{t:['고리 하나가 거의 끊어져 있었다. 오늘 밤이었으면 캠프가 끝났을 것이다.','새 사슬로 바꾸자 Leo가 처음으로 고개를 숙였다. "…고마워."'],give:{scrap:4},mind:4,xp:24,win:1},{t:'손을 대는 순간 사슬이 끊어졌다.',fight:{z:'runner',queue:[],win:{med:1}},vfx:'red',xp:10})},
+  {n:'캠프 사람들에게 알린다',f:{t:['횃불을 든 사람들이 내려왔다. Leo는 막지 않았다.','다음 날 아침 Leo의 자리가 비어 있었다. 쪽지 한 장. "미안해. 둘이 갈게."'],give:{food:8},mind:-6,xp:14}}]}),
+ talk:c=>({t:['"물린 지 열흘째야. 아직 안 변했어. 가끔 내 이름을 불러."','여자의 눈동자는 이미 하얗다. 이름이 아니라, 그냥 소리다.'],sfx:'sob',o:[
+  {n:'함께 보내 주자고 설득한다',tag:'매력',f:chk('cha',.5,{t:['Leo가 직접 하겠다고 했다. 나는 계단 위에서 기다렸다.','올라온 그는 아무 말도 하지 않았다. 그날부터 누구보다 열심히 일했다.'],crew:[['지하실의 Leo','end']],mind:-3,xp:32,win:1},{t:['"넌 몰라!" Leo가 나를 밀쳐 냈다. 머리가 벽에 부딪혔다.','그날 밤 둘은 사라졌다.'],hp:-8,st:[['conc',10]],xp:12})},
+  {n:'사흘만 더 지켜본다',cost:{med:2},f:rol(.22,{t:['사흘째 밤, 여자가 숟가락을 스스로 받아 들었다.','기적인지 착각인지 모른다. 다만 그녀는 사람의 눈으로 울었다.'],crew:[['지하실의 연인','cha']],xp:45,vfx:'gold',win:1},{t:['사흘째 밤, 사슬이 끊어졌다. Leo의 비명은 짧았다.'],fight:{z:'runner',queue:['walker'],win:{med:2}},sfx:'scream',mind:-8,xp:15})},
+  {n:'못 본 걸로 한다',f:{t:'계단을 올라왔다. 그날부터 밤마다 지하실에서 숟가락 긁는 소리가 들렸다.',st:[['insom',20]],mind:-5,xp:8}}]})});
+
+SGA('weaktable',1,2,'배신자의 식탁','threat','식량이 줄자 가장 약한 자를 버리려는 공모.',{
+ start:c=>({t:['창고 뒤에서 수군거림. "할머니는 하루에 한 끼만 먹어도 되잖아. 아니, 차라리…"','다섯 명이 고개를 맞대고 있다. 계획은 내일 아침 수색 때 할머니를 데리고 나가 두고 오는 것.','그들 중 하나가 나를 본다. "너도 한 표 줄래?"'],sfx:'whisper',o:[
+  {n:'공모를 판으로 깬다',tag:'매력',f:chk('cha',.45,{t:['"오늘은 할머니, 내일은 누구 차례지?" 아무도 대답하지 못했다.','할머니는 그날 저녁 손뜨개 장갑을 나눠 줬다. 다섯 켤레.'],give:{food:6},mind:6,xp:30,win:1},{t:['"위선 떨지 마." 주먹이 먼저 날아왔다.','결국 할머니는 내가 데리고 다니기로 했다.'],hp:-10,crew:[['버려질 뻔한 할머니','per']],xp:18})},
+  {n:'내 몫을 할머니께 돌린다',cost:{food:12},f:{t:['식량을 내려놓자 수군거림이 멎었다.','할머니가 내 손을 꼭 잡았다. "젊은 사람이 굶으면 못 써." 그래도 받았다.'],crew:[['버려질 뻔한 할머니','per']],mind:5,xp:28,win:1}},
+  {n:'한 표 던진다',f:{t:['아침에 할머니는 돌아오지 않았다. 아무도 그 얘기를 하지 않았다.','식량은 늘었다. 밥맛은 없었다.'],give:{food:15},mind:-12,st:[['insom',25]],xp:6}}]})});
+
+SGA('fakesavior',1,4,'가짜 구원자','threat','생존자를 위험 지역에 보내고 자원만 갈취하는 리더.',{
+ start:c=>({t:['"안전지대까지 길을 안내합니다. 통행료는 식량 열 개."','친절한 남자가 사람들을 줄 세우고 있다. 출발하는 무리마다 표식 없는 길로 보낸다.','어제 출발한 무리의 배낭이 그의 트럭 뒤칸에 쌓여 있다.'],sfx:'radio',mood:'threat',o:[
+  {n:'다음 무리에 끼어 따라간다',go:'follow'},
+  {n:'트럭 뒤칸을 뒤진다',tag:'민첩',f:chk('agi',.45,{t:['배낭을 열자 이름표가 붙은 물통, 아이 신발, 피 묻은 지도.','되찾은 물자를 사람들에게 돌려주자 줄이 흩어졌다. 남자는 그날 밤 사라졌다.'],give:{water:10,food:8,med:2},xp:34,win:1},{t:'"도둑이다!" 그의 부하들이 몰려왔다.',fight:{z:'raider',queue:['raider'],win:{$:30,food:6}},xp:12})},
+  {n:'사람들에게 경고한다',tag:'매력',f:chk('cha',.4,{t:['"어제 간 사람들, 돌아온 사람 있어요?" 줄에 선 사람들이 서로를 봤다.','남자의 웃음이 굳었다. 누군가 내게 감사 인사로 통조림을 쥐여 줬다.'],give:{food:6},crew:[['줄에서 빠져나온 청년','agi']],xp:28,win:1},{t:'"선동꾼이네." 사람들이 오히려 나를 밀어냈다.',mind:-4,xp:8})}]}),
+ follow:c=>({t:['안내자가 가리킨 길 끝은 붕괴된 쇼핑몰. 문 안쪽에서 수십 개의 신음 소리가 울린다.','뒤를 돌아보니 안내자가 멀찍이서 무전기를 들고 있다. "다 들어갔어. 짐 챙겨."'],sfx:'growl',vfx:'red',o:[
+  {n:'사람들을 이끌고 되돌아간다',tag:'체력',f:chk('end',.45,{t:['안내자의 트럭까지 달려가 열쇠를 빼앗았다. 무리 전원이 살아 돌아왔다.','트럭에 실린 물자는 원래 주인들에게 돌아갔다. 남은 것은 우리 몫.'],give:{fuel:4,food:10,$:40},xp:42,win:1},{t:'놈들이 문을 밀고 쏟아졌다.',fight:{z:'walker',queue:['runner','walker'],win:{food:6}},hp:-6,xp:14})},
+  {n:'안내자부터 잡는다',f:{t:'무전기를 든 손을 걷어찼다. 그의 부하가 쇠파이프를 들었다.',fight:{z:'enforcer',queue:['raider'],win:{$:50,fuel:3}},xp:20,win:1}}]})});
+
+SGA('lastpill',1,3,'마지막 한 알','human','유통기한 지난 해열제 한 알을 두고 두 부모의 신경전.',{
+ start:c=>({t:['열에 들뜬 아이가 둘. 해열제는 한 알. 유통기한이 반년 지났다.','두 엄마가 약통을 사이에 두고 서로를 노려본다. "우리 애가 먼저 아팠어요." "우리 애가 더 어려요."','둘 다 나를 본다. 결정하라고.'],sfx:'sob',o:[
+  {n:'약을 반으로 쪼갠다',tag:'감각',f:chk('per',.5,{t:['반 알씩. 밤새 물수건을 갈았다. 새벽에 두 아이 다 열이 내렸다.','두 엄마가 처음으로 같이 울었다.'],mind:8,give:{food:5},xp:35,win:1},{t:['반 알로는 부족했다. 한 아이의 열이 끝내 내리지 않았다.','남은 엄마가 나를 원망하는 눈으로 봤다. 그 눈을 잊을 수 없다.'],mind:-10,xp:12})},
+  {n:'우리 캠프 약을 꺼낸다',cost:{med:2},f:{t:['캠프 약품을 털어 둘에게 나눠 줬다. 해열제 한 알은 그대로 남았다.','다음에 아플 누군가를 위해.'],give:{painkiller:1},crew:[['아이를 지킨 엄마','cha']],mind:6,xp:30,win:1}},
+  {n:'제비뽑기로 정하게 한다',f:rol(.5,{t:'운이 좋았다. 뽑히지 않은 아이도 이틀 뒤 스스로 열이 내렸다.',mind:2,xp:15},{t:'뽑히지 않은 아이는 사흘을 버티지 못했다. 공정했다. 그게 더 끔찍했다.',mind:-9,xp:10})}]})});
+
+SGA('informer',1,5,'밀고의 대가','gun','"한 명을 넘기면 모두를 살려주겠다"는 무장 세력.',{
+ start:c=>({t:['총을 든 열 명이 캠프 앞에 섰다. "우리 보급품을 턴 놈이 여기 있다. 그놈만 넘겨."','"넘기면 모두 산다. 아니면 다 죽고."','뒤에서 막내 Joey가 떨고 있다. 정말 그가 훔쳤는지 아무도 모른다.'],sfx:'gunshot',vfx:'shake',o:[
+  {n:'협상한다',tag:'매력',go:c=>PRx(sk('cha',.4))?'deal':'nodeal'},
+  {n:'내가 대신 나선다',f:{t:['"내가 했다." 그들이 나를 끌고 갔다. 개머리판이 몇 번 날아왔다.','풀려났을 때 Joey가 문 앞에서 기다리고 있었다. 그는 그날부터 내 그림자처럼 따라다녔다.'],hp:-22,st:[['conc',15]],crew:[['목숨을 빚진 Joey','agi']],xp:40,win:1}},
+  {n:'Joey를 넘긴다',f:{t:['그들은 약속을 지켰다. Joey만 데려갔다.','멀리서 총소리가 한 번 났다. 캠프 사람들은 나와 눈을 마주치지 않는다.'],mind:-15,xp:5}}]}),
+ deal:c=>({t:['"보급품 값을 치르면 되잖아." 대장이 턱을 문질렀다.','"…식량 스무 개. 아니면 탄약."'],o:[
+  {n:'식량 스무 개를 낸다',cost:{food:20},f:{t:'그들은 자루를 챙겨 떠났다. 대장이 돌아보며 말했다. "다음엔 도둑 단속 잘해."',mind:4,xp:30,seed:['allyGift',{g:'무장 세력'},60,140],win:1}},
+  {n:'탄약을 낸다',cost:{ammo:1},f:{t:'대장이 탄약 상자를 열어 보고 웃었다. "거래 좋지." 그는 무전 주파수를 남겼다.',xp:30,give:{drone:1},win:1}},
+  {n:'버틴다',f:{t:'"협상 끝." 총구가 올라갔다.',fight:{z:'deserter',queue:['raider'],win:{ammo:1,$:60}},xp:15}}]}),
+ nodeal:c=>({t:['"말 많네." 대장이 하늘에 한 발 쐈다.','"셋 센다."'],sfx:'gunshot',vfx:'red',o:[
+  {n:'맞서 싸운다',f:{t:'모두 엄폐물 뒤로 흩어졌다.',fight:{z:'deserter',queue:['raider','raider'],win:{ammo:1,$:60}},xp:18}},
+  {n:'내가 대신 나선다',f:{t:['"쏘려면 나를 쏴." 대장이 한참 나를 보다가 총을 내렸다.','"배짱은 인정하지." 그들은 빈손으로 떠났다.'],hp:-8,crew:[['목숨을 빚진 Joey','agi']],xp:38,win:1}}]})});
+
+SGA('fallenhero',1,4,'영웅의 낙향','human','모두를 구하던 리더가 감염되자 캠프 문을 안에서 잠그고 홀로 남는다.',{
+ start:c=>({t:['"다들 떠나. 지금."','리더 Harris가 캠프 철문을 안에서 잠갔다. 팔뚝의 붕대에 검은 얼룩이 번지고 있다.','"내가 변하면 여기서 끝나는 게 낫지. 열쇠는 우체통에."'],sfx:'knock',o:[
+  {n:'문 너머로 마지막 이야기를 듣는다',go:'talk'},
+  {n:'억제제로 시간을 번다',cost:{suppress:1},f:{t:['철문 틈으로 억제제를 밀어 넣었다. "…바보 같은 녀석." 그가 웃었다.','하루를 벌었다. 그는 그 하루 동안 캠프 지도와 비축 창고 위치를 전부 적어 넘겼다.'],give:{food:12,water:12,ammo:1,drone:1},xp:45,vfx:'gold',win:1}},
+  {n:'문을 부수고 들어간다',tag:'힘',f:chk('str',.45,{t:['문이 열렸을 때, 그는 이미 반쯤 변해 있었다. 그래도 나를 알아봤다.','"…고마워." 그게 마지막 사람의 말이었다.'],fight:{z:'brute',queue:[],win:{ammo:1,medkit:1}},xp:30,win:1},{t:'철문은 꿈쩍도 하지 않았다. 안쪽에서 "가라니까!" 하는 고함.',hp:-6,xp:8})}]}),
+ talk:c=>({t:['"처음 이 캠프 만들 때 열 명이었어. 지금 서른이야. 나쁘지 않지?"','"부탁 하나만. 막내 Dylan이한테 내 칼 줘. 걔가 제일 겁이 많거든."'],sfx:'sob',o:[
+  {n:'약속한다',f:{t:['문 아래로 칼집에 든 칼이 밀려 나왔다. 그날 밤 안에서 마지막으로 노래를 흥얼거리는 소리가 들렸다.','아침에 우리는 떠났다. 문은 열지 않았다.'],crew:[['리더의 칼을 받은 Dylan','str']],mind:-4,xp:36,win:1}},
+  {n:'"같이 가자"고 끝까지 조른다',f:rol(.3,{t:['한참 침묵 끝에 자물쇠가 풀렸다. "…열 시간. 그 안에 안 나으면 버려."','열 시간 뒤, 그의 열이 내렸다. 철조망 상처였다.'],crew:[['돌아온 리더','cha']],xp:50,vfx:'gold',win:1},{t:'"고집은." 그 말을 끝으로 그는 대답하지 않았다.',mind:-6,xp:15})}]})});
+
+SGA('funeral',1,3,'피로 물든 장례식','threat','유품을 나누다 숨겨 둔 개인 자원이 발견되어 폭동.',{
+ start:c=>({t:['Mr. Price의 장례. 유품을 나누려 배낭을 열자 통조림 서른 개, 항생제 세 통이 쏟아졌다.','"우리 굶을 때 혼자 이걸…" 누군가 Mr. Price의 아내를 밀쳤다. 곧 고함, 그리고 칼.'],sfx:'scream',vfx:'shake',mood:'threat',o:[
+  {n:'사이에 끼어든다',tag:'힘',f:chk('str',.45,{t:['칼 든 손목을 비틀어 쥐었다. 땅에 떨어진 칼 소리에 모두 멈췄다.','물자는 똑같이 나눴다. Mr. Price의 아내 몫도.'],give:{food:8,antibio:1},mind:4,xp:34,win:1},{t:'칼날이 팔을 그었다. 소란은 내가 쓰러지고서야 멎었다.',hp:-14,st:[['bleed',10]],give:{food:5},xp:14})},
+  {n:'"그 약, 누굴 위한 거였는지 보자"',tag:'감각',f:chk('per',.5,{t:['항생제 병에 붙은 쪽지. "Ellie 생일 선물. 열 나면 바로." Ellie는 캠프 막내다.','칼이 내려갔다. Mr. Price의 아내가 쪽지를 끌어안고 울었다.'],mind:6,give:{food:6},xp:36,win:1},{t:'아무 표식도 없었다. 결국 물자는 힘센 사람 순서로 나뉘었다.',mind:-6,xp:10})},
+  {n:'틈을 타 내 몫을 챙긴다',f:{t:'통조림 여섯 개를 품에 넣었다. 등 뒤에서 누군가 쓰러지는 소리가 났다.',give:{food:6,med:1},mind:-8,xp:6}}]})});
+
+SGA('silentbus',1,4,'침묵의 버스','horror','탈출 버스에서 우는 아기 때문에 엄마를 내리라 강요하는 승객들.',{
+ start:c=>({t:['탈출 버스가 놈들 무리 사이를 숨죽여 지나간다. 엔진도 끄고 내리막을 굴러가는 중.','아기가 울기 시작했다. 창밖의 수십 개 얼굴이 동시에 버스를 향해 돌아선다.','"내려! 애 데리고 내려!" 남자 둘이 엄마의 어깨를 잡는다.'],sfx:'sob',vfx:'silence',o:[
+  {n:'아기를 받아 달랜다',tag:'매력',f:chk('cha',.45,{t:['품에 안고 심장 소리를 들려줬다. 울음이 훌쩍임으로, 다시 숨소리로.','버스가 무리를 빠져나왔을 때, 엄마가 소리 없이 내 손에 이마를 댔다.'],crew:[['버스의 엄마','end']],mind:6,xp:36,win:1},{t:'울음은 멎지 않았다. 창문에 손바닥이 철썩철썩 붙기 시작했다.',fight:{z:'walker',queue:['walker','runner'],win:{food:6}},xp:14})},
+  {n:'남자들을 막아선다',f:{t:['"한 명이라도 내리면 내가 같이 내린다." 남자들이 물러섰다.','그 순간 뒤쪽 창이 깨졌다.'],fight:{z:'runner',queue:['walker'],win:{food:6,water:6}},xp:22,win:1}},
+  {n:'시동을 걸고 밟는다',tag:'민첩',f:chk('agi',.45,{t:['엔진이 포효했다. 범퍼에 부딪히는 소리가 연달아 이어지고, 이윽고 조용해졌다.','아기는 엔진 소리에 놀라 울음을 그쳤다.'],xp:28,win:1},{t:'시동이 걸리지 않았다. 문이 비틀린다.',fight:{z:'brute',queue:[],win:{fuel:3}},hp:-6,xp:12})}]})});
+
+SGA('triage',1,5,'의사의 선택','human','중상자와 감염 의심자, 누구를 먼저 치료할 것인가.',{
+ start:c=>({t:['임시 진료소. 의사는 손이 하나뿐이다.','한쪽은 다리가 으스러진 소방관. 피가 멈추지 않는다. 다른 쪽은 물렸는지 확실치 않은 소녀. 해독할 시간은 지금뿐이다.','"골라 줘요. 난 못 하겠어." 의사의 손이 떨린다.'],sfx:'heart',o:[
+  {n:'소방관부터',f:rol(.65,{t:['지혈에 성공했다. 소녀는 열이 올랐지만, 다행히 감염은 아니었다.','소방관은 "빚졌다"고만 했다.'],crew:[['다리를 지킨 소방관','str']],xp:34,win:1},{t:['지혈은 됐다. 그사이 소녀의 눈이 하얗게 흐려졌다.','의사는 그날 이후 메스를 들지 못했다.'],mind:-10,xp:14})},
+  {n:'소녀부터',f:rol(.45,{t:['상처를 도려내고 소독했다. 소녀는 살았다. 소방관도 버텼다. 기적처럼.'],crew:[['살아남은 소녀','agi']],xp:38,win:1},{t:['소녀는 살았다. 소방관은 새벽을 넘기지 못했다.'],mind:-8,give:{med:2},xp:16})},
+  {n:'내가 한 명을 맡는다',cost:{medkit:1},f:{t:['구급상자를 펼쳐 소방관을 맡았다. 의사는 소녀를.','둘 다 살았다. 의사가 처음으로 웃으며 의학 메모를 건넸다.'],give:{suture:1,antibio:1},crew:[['진료소의 의사','per']],xp:46,vfx:'gold',win:1}}]})});
+
+SGA('cult',1,6,'광신도의 제물','horror','좀비를 인도자로 숭배하며 산 사람을 바치는 집단.',{
+ start:c=>({t:['흰 옷의 무리가 노래를 부른다. "그분들이 우리를 데려가신다. 아프지 않은 곳으로."','울타리 안쪽, 감염자 여럿이 묶인 채 몸부림친다. 그 앞에 눈을 가린 청년이 무릎 꿇고 있다.','"오늘의 축복이다!" 사제가 칼로 청년의 밧줄을 끊으려 한다.'],sfx:'whisper',vfx:'flicker',o:[
+  {n:'의식에 섞여 들어간다',tag:'매력',go:c=>PRx(sk('cha',.45))?'inside':'caught'},
+  {n:'울타리를 무너뜨린다',tag:'힘',f:chk('str',.4,{t:['울타리가 넘어가자 묶여 있던 놈들이 신도들 쪽으로 쏟아졌다. 아수라장 속에서 청년을 끌어냈다.'],crew:[['제물이 될 뻔한 청년','end']],mind:-4,xp:36,win:1},{t:'울타리가 반쯤 넘어갔다. 놈들도 신도들도 나를 봤다.',fight:{z:'cultist',queue:['walker','walker'],win:{med:2}},xp:14})},
+  {n:'화염병을 던진다',cost:{molotov:1},f:{t:['불길이 제단을 삼켰다. 신도들이 흩어지고, 연기 속에서 청년이 기어 나왔다.','그는 오래 떨다가 말했다. "…또 다른 제단이 있어요. 동쪽에."'],crew:[['제물이 될 뻔한 청년','end']],vfx:'fire',xp:40,win:1}}]}),
+ inside:c=>({t:['흰 천을 뒤집어쓰고 줄 끝에 섰다. 사제가 다가와 내 얼굴을 들여다본다.','"새 얼굴이군. 그분들께 무엇을 바치겠나?"'],o:[
+  {n:'"저 청년은 이미 물렸다"고 속인다',f:{t:['"더럽혀진 제물은 그분들을 노하게 한다." 사제가 놀라 청년을 내쫓았다.','울타리 밖에서 청년을 받아 들었다.'],crew:[['제물이 될 뻔한 청년','end']],xp:42,win:1}},
+  {n:'사제를 붙잡아 인질로 삼는다',f:{t:'칼을 사제 목에 댔다. 신도들이 비명을 지르며 달려든다.',fight:{z:'cultist',queue:['cultist'],win:{$:40,med:3}},xp:20,win:1}}]}),
+ caught:c=>({t:['"이교도다!" 사제가 나를 가리켰다. 흰 옷들이 원을 좁혀 온다.'],sfx:'scream',vfx:'red',o:[
+  {n:'싸운다',f:{t:'첫 번째 신도가 칼을 휘둘렀다.',fight:{z:'cultist',queue:['cultist','walker'],win:{med:2}},xp:16}},
+  {n:'달아난다',tag:'민첩',f:chk('agi',.5,{t:'숲으로 뛰었다. 등 뒤에서 노랫소리가 오래 따라왔다.',xp:10},{t:'나뭇가지에 걸려 넘어졌다. 발목이 꺾였다.',hp:-10,st:[['leg',15]],xp:8})}]})});
+
+SGA('heritage',1,5,'유산 상속전','threat','자원 부자 노인의 사망 후, 아지트를 차지하려 분열하는 무리.',{
+ start:c=>({t:['"Hollis 영감"이 죽었다. 마을에서 가장 큰 창고를 가진 사람이었다.','열쇠는 하나. 손주, 간병인, 옆집 사냥꾼 셋이 서로 자기 거라 우긴다.','셋 다 무장했다. 그리고 셋 다 나를 증인으로 세우려 한다.'],sfx:'bang',o:[
+  {n:'노인의 유언장을 찾는다',tag:'감각',f:chk('per',.45,{t:['베개 속에서 편지가 나왔다. "창고는 마을 모두의 것. 열쇠는 제일 배고픈 사람에게."','셋 다 할 말을 잃었다. 창고는 그날 밤 마을 공동 창고가 됐다. 내 몫도.'],give:{food:12,water:10,scrap:10},xp:38,win:1},{t:'아무것도 없었다. 그사이 총성이 울렸다.',fight:{z:'raider',queue:['raider'],win:{food:8}},xp:12})},
+  {n:'간병인 편에 선다',f:{t:['"마지막 석 달을 같이 있어 준 사람이 이 사람이야." 손주가 침을 뱉고 떠났다.','간병인은 창고에서 약을 한 아름 꺼내 줬다.'],give:{med:4,bandage:2},xp:26,win:1}},
+  {n:'열쇠를 챙겨 사라진다',tag:'민첩',f:chk('agi',.4,{t:'다들 서로를 노려보는 사이 열쇠를 집어 들었다. 창고는 텅 빈 것처럼 보였지만, 바닥 밑에 진짜가 있었다.',give:{food:14,fuel:4,$:60},mind:-6,xp:20},{t:'"저놈이 열쇠를!" 셋이 동시에 나를 겨눴다.',fight:{z:'enforcer',queue:['raider'],win:{$:40}},xp:10})}]})});
+
+SGA('deserter',1,7,'탈영병의 경고','gun','정부가 생존자 구역을 폭격할 거라는 정보를 든 군인.',{
+ start:c=>({t:['군복을 입은 청년이 비틀거리며 캠프로 들어왔다. "48시간 뒤 이 구역 전체가 폭격돼요. 정화 작전이래요."','그의 가방에 작전 지도가 있다. 진짜처럼 보인다. 혹은 진짜처럼 만든 것.'],sfx:'radio',vfx:'static',o:[
+  {n:'지도를 확인한다',tag:'감각',go:c=>PRx(sk('per',.45))?'real':'fake'},
+  {n:'무조건 대피를 시작한다',f:{t:['짐을 꾸리고 언덕 너머로 옮겼다. 이틀 뒤 밤하늘이 붉게 물들었다. 진짜였다.','청년은 그날 밤 처음으로 잠들었다.'],crew:[['경고하러 온 탈영병','per']],lose:.15,vfx:'fire',xp:40,win:1}},
+  {n:'그를 묶어 둔다',f:{t:'"믿지 않아도 돼요. 그래도 애들만은…" 그는 묶인 채로 계속 같은 말을 반복했다.',mind:-4,xp:10}}]}),
+ real:c=>({t:['좌표, 작전명, 지휘관 서명. 진짜다. 하나 더. 폭격 전에 "보급 창고 회수 작전"이 있다.','창고는 폭격 지점 한가운데.'],o:[
+  {n:'폭격 전에 창고를 턴다',tag:'체력',f:chk('end',.45,{t:['군 트럭보다 한 시간 먼저 도착했다. 상자 셋을 메고 나왔을 때, 하늘에서 첫 섬광.'],give:{ammo:2,ration:3,medkit:1},vfx:'fire',xp:48,win:1},{t:'회수 부대와 마주쳤다.',fight:{z:'deserter',queue:['swat'],win:{ammo:2,ration:2}},xp:16})},
+  {n:'사람들부터 옮긴다',f:{t:'모두 살았다. 폭격이 끝난 뒤 돌아가 보니 캠프 자리는 커다란 구덩이였다.',crew:[['경고하러 온 탈영병','per']],vfx:'fire',xp:40,win:1}}]}),
+ fake:c=>({t:['지도는 그럴듯하지만 서명이 이상하다. 뭔가 이상하다는 생각이 드는 순간, 캠프 밖에서 엔진 소리.','"…미안해요. 저 사람들이 시켰어요." 청년이 울먹였다.'],sfx:'engine',mood:'threat',o:[
+  {n:'약탈자들과 싸운다',f:{t:'빈 캠프를 털러 온 트럭이 멈췄다.',fight:{z:'raider',queue:['raider','enforcer'],win:{$:50,fuel:4}},xp:18,win:1}},
+  {n:'청년을 앞세워 돌려보낸다',tag:'매력',f:chk('cha',.45,{t:'"다 떠났어요. 아무것도 없어요." 청년의 목소리가 떨리지 않았다. 트럭이 돌아갔다.',crew:[['돌아선 탈영병','per']],xp:34,win:1},{t:'청년이 말을 더듬었다. 트럭 문이 열렸다.',fight:{z:'raider',queue:['raider'],win:{$:30}},xp:12})}]})});
+
+SGA('cannibal',1,8,'식인종의 초대','horror','지나치게 친절하고 고기가 풍족한 외딴 산장.',{
+ start:c=>({t:['외딴 산장. 굴뚝에서 연기가 오르고, 고기 굽는 냄새가 난다.','"어서 와요, 얼마 만의 손님인지!" 주인 부부가 활짝 웃는다. 식탁 위에 스튜가 넘친다.','이 근방엔 짐승이 다 사라진 지 오래다.'],sfx:'heart',o:[
+  {n:'먹는 척하며 둘러본다',tag:'감각',go:c=>PRx(sk('per',.45))?'cellar':'drug'},
+  {n:'정중히 거절하고 떠난다',tag:'매력',f:chk('cha',.45,{t:'"다음에 꼭 다시 들러요." 부부는 문간에서 오래 손을 흔들었다. 그 웃음이 등 뒤에 붙어 따라왔다.',xp:16,mind:-2},{t:'"손님이 그냥 가면 섭섭하지." 남편이 문을 막아섰다. 손에 고기 칼.',fight:{z:'thug',queue:[],win:{food:6}},xp:14})},
+  {n:'스튜를 먹는다',f:{t:['맛있었다. 너무.','배가 부르자 눈꺼풀이 무거워졌다. 정신을 잃기 직전, 부부가 내 다리 둘레를 줄자로 재는 걸 봤다.'],vfx:'dark:…눈이 감긴다',hp:-10,st:[['drained',20]],fight:{z:'thug',queue:['thug'],win:{food:8,med:2}},xp:12}}]}),
+ cellar:c=>({t:['화장실 간다며 복도로 나섰다. 지하실 문틈으로 차가운 공기, 그리고 쇠사슬 소리.','안에 사람이 셋 갇혀 있다. 그중 하나가 입 모양으로 말한다. "도와줘."'],sfx:'knock',vfx:'flicker',mood:'horror',o:[
+  {n:'열쇠를 훔쳐 모두 풀어 준다',tag:'민첩',f:chk('agi',.45,{t:['부부가 식탁에서 웃는 사이 지하실을 열었다. 넷이서 뒷문으로 달렸다.','산장은 그날 밤 불탔다. 누가 질렀는지는 묻지 않았다.'],crew:[['산장에 갇혔던 사람','end']],give:{food:10},vfx:'fire',xp:50,win:1},{t:'열쇠 꾸러미가 짤랑였다. 등 뒤에서 아내가 웃으며 서 있었다.',fight:{z:'thug',queue:['thug'],win:{food:8}},xp:16})},
+  {n:'식탁으로 돌아가 부부를 제압한다',f:{t:'식탁 밑에서 칼을 뽑았다. 웃음이 멎었다.',fight:{z:'thug',queue:['thug'],win:{food:10,med:2,$:40}},xp:24,win:1}}]}),
+ drug:c=>({t:['둘러볼 틈도 없이 스튜에 섞인 무언가가 돌기 시작했다. 다리가 풀린다.'],vfx:'dark:…세상이 기운다',mood:'horror',o:[
+  {n:'혀를 깨물고 버틴다',tag:'체력',f:chk('end',.5,{t:'고통으로 정신을 붙잡았다. 다가오는 남편의 손목을 잡아 꺾었다.',fight:{z:'thug',queue:[],win:{food:8,med:2}},xp:20,win:1},{t:'눈을 떴을 땐 지하실이었다. 사슬을 풀고 나오기까지 하루가 걸렸다.',hp:-20,st:[['drained',30],['panic',20]],lose:.1,xp:12})}]})});
+
+SGA('poison',1,6,'독약과 동반자','horror','좀비가 밀실을 뚫기 직전, 끝까지 버틸 것인가.',{
+ start:c=>({t:['창고 사무실에 갇혔다. 문이 안쪽으로 휜다. 경첩 하나가 이미 빠졌다.','동행한 Mr. Moore가 주머니에서 약병을 꺼낸다. "물리는 것보단… 이게 덜 아플 거야."','그의 손이 떨린다. 바깥의 두드림이 점점 빨라진다.'],sfx:'knock',vfx:'shake',o:[
+  {n:'약병을 빼앗아 던져 버린다',go:'hold'},
+  {n:'천장 환기구를 살핀다',tag:'감각',f:chk('per',.45,{t:['환기구 나사가 헐거웠다. Mr. Moore를 먼저 밀어 올리고, 문이 부서지는 순간 내 발이 사라졌다.','지붕 위에서 둘이 한참을 웃었다. 울면서.'],crew:[['함께 버틴 Mr. Moore','end']],mind:8,xp:42,win:1},{t:'환기구는 용접돼 있었다. 문이 터졌다.',fight:{z:'walker',queue:['walker','runner'],win:{med:1}},xp:14})},
+  {n:'Mr. Moore와 이야기를 나눈다',tag:'매력',f:chk('cha',.4,{t:['"딸이 있다며. 걔한테 뭐라고 할 건데." Mr. Moore가 약병을 내려놨다.','둘이서 책상을 밀어 문을 막았다. 새벽까지 버텼고, 아침 해와 함께 놈들이 흩어졌다.'],crew:[['함께 버틴 Mr. Moore','end']],mind:10,xp:44,win:1},{t:'말이 끝나기도 전에 문이 터졌다.',fight:{z:'walker',queue:['runner'],win:{}},mind:-4,xp:12})}]}),
+ hold:c=>({t:['유리병이 벽에 부딪혀 깨졌다. "끝까지 간다. 둘 다."','Mr. Moore가 이를 악물고 의자를 들었다.'],o:[
+  {n:'문을 연다. 맞받아친다',f:{t:'문이 열리자마자 첫 놈의 머리를 내리쳤다.',fight:{z:'walker',queue:['walker','runner'],win:{med:2,bandage:1}},crew:[['함께 버틴 Mr. Moore','end']],xp:30,win:1}},
+  {n:'버티며 구조 신호를 보낸다',cost:{lure:1},f:{t:['유인기를 창밖으로 던졌다. 놈들이 소리를 따라 빠져나갔다.','"…살았네." Mr. Moore가 바닥에 주저앉았다.'],crew:[['함께 버틴 Mr. Moore','end']],mind:8,xp:40,win:1}}]})});
+
+SGA('cough',1,2,'의심의 아이콘','human','감염 증상과 똑같은 기침을 하는 독감 환자의 격리 투표.',{
+ start:c=>({t:['이틀째 기침을 하는 Mr. Pike. 열이 나고, 눈이 붉다. 감염 초기 증상과 똑같다.','"그냥 독감이에요. 정말이에요." Mr. Pike가 애원한다. 투표가 시작됐다. 내 표가 마지막이다.'],sfx:'heart',o:[
+  {n:'몸의 상처부터 확인한다',tag:'감각',f:chk('per',.5,{t:['구석구석 살폈다. 물린 자국도 긁힌 자국도 없었다. Mr. Pike 아이가 독감이었다.','격리 대신 따뜻한 차와 약. 사흘 뒤 Mr. Pike가 첫 사냥감을 들고 돌아왔다.'],give:{food:8},crew:[['독감에 걸렸던 Mr. Pike','per']],mind:5,xp:30,win:1},{t:'상처는 없었다. 그래도 사람들의 불안은 사라지지 않았다. Mr. Pike는 스스로 떠났다.',mind:-5,xp:12})},
+  {n:'격리에 찬성한다',f:{t:['창고에 가뒀다. 문 너머 기침 소리가 밤새 이어졌다.','사흘 뒤 문을 열자 Mr. Pike는 멀쩡했다. 다만 다시는 우리와 밥을 먹지 않았다.'],mind:-4,xp:14}},
+  {n:'내 방에서 내가 돌본다',cost:{med:1},f:rol(.85,{t:'감기약 한 알과 이틀 밤. 열이 내렸다. 사람들의 시선도 같이 누그러졌다.',crew:[['독감에 걸렸던 Mr. Pike','per']],xp:32,win:1},{t:['사흘째 밤 Mr. Pike의 기침이 멎었다. 너무 조용했다.','다행히 침대 밑에 둔 몽둥이가 손에 닿았다.'],fight:{z:'runner',queue:[],win:{med:1}},mind:-6,xp:14})}]})});
+
+/* ---------- II. 특수 좀비 & 변칙 생태계 ---------- */
+SGA('quiet',2,4,'고요의 구역','horror','소리에 극도로 민감한 눈먼 감염자들의 구역.',{
+ start:c=>({t:['골목 입구에 스프레이 글씨. "말하지 마. 걷지 마. 숨도 작게."','바닥에 수십 명이 서 있다. 전부 눈이 하얗게 말라붙었다. 움직이지 않는다. 듣고 있다.','반대편 약국 셔터가 반쯤 열려 있다.'],vfx:'silence',sfx:'tick',o:[
+  {n:'신발을 벗고 건넌다',tag:'민첩',go:c=>PRx(sk('agi',.45))?'across':'noise'},
+  {n:'멀리 병을 던져 유인한다',tag:'감각',f:chk('per',.45,{t:['병이 깨지는 순간, 수십 개의 고개가 동시에 꺾였다. 무리가 썰물처럼 빠져나갔다.','텅 빈 골목을 걸어 약국에 들어갔다.'],give:{med:4,painkiller:1},xp:34,win:1},{t:'병이 너무 가까이 떨어졌다.',fight:{z:'blind',queue:['blind'],win:{med:2}},vfx:'red',xp:14})},
+  {n:'유인기를 켠다',cost:{lure:1},f:{t:['삐-삐- 소리를 따라 놈들이 일제히 움직였다. 소름 끼치게 조용한 발걸음으로.','약국 안쪽 창고까지 다 털었다.'],give:{med:5,antibio:1,bandage:2},xp:38,win:1}}]}),
+ across:c=>({t:['한 발, 또 한 발. 놈의 어깨가 내 팔에 스칠 만큼 가깝다.','약국 문턱. 셔터 아래로 몸을 밀어 넣는 순간, 배낭 속 캔이 달그락거린다.'],vfx:'silence',sfx:'heart',o:[
+  {n:'숨을 멈추고 기다린다',tag:'체력',f:chk('end',.5,{t:['일 분. 이 분. 고개를 돌렸던 놈이 천천히 제자리로 돌아갔다.','약국 안은 손대지 않은 그대로였다.'],give:{med:5,antibio:1},xp:40,win:1},{t:'숨이 터졌다. 수십 개의 고개가 이쪽으로 꺾였다.',fight:{z:'blind',queue:['blind','walker'],win:{med:3}},xp:16})},
+  {n:'캔을 멀리 굴린다',f:{t:'캔이 굴러간 쪽으로 놈들이 몰렸다. 그 틈에 약국 안쪽까지.',give:{med:3,food:4},xp:28,win:1}}]}),
+ noise:c=>({t:['유리 조각을 밟았다. 아주 작은 소리.','모든 고개가 동시에 이쪽을 향한다.'],vfx:'red',sfx:'scream',o:[
+  {n:'싸운다',f:{t:'눈먼 놈들이 소리를 따라 쏟아진다.',fight:{z:'blind',queue:['blind','blind'],win:{med:3}},xp:16}},
+  {n:'얼어붙은 채 버틴다',tag:'체력',f:chk('end',.4,{t:'놈들이 내 주위를 맴돌다 흩어졌다. 땀이 등줄기를 타고 흘렀다.',st:[['panic',10]],xp:20},{t:'떨리는 숨소리를 들켰다.',fight:{z:'blind',queue:['blind'],win:{med:2}},xp:12})}]})});
+
+SGA('lurker',2,3,'시체 밭의 잠복자','horror','죽은 시체 사이에 섞여 발목만 낚아채는 변종.',{
+ start:c=>({t:['고속도로 휴게소 주차장. 시체 수백 구가 겹겹이 쌓여 있다. 오래전 군이 "정리"한 자리.','건너편 편의점까지 가려면 이 사이를 지나야 한다. 시체 하나의 손가락이 미세하게 움직인 것 같다.'],sfx:'heart',vfx:'flicker',o:[
+  {n:'쇠막대로 하나하나 찔러 보며 간다',tag:'감각',f:chk('per',.45,{t:['찌르자 셋이 꿈틀거렸다. 다 처리하고 지나갔다.','편의점 냉장고 뒤에 누군가 숨겨 둔 배낭.'],give:{food:10,water:8,$:30},xp:34,win:1},{t:'다섯 번째 시체가 막대를 낚아챘다.',fight:{z:'lurker',queue:['lurker'],win:{food:6}},xp:14})},
+  {n:'차 지붕을 밟고 건넌다',tag:'민첩',f:chk('agi',.5,{t:'차에서 차로. 아래에서 손들이 허공을 긁었다. 편의점에 무사히 닿았다.',give:{food:8,water:6},xp:30,win:1},{t:'지붕이 꺼졌다. 발목에 차가운 손.',fight:{z:'lurker',queue:[],win:{food:4}},st:[['leg',10]],hp:-6,xp:12})},
+  {n:'휘발유를 뿌리고 불을 붙인다',cost:{fuel:2},f:{t:['불길 속에서 수십 구가 일어나 비틀거렸다. 대부분 그 자리에서 쓰러졌다.','타고 남은 길을 걸어갔다. 냄새는 오래 남았다.'],give:{food:10,water:10,scrap:8},vfx:'fire',mind:-4,xp:38,win:1}}]})});
+
+SGA('climber',2,6,'벽을 타는 자','horror','외벽과 천장을 타고 침투하는 변형 감염자.',{
+ start:c=>({t:['밤. 캠프 2층 창문이 안쪽에서 열려 있다. 아무도 열지 않았다.','천장에서 무언가 떨어진다. 끈적한 침.','고개를 들자 거꾸로 매달린 얼굴이 웃고 있다. 관절이 전부 반대로 꺾여 있다.'],sfx:'scream',vfx:'red',o:[
+  {n:'바로 맞붙는다',f:{t:'놈이 천장에서 떨어지며 덮쳤다.',fight:{z:'climber',queue:[],win:{sample:1,scrap:8}},xp:20,win:1}},
+  {n:'불을 다 켠다',tag:'감각',f:chk('per',.45,{t:['손전등, 랜턴, 발전기 조명까지. 빛을 받은 놈이 몸을 웅크리며 창밖으로 달아났다.','다음 날 벽에 철조망을 둘렀다. 그 뒤로 다시 오지 않았다.'],mind:4,xp:32,win:1},{t:'불이 켜지기 전에 놈이 덮쳤다.',fight:{z:'climber',queue:[],win:{sample:1}},hp:-8,xp:14})},
+  {n:'창문 쪽으로 유인해 떨어뜨린다',tag:'힘',f:chk('str',.45,{t:'놈이 덤벼드는 순간 몸을 낮췄다. 놈은 그대로 창밖으로 날아가 마당에 처박혔다.',give:{sample:1},xp:36,win:1},{t:'놈의 다리가 내 목을 감았다.',fight:{z:'climber',queue:[],win:{sample:1}},hp:-12,xp:14})}]})});
+
+SGA('spore',2,5,'자폭성 포자','gas','죽을 때 바이러스 포자를 터뜨리는 개체.',{
+ start:c=>({t:['식물원 온실. 공기가 누렇다. 벤치에 앉은 감염자 등에 버섯 같은 혹이 부풀어 있다.','혹이 숨을 쉬듯 부풀었다 줄어든다. 온실 안쪽에 희귀 약초 화분이 보인다.'],vfx:'gas',sfx:'hiss',o:[
+  {n:'방독면을 쓰고 들어간다',cost:{gasmask:1},f:{t:['필터 너머로 숨을 고르며 약초를 뽑았다. 나오는 길에 혹이 터졌다. 노란 가루가 눈앞을 덮었다.','필터가 다 막혔다. 그래도 폐는 멀쩡하다.'],give:{med:5,reagent:2},vfx:'gas',xp:40,win:1}},
+  {n:'멀리서 화염병으로 태운다',cost:{molotov:1},f:{t:'불길에 혹이 터지며 포자가 같이 타올랐다. 약초 절반은 살렸다.',give:{med:3,reagent:1},vfx:'fire',xp:32,win:1}},
+  {n:'숨을 참고 빠르게',tag:'체력',f:chk('end',.4,{t:'숨을 참은 채 화분 두 개를 안고 나왔다. 문을 닫는 순간 안에서 퍽 소리.',give:{med:3},xp:28,win:1},{t:'벤치의 놈이 일어섰다. 혹이 터지기 직전이다.',fight:{z:'sporer',queue:[],win:{reagent:1}},st:[['sick',15]],vfx:'gas',xp:14})}]})});
+
+SGA('armor',2,5,'철갑 좀비','gun','진압복을 입어 총알이 통하지 않는 경찰 감염자.',{
+ start:c=>({t:['경찰서 앞. 진압복과 방탄모의 감염자 넷이 방패를 든 채 서성인다.','안에 무기고가 있다는 걸 다 안다. 그래서 아무도 못 들어갔다.'],sfx:'steps',o:[
+  {n:'헬멧 이음새를 노린다',tag:'감각',f:chk('per',.45,{t:'목과 헬멧 사이 손가락 두 마디 틈. 칼날이 정확히 들어갔다. 남은 셋이 몰려온다.',fight:{z:'riot',queue:['riot'],win:{ammo:1,parts:1}},xp:22,win:1},{t:'칼날이 방탄복에 튕겨 나갔다.',fight:{z:'swat',queue:['riot'],win:{ammo:1}},hp:-6,xp:12})},
+  {n:'넘어뜨려 일으키지 못하게 한다',tag:'힘',f:chk('str',.45,{t:['무거운 장비가 오히려 약점이었다. 넘어진 놈들은 거북이처럼 버둥거렸다.','무기고 열쇠는 서장실 금고에.'],give:{ammo:2,parts:1,$:40},xp:40,win:1},{t:'방패에 막혀 내가 넘어졌다.',fight:{z:'riot',queue:['riot'],win:{ammo:1}},xp:12})},
+  {n:'수류탄을 굴린다',cost:{grenade:1},f:{t:['방패가 날아갔다. 연기가 걷히자 무기고 문이 열려 있었다.'],give:{ammo:3,parts:2},vfx:'flash',xp:36,win:1}}]})});
+
+SGA('wolves',2,3,'광견병 늑대 떼','threat','짐승까지 감염되어 밤마다 아지트를 습격하는 들개 무리.',{
+ start:c=>({t:['사흘째 밤. 울타리 밖 어둠 속에 눈이 여럿 빛난다. 낮게 으르렁거린다.','어제는 닭장이 털렸다. 오늘은 보초가 물렸다. 놈들은 점점 대담해진다.'],sfx:'growl',vfx:'red',o:[
+  {n:'미끼를 놓고 매복한다',cost:{food:6},f:{t:'고기를 울타리 밖에 걸어 뒀다. 놈들이 몰려든 순간 덮쳤다.',fight:{z:'wolf',queue:['wolf','wolf'],win:{food:6,scrap:4}},xp:24,win:1}},
+  {n:'우두머리 굴을 찾는다',tag:'감각',f:chk('per',.45,{t:['발자국을 따라가 굴을 찾았다. 우두머리는 늙고 지쳐 있었다. 한 번에 끝냈다.','남은 개들은 흩어졌다. 굴 안에 아직 감염되지 않은 강아지 한 마리.'],give:{food:4},xp:40,win:1},{t:'굴 앞에서 놈들에게 둘러싸였다.',fight:{z:'wolf',queue:['wolf','wolf','wolf'],win:{food:6}},xp:14})},
+  {n:'불을 밝혀 밤새 지킨다',cost:{wood:15},f:{t:'모닥불 열 개. 놈들은 밤새 불빛 밖을 맴돌다가 새벽에 사라졌다. 다시 오지 않았다.',mind:4,xp:28,win:1}}]})});
+
+SGA('amalgam',2,10,'거대 연합체','horror','수십 구의 시체가 엉켜 붙은 괴물.',{
+ start:c=>({t:['땅이 울린다. 건물 모퉁이를 돌아 나온 것은 하나가 아니었다.','수십 개의 팔, 수십 개의 얼굴이 엉켜 붙어 굴러온다. 지나간 자리의 자동차가 찌그러졌다.','그 덩어리 안에서 누군가의 목걸이가 반짝인다. 우리 캠프에서 실종된 Zoe의 것이다.'],sfx:'growl',vfx:'quake',o:[
+  {n:'정면으로 맞선다',f:{t:'덩어리가 몸을 일으켰다. 그림자가 나를 덮는다.',fight:{z:'amalgam',queue:[],win:{sample:3,scrap:20,$:80}},xp:30,win:1}},
+  {n:'주유소로 유인해 터뜨린다',tag:'민첩',f:chk('agi',.45,{t:['놈을 끌고 주유소를 가로질렀다. 성냥 하나.','불기둥이 하늘로 솟았다. 재가 비처럼 내렸다. Zoe의 목걸이가 발밑에 떨어져 있었다.'],give:{sample:2,scrap:12},vfx:'fire',mind:-3,xp:55,win:1},{t:'발이 꼬였다. 덩어리의 팔들이 나를 낚아챘다.',fight:{z:'amalgam',queue:[],win:{sample:3}},hp:-18,xp:20})},
+  {n:'숨어서 지나가길 기다린다',f:{t:'놈은 한 시간 동안 골목을 헤집다 사라졌다. Zoe의 목걸이는 영영 찾지 못했다.',mind:-6,xp:12}}]})});
+
+SGA('nocturnal',2,5,'빛을 싫어하는 자들','horror','낮엔 지하에 숨고 밤이면 쏟아지는 야행성.',{
+ start:c=>({t:['해 질 녘. 시청 지하 주차장 입구에서 서늘한 바람이 올라온다.','낮엔 텅 비어 있던 곳. 지금은 어둠 속에서 수백 개의 숨소리가 들린다.','해가 지기까지 십 분.'],sfx:'tick',vfx:'flicker',o:[
+  {n:'입구를 막는다',tag:'힘',f:chk('str',.45,{t:['버스를 밀어 입구를 막았다. 해가 지자 안에서 철판을 두드리는 소리. 밤새.','아침에 보니 버스가 반 뼘 밀려 있었다. 그래도 버텼다.'],give:{scrap:6},mind:4,xp:34,win:1},{t:'버스가 반쯤 움직였을 때 해가 졌다.',fight:{z:'nocturne',queue:['nocturne','nocturne'],win:{scrap:8}},vfx:'dark:해가 졌다',xp:16})},
+  {n:'조명탄을 던져 넣는다',cost:{fuel:2},f:{t:['임시 조명탄이 주차장을 하얗게 밝혔다. 놈들이 비명을 지르며 더 깊이 숨어들었다.','그 틈에 입구의 버려진 차들을 뒤졌다.'],give:{fuel:4,scrap:10,$:30},vfx:'flash',xp:36,win:1}},
+  {n:'서둘러 멀리 떠난다',f:{t:'뒤에서 비명 같은 울음이 터졌다. 돌아보지 않았다.',xp:10}}]})});
+
+SGA('mimic',2,4,'흉내 내는 소리','horror','"살려줘", "여기야"를 반복하며 유인하는 감염자.',{
+ start:c=>({t:['"살려줘… 여기야… 살려줘…"','아이 목소리. 무너진 놀이터 쪽이다. 같은 억양, 같은 간격.','다섯 번째 반복에서 알아챘다. 숨 쉬는 틈이 없다.'],sfx:'whisper',vfx:'static',o:[
+  {n:'반대 방향으로 돌아간다',tag:'감각',f:chk('per',.45,{t:['소리가 나는 반대쪽으로 크게 돌았다. 놀이터 뒤편에서 진짜 아이가 미끄럼틀 밑에 숨어 있었다.','목소리는 아이를 먹으려던 놈의 흉내였다.'],crew:[['미끄럼틀 밑의 아이','agi']],xp:42,win:1},{t:'돌아간 길에도 같은 목소리. 사방에서.',fight:{z:'mimic',queue:['walker','walker'],win:{food:6}},xp:14})},
+  {n:'소리 나는 곳을 직접 친다',f:{t:'놀이터 그네 뒤. 입만 벌린 채 "살려줘"를 반복하던 놈이 고개를 꺾었다.',fight:{z:'mimic',queue:[],win:{sample:1,food:4}},xp:22,win:1}},
+  {n:'"누구야?" 하고 대답한다',f:{t:['"…누구야? 누구야? 누구야?" 목소리가 내 말을 흉내 냈다. 내 목소리로.','등 뒤에서 발소리가 겹친다.'],fight:{z:'mimic',queue:['runner'],win:{food:4}},mind:-6,st:[['panic',10]],xp:12}}]})});
+
+SGA('undertow',2,6,'수중의 그림자','horror','물속에 잠겨 있다 배와 사람을 끌어당기는 개체.',{
+ start:c=>({t:['강 건너편 마을에 물자가 남아 있다. 보트 한 척, 노 하나.','물빛이 탁하다. 강 중간쯤 거품이 올라온다. 일정한 간격으로.'],sfx:'heart',vfx:'water',o:[
+  {n:'최대한 조용히 노를 젓는다',tag:'체력',go:c=>PRx(sk('end',.45))?'cross':'grab'},
+  {n:'다리 잔해 위로 건넌다',tag:'민첩',f:chk('agi',.45,{t:'휘청이는 철골 위를 건넜다. 아래 물속에서 하얀 얼굴들이 따라 움직였다.',give:{food:10,fuel:3},xp:34,win:1},{t:'철골이 휘었다. 물에 빠졌다.',fight:{z:'undertow',queue:[],win:{food:6}},vfx:'water',hp:-8,xp:14})},
+  {n:'고기 미끼를 반대편에 던진다',cost:{food:5},f:{t:'미끼가 떨어진 쪽으로 물이 소용돌이쳤다. 그사이 건넜다. 반대편 마을 창고는 꽤 쓸 만했다.',give:{food:12,fuel:3,scrap:8},xp:36,win:1}}]}),
+ cross:c=>({t:['노가 물을 가르는 소리만. 거품이 배 밑을 지나간다.','건너편 기슭이 가깝다.'],o:[{n:'끝까지 젓는다',f:{t:'기슭에 닿았다. 뒤를 돌아보자 퉁퉁 불은 손 하나가 뱃전을 놓쳤다.',give:{food:12,fuel:4},xp:40,win:1}}]}),
+ grab:c=>({t:['배가 기울었다. 물속에서 손이 뱃전을 잡았다. 하나, 둘.'],vfx:'water',sfx:'scream',o:[{n:'노로 내리친다',f:{t:'물보라 속에서 놈이 기어올랐다.',fight:{z:'undertow',queue:['drowned'],win:{food:8,fuel:2}},xp:16}}]})});
+
+SGA('alpha',2,9,'지능형 리더','threat','도구를 쓰고 다른 좀비에게 신호를 보내는 감염자.',{
+ start:c=>({t:['감염자 무리가 이상하다. 줄을 맞춰 움직인다.','그 뒤에 쇠파이프를 든 놈 하나. 손을 들자 무리가 멈추고, 손을 내리자 일제히 돈다.','놈이 고개를 돌려 나를 봤다. 그리고 손가락으로 나를 가리켰다.'],sfx:'growl',vfx:'glitch',o:[
+  {n:'지휘하는 놈부터 노린다',tag:'감각',f:chk('per',.4,{t:'무리를 헤치고 놈 앞에 섰다. 놈이 쇠파이프를 고쳐 쥐었다.',fight:{z:'alpha',queue:[],win:{sample:3,$:60}},xp:30,win:1},{t:'놈의 신호 하나에 무리가 나를 에워쌌다.',fight:{z:'walker',queue:['runner','alpha'],win:{sample:3}},xp:18})},
+  {n:'놈의 신호를 흉내 낸다',tag:'매력',f:chk('cha',.35,{t:['손을 들었다. 무리 절반이 멈칫했다. 놈이 처음으로 당황했다.','혼란 속에 무리가 서로 엉켰고, 놈은 소리를 지르며 물러났다.'],give:{sample:1},mind:6,xp:44,win:1},{t:'아무도 반응하지 않았다. 놈이 웃는 것 같았다.',fight:{z:'alpha',queue:['walker'],win:{sample:2}},xp:16})},
+  {n:'놈을 따라가 본다',f:{t:['놈은 무리를 이끌고 병원 쪽으로 갔다. 정문을 쇠파이프로 두드리자 무리가 문을 부쉈다.','배우고 있다. 놈들이.'],mind:-6,give:{drone:1},xp:20}}]})});
+
+SGA('heatseek',2,4,'체온을 쫓는 무리','threat','극한 추위 속 모닥불 온기만 향해 돌진하는 감염자 떼.',{
+ start:c=>({t:['영하 이십 도. 캠프 한가운데 모닥불이 유일한 온기다.','멀리 눈밭에서 검은 점들이 움직인다. 모닥불을 향해 일직선으로. 얼어붙은 다리로도 빠르다.'],sfx:'steps',vfx:'cold',o:[
+  {n:'불을 끄고 몸으로 버틴다',tag:'체력',f:chk('end',.45,{t:['불을 껐다. 다 같이 한 담요 아래 붙어 앉았다. 놈들은 캠프 앞에서 방향을 잃고 흩어졌다.','손가락 끝이 아직도 저리다. 그래도 살았다.'],hp:-6,mind:6,xp:36,win:1},{t:'추위가 뼈를 파고든다. 누군가 참지 못하고 불을 다시 켰다.',fight:{z:'heat',queue:['heat','heat'],win:{wood:8}},st:[['weak',15]],xp:14})},
+  {n:'불을 미끼로 옮긴다',cost:{wood:10,fuel:1},f:{t:['캠프에서 먼 언덕 위에 큰 불을 새로 지폈다. 놈들이 그쪽으로 몰려갔다.','언덕 위 불이 꺼질 때쯤 놈들은 모두 얼어붙어 있었다.'],vfx:'fire',give:{scrap:8},xp:38,win:1}},
+  {n:'불 앞에서 맞선다',f:{t:'불빛을 등지고 섰다.',fight:{z:'heat',queue:['heat','heat'],win:{wood:10}},xp:20,win:1}}]})});
+
+SGA('crows',2,3,'감염된 조류','horror','하늘에서 떨어져 목덜미를 쪼는 감염된 까마귀 떼.',{
+ start:c=>({t:['하늘이 갑자기 어두워졌다. 구름이 아니다.','까마귀 수백 마리가 원을 그리며 내려온다. 눈이 붉다. 한 마리가 떨어져 바로 옆 사람의 목을 쪼았다.'],sfx:'scream',vfx:'red',o:[
+  {n:'가장 가까운 차 안으로',tag:'민첩',f:chk('agi',.5,{t:['차 문을 닫는 순간 앞유리에 수십 마리가 부딪혔다. 금이 갔지만 버텼다.','한 시간 뒤 떼가 떠났다. 차 트렁크에서 쓸 만한 것들.'],give:{scrap:6,fuel:2,$:20},xp:30,win:1},{t:'문을 닫기 전에 세 마리가 따라 들어왔다.',fight:{z:'crow',queue:['crow'],win:{}},hp:-6,st:[['bleed',8]],xp:12})},
+  {n:'담요를 뒤집어쓰고 싸운다',f:{t:'담요 아래서 쇠막대를 휘둘렀다.',fight:{z:'crow',queue:['crow'],win:{scrap:4}},xp:22,win:1}},
+  {n:'연기를 피운다',cost:{wood:6},f:{t:'젖은 나무가 연기를 뿜자 떼가 흩어졌다. 까마귀는 연기를 싫어한다. 놈들도 마찬가지였다.',xp:28,win:1}}]})});
+
+SGA('volt',2,7,'전기 충격기','gun','발전소 근처에서 전선과 얽혀 전류가 흐르는 감염자.',{
+ start:c=>({t:['변전소. 아직 전기가 살아 있다. 캠프에 쓸 배터리와 부품이 가득하다.','철조망 안쪽에서 파란 불꽃이 튄다. 전선을 온몸에 감은 감염자가 비틀거린다. 닿는 철망마다 지지직.'],sfx:'static',vfx:'flash',o:[
+  {n:'차단기를 내린다',tag:'감각',f:chk('per',.45,{t:['배전반을 찾아 메인 차단기를 내렸다. 불꽃이 멎자 놈은 그냥 걷는 시체였다.','부품을 한 아름 챙겼다.'],give:{elec:6,parts:1},xp:38,win:1},{t:'엉뚱한 차단기였다. 전류가 내 쪽으로 튀었다.',fight:{z:'volt',queue:[],win:{elec:4}},hp:-12,vfx:'flash',xp:14})},
+  {n:'물을 뿌려 합선시킨다',cost:{water:8},f:{t:['물줄기가 닿자 놈이 하얗게 번쩍이며 쓰러졌다. 연기가 피어올랐다.','타 버린 놈 옆에서 전선 뭉치와 배터리를 챙겼다.'],give:{elec:5,scrap:8},vfx:'flash',xp:34,win:1}},
+  {n:'그냥 맞붙는다',f:{t:'놈이 파랗게 번쩍이며 다가온다.',fight:{z:'volt',queue:[],win:{elec:5}},xp:20,win:1}}]})});
+
+SGA('acid',2,6,'산성 분출자','gas','산성 체액으로 철문과 차벽을 녹이는 감염자.',{
+ start:c=>({t:['캠프 철문에서 연기가 난다. 쉬익-','문 밖의 놈이 녹색 체액을 토해 낼 때마다 철판에 구멍이 하나씩 늘어난다.','벌써 주먹만 한 구멍 셋.'],sfx:'hiss',vfx:'gas',o:[
+  {n:'구멍으로 창을 찔러 넣는다',tag:'힘',f:chk('str',.45,{t:'구멍 사이로 쇠창을 찔렀다. 놈이 쓰러지며 마지막 체액을 하늘로 뿜었다. 문은 살렸다.',give:{sample:1},xp:34,win:1},{t:'창이 빗나갔다. 놈이 구멍에 대고 뿜었다.',fight:{z:'corroder',queue:[],win:{sample:1}},hp:-10,st:[['bleed',8]],xp:14})},
+  {n:'문을 열고 나가 싸운다',f:{t:'문이 열리자 놈이 고개를 들었다.',fight:{z:'corroder',queue:['walker'],win:{sample:2}},xp:22,win:1}},
+  {n:'석회를 뿌려 중화시킨다',cost:{scrap:10,wood:5},f:{t:'부순 벽돌 가루를 퍼부었다. 체액이 하얗게 굳었다. 놈은 문 앞에서 굳어 버린 자기 침에 발이 붙었다.',give:{sample:1},xp:38,win:1}}]})});
+
+/* ---------- III. 환경 & 극단적 재해 ---------- */
+SGA('fog',3,3,'자욱한 안개','horror','시야 2m, 사방에서 신음 소리만 들리는 날.',{
+ start:c=>({t:['아침에 일어나 보니 세상이 하얗다. 손을 뻗으면 손끝이 흐릿하다.','안개 속 사방에서 신음 소리. 가깝다. 아니, 멀다. 알 수 없다.','물을 길러 간 동료 하나가 아직 돌아오지 않았다.'],vfx:'fog',sfx:'distant',o:[
+  {n:'밧줄을 허리에 묶고 찾으러 간다',tag:'감각',f:chk('per',.45,{t:['밧줄을 따라 오십 걸음. 우물가에서 웅크린 동료를 찾았다. 무사했다.','돌아오는 길에 안개 속 형체 둘과 스쳤다. 놈들도 나를 보지 못했다.'],mind:6,give:{water:10},xp:34,win:1},{t:'밧줄이 끊겼다. 형체가 안개를 가르며 다가온다.',fight:{z:'walker',queue:['walker'],win:{water:6}},vfx:'fog',xp:14})},
+  {n:'냄비를 두드려 위치를 알린다',f:rol(.5,{t:'냄비 소리를 따라 동료가 돌아왔다. 다행히 놈들은 소리보다 굼떴다.',mind:4,xp:24,win:1},{t:'동료는 돌아왔다. 등 뒤로 놈들도 같이.',fight:{z:'walker',queue:['runner','walker'],win:{}},xp:14})},
+  {n:'안개가 걷힐 때까지 기다린다',f:{t:'정오가 지나서야 안개가 걷혔다. 우물가엔 물통만 쓰러져 있었다.',mind:-8,xp:8}}]})});
+
+SGA('coldnight',3,4,'맹추위의 밤','tense','한파 속 난방이 꺼지고 추위와 좀비 둘 다 막아야 하는 밤.',{
+ start:c=>({t:['한파. 발전기가 얼어서 멈췄다. 온도계가 영하 이십오 도.','아이들 입술이 파랗다. 그리고 바깥에서 문을 긁는 소리.'],vfx:'cold',sfx:'knock',o:[
+  {n:'발전기를 고친다',tag:'감각',f:chk('per',.45,{t:['연료 필터에 얼음이 끼어 있었다. 불로 녹이자 발전기가 다시 돌았다.','따뜻한 바람. 아이들이 잠들었다.'],cure:['weak'],mind:6,xp:34,win:1},{t:'손가락이 얼어 공구를 놓쳤다.',hp:-8,st:[['weak',15]],xp:12})},
+  {n:'가구를 뜯어 땐다',cost:{wood:12},f:{t:'의자와 책상이 불속으로 들어갔다. 밤새 장작 타는 소리가 문 긁는 소리를 덮었다.',mind:4,xp:28,win:1}},
+  {n:'문 앞의 놈부터 처리한다',f:{t:'얼어붙은 손으로 문을 열었다. 서리 낀 놈이 비틀거린다.',fight:{z:'heat',queue:['walker'],win:{wood:6}},st:[['weak',10]],xp:20,win:1}}]})});
+
+SGA('firewave',3,6,'대형 화재의 여파','horror','인근 도시 화재, 연기와 함께 도망쳐 온 좀비 떼.',{
+ start:c=>({t:['동쪽 하늘이 붉다. 도시가 타고 있다.','매캐한 연기 속에서 그림자들이 걸어온다. 수백. 불을 피해 이쪽으로. 몇몇은 아직 타고 있다.'],vfx:'fire',sfx:'alarm',o:[
+  {n:'캠프 앞에 방화선을 판다',tag:'체력',f:chk('end',.45,{t:['밤새 삽질. 도랑에 기름을 붓고 불을 붙였다. 무리가 불길 앞에서 갈라졌다.','아침에 보니 캠프만 섬처럼 남아 있었다.'],hp:-6,give:{scrap:10},xp:42,win:1},{t:'도랑이 다 파지기 전에 선두가 닿았다.',fight:{z:'walker',queue:['runner','walker','bloat'],win:{scrap:10}},xp:18})},
+  {n:'짐을 싸서 서쪽으로 피한다',f:{t:'하룻밤을 강가에서 보냈다. 돌아왔을 때 캠프는 반쯤 털려 있었다. 그래도 사람은 다 살았다.',lose:.15,mind:2,xp:24,win:1}},
+  {n:'지붕에 올라가 버틴다',f:rol(.5,{t:'무리가 캠프 아래를 지나갔다. 하루 종일. 누구도 소리 내지 않았다.',xp:30,win:1},{t:'타고 있던 놈 하나가 창고에 불을 옮겼다.',fight:{z:'bloat',queue:['walker'],win:{}},lose:.1,vfx:'fire',xp:16})}]})});
+
+SGA('flood',3,5,'침수된 지하도','tense','폭우로 잠기는 지하에서 좀비를 피해 탈출.',{
+ start:c=>({t:['지하철역에서 물자를 찾던 중 폭우가 쏟아졌다. 계단으로 물이 폭포처럼 쏟아진다.','물이 허리까지 찼다. 물 위에 시체들이 떠다닌다. 몇은 눈을 뜨고 있다.'],vfx:'water',sfx:'heart',o:[
+  {n:'환기구 사다리를 찾는다',tag:'감각',f:chk('per',.45,{t:'벽면의 녹슨 사다리. 올라가 맨홀 뚜껑을 밀어냈다. 빗속으로 기어 나왔다. 배낭은 무사하다.',give:{elec:3,scrap:8},xp:36,win:1},{t:'사다리 앞에 떠 있던 시체가 손을 뻗었다.',fight:{z:'drowned',queue:[],win:{elec:2}},vfx:'water',xp:14})},
+  {n:'숨을 참고 터널로 헤엄친다',tag:'체력',f:chk('end',.45,{t:'물속 터널을 지나 다음 역 계단으로 올라섰다. 폐가 터질 것 같았다.',hp:-6,give:{elec:2},xp:32,win:1},{t:'물밑에서 무언가 발목을 잡았다.',fight:{z:'undertow',queue:[],win:{}},hp:-10,vfx:'water',xp:14})},
+  {n:'짐을 버리고 계단을 거슬러 오른다',tag:'힘',f:chk('str',.5,{t:'물살을 거슬러 한 계단씩. 배낭은 떠내려갔다. 몸만 나왔다.',lose:.05,xp:22,win:1},{t:'물살에 밀려 떨어졌다. 다시 올라오기까지 오래 걸렸다.',hp:-14,lose:.05,xp:10})}]})});
+
+SGA('bridge',3,6,'무너진 다리','tense','유일한 탈출로 대교 붕괴, 안전지대를 눈앞에 두고 고립.',{
+ start:c=>({t:['쿠구궁- 대교 가운데가 내려앉았다. 강 건너편 안전지대의 깃발이 보인다. 손에 잡힐 듯.','뒤쪽 도로에는 무리가 몰려오고 있다. 다리 끊긴 틈은 오 미터.'],vfx:'quake',sfx:'bang',o:[
+  {n:'철골로 임시 다리를 놓는다',tag:'힘',f:chk('str',.45,{t:['떨어진 가로등을 지렛대 삼아 철판을 걸쳤다. 한 사람씩. 마지막 사람이 건너는 순간 철판이 떨어졌다.','건너편 사람들이 박수를 쳤다.'],give:{food:10,$:50},crew:[['다리를 건넌 생존자','str']],xp:48,win:1},{t:'철판이 미끄러졌다. 무리가 다리 위로 올라선다.',fight:{z:'walker',queue:['runner','walker'],win:{}},xp:16})},
+  {n:'강 건너로 밧줄을 쏜다',cost:{parts:1},f:{t:'부품으로 만든 작살총에 밧줄을 묶어 쐈다. 건너편에서 누군가 받아 묶었다. 하나씩 매달려 건넜다.',give:{food:10,$:60},xp:44,win:1}},
+  {n:'다리 위에서 무리를 막는다',f:{t:'끊긴 다리를 등지고 섰다. 물러설 곳이 없다.',fight:{z:'brute',queue:['walker','walker'],win:{scrap:12,$:40}},xp:24,win:1}}]})});
+
+SGA('blackout',3,5,'블랙아웃','horror','도시 마지막 발전이 꺼지며 모든 보안 장치가 멈추는 순간.',{
+ start:c=>({t:['도시 마지막 발전소가 멈췄다. 가로등, 경보기, 전기 울타리, 감시 카메라. 전부 한순간에.','완전한 어둠. 그리고 멀리서 전기 울타리에 막혀 있던 무리의 발소리가 움직이기 시작한다.'],vfx:'dark:모든 불이 꺼졌다',sfx:'down',o:[
+  {n:'수동 발전기를 돌린다',tag:'체력',f:chk('end',.45,{t:['한 시간 동안 손잡이를 돌렸다. 울타리에 다시 전기가 흘렀다. 파직- 소리와 함께 무리가 물러섰다.'],hp:-8,give:{elec:2},xp:38,win:1},{t:'팔이 풀렸다. 울타리가 무너진다.',fight:{z:'walker',queue:['walker','runner'],win:{elec:2}},xp:14})},
+  {n:'횃불로 길을 만든다',cost:{wood:8,fuel:1},f:{t:'캠프 둘레에 횃불을 박았다. 불빛 안쪽만이 우리 땅이었다. 밤새 그 안에서 버텼다.',vfx:'fire',mind:4,xp:30,win:1}},
+  {n:'어둠 속에서 매복한다',tag:'감각',f:chk('per',.4,{t:'눈이 어둠에 익자 놈들의 윤곽이 보였다. 하나씩 조용히.',give:{scrap:8,elec:2},xp:34,win:1},{t:'보이지 않는 곳에서 손이 나왔다.',fight:{z:'nocturne',queue:['walker'],win:{}},hp:-6,xp:14})}]})});
+
+SGA('toxic',3,7,'유독가스 유출','gas','파괴된 화학 공장, 방독면 없인 지날 수 없는 구역.',{
+ start:c=>({t:['화학 공장 탱크가 터졌다. 노란 안개가 거리를 덮는다. 새들이 하늘에서 떨어진다.','안개 너머 병원에 약품이 남아 있다. 그리고 그 병원에 우리 대원 하나가 갇혀 있다.'],vfx:'gas',sfx:'hiss',o:[
+  {n:'방독면을 쓰고 들어간다',cost:{gasmask:1},f:{t:['필터 하나로 이십 분. 병원 3층에서 대원을 찾아 젖은 수건을 씌우고 나왔다.','나오면서 약장도 털었다.'],give:{med:5,antibio:1},mind:6,xp:46,win:1}},
+  {n:'젖은 천으로 버틴다',tag:'체력',f:chk('end',.4,{t:'눈이 타고 목이 찢어질 것 같았다. 그래도 대원을 업고 나왔다.',hp:-15,st:[['sick',20]],give:{med:2},xp:34,win:1},{t:'열 걸음도 못 가 주저앉았다. 겨우 기어 나왔다.',hp:-18,st:[['sick',20],['drained',15]],xp:10})},
+  {n:'바람이 바뀌길 기다린다',f:rol(.5,{t:'저녁에 바람이 바뀌었다. 안개가 걷힌 길로 들어가 대원을 데려왔다.',xp:26,win:1},{t:'바람은 바뀌지 않았다. 사흘 뒤 병원에 갔을 때는 너무 늦었다.',mind:-10,xp:10})}]})});
+
+SGA('sandstorm',3,5,'모래바람','tense','시야 차단, 무전기 먹통 상태의 수색.',{
+ start:c=>({t:['황사가 하늘을 노랗게 덮었다. 무전기가 지지직거리다 아예 멎었다.','수색조 셋이 아직 돌아오지 않았다. 마지막 교신 위치는 공단 창고.'],vfx:'static',sfx:'static',o:[
+  {n:'나침반과 지도로 찾아간다',tag:'감각',f:chk('per',.45,{t:['모래바람 속에서 창고 지붕을 찾았다. 셋은 안에서 문을 막고 버티고 있었다.','"무전이 안 돼서 죽는 줄 알았어." 창고 안 물자도 같이 들고 왔다.'],give:{scrap:12,elec:2},mind:6,xp:40,win:1},{t:'길을 잃었다. 모래 속에서 그림자가 다가온다.',fight:{z:'walker',queue:['walker'],win:{}},hp:-6,xp:14})},
+  {n:'옥상에서 거울로 신호한다',tag:'매력',f:chk('cha',.35,{t:'해가 잠깐 비친 틈에 거울을 번쩍였다. 저 멀리서 번쩍, 번쩍. 대답이 왔다.',mind:4,xp:30,win:1},{t:'아무 대답도 없었다. 그들은 이틀 뒤에야 돌아왔다. 둘만.',mind:-8,xp:10})},
+  {n:'바람이 잦아들 때까지 기다린다',f:{t:'하루 뒤 셋이 돌아왔다. 모래 범벅이 된 채로. 운이 좋았다.',xp:14}}]})});
+
+SGA('quake',3,7,'지진의 조짐','tense','붕괴 위험 노후 건물에서 좀비와 대치.',{
+ start:c=>({t:['낡은 아파트 4층. 바닥이 미세하게 떨린다. 천장에서 먼지가 내려앉는다.','복도 끝에 감염자 둘. 그리고 계단은 그 너머다. 벽의 금이 점점 벌어진다.'],vfx:'quake',sfx:'bang',o:[
+  {n:'창문으로 옆 건물에 뛴다',tag:'민첩',f:chk('agi',.45,{t:['옆 건물 베란다로 몸을 던졌다. 착지하는 순간 등 뒤에서 아파트가 주저앉았다.','먼지 구름 속에 놈들도 묻혔다.'],vfx:'quake',give:{scrap:6},xp:40,win:1},{t:'손이 미끄러졌다. 한 층 아래로 떨어졌다.',hp:-16,st:[['leg',15]],xp:12})},
+  {n:'놈들을 뚫고 계단으로',f:{t:'흔들리는 복도에서 놈들과 맞붙었다.',fight:{z:'walker',queue:['walker'],win:{scrap:8}},vfx:'shake',xp:22,win:1}},
+  {n:'기둥 옆에 웅크린다',tag:'체력',f:chk('end',.4,{t:'건물이 무너졌다. 기둥 옆 작은 틈에 갇혔다. 반나절을 파고 나왔다. 놈들은 나오지 못했다.',hp:-10,xp:30,win:1},{t:'잔해에 깔렸다. 겨우 빠져나왔다.',hp:-22,st:[['arm',15]],xp:10})}]})});
+
+SGA('mart',3,4,'함정으로 변한 마트','horror','셔터가 내려가 갇힌 마트, 비상등 아래 남은 좀비들.',{
+ start:c=>({t:['쿵. 등 뒤에서 마트 셔터가 내려갔다. 자동 장치가 아직 살아 있었다.','비상등 붉은빛 아래, 진열대 사이로 그림자들이 일어선다. 계산대 쪽에 셔터 수동 레버.'],vfx:'red',sfx:'bang',o:[
+  {n:'진열대를 넘어 레버까지',tag:'민첩',f:chk('agi',.45,{t:'진열대 위를 달려 레버를 당겼다. 셔터가 올라가는 사이 카트를 한가득 채웠다.',give:{food:14,water:10},xp:36,win:1},{t:'진열대가 넘어졌다. 놈들이 몰려온다.',fight:{z:'walker',queue:['walker','runner'],win:{food:10}},xp:14})},
+  {n:'창고에 숨어 정리한다',f:{t:'창고 문을 미끼로 놈들을 하나씩 끌어들였다.',fight:{z:'walker',queue:['walker'],win:{food:12,water:8}},xp:24,win:1}},
+  {n:'스피커로 반대편에 소리를 튼다',tag:'감각',f:chk('per',.45,{t:'방송실을 찾아 반대편 스피커에 음악을 틀었다. 놈들이 몰려간 사이 레버를 당겼다.',give:{food:12,water:8,elec:1},xp:34,win:1},{t:'방송실 문이 잠겨 있었다.',fight:{z:'walker',queue:['walker'],win:{food:6}},xp:12})}]})});
+
+SGA('radiation',3,10,'방사능 경보','gas','관리 주체가 사라진 원전에서 오염 물질 누출.',{
+ start:c=>({t:['선량계가 미친 듯이 울린다. 북쪽 원전의 냉각 장치가 멈췄다는 소문은 사실이었다.','캠프 사람들의 코피가 멎지 않는다. 남쪽 군 병원에 요오드화칼륨이 남아 있을지 모른다.'],vfx:'rad',sfx:'alarm',o:[
+  {n:'군 병원까지 강행한다',tag:'체력',f:chk('end',.4,{t:['이틀 길을 하루에 갔다. 약품 창고에 요오드제 상자가 그대로.','캠프 사람들 전원에게 나눴다. 코피가 멎었다.'],give:{med:6,antibio:1},mind:8,xp:55,win:1},{t:'병원 앞에서 방독면 병사 감염자들과 마주쳤다.',fight:{z:'gasmask',queue:[],win:{med:4}},hp:-8,xp:20})},
+  {n:'캠프 전체를 남쪽으로 옮긴다',f:{t:'모든 걸 다 들고 갈 순 없었다. 그래도 바람이 바뀌기 전에 산을 넘었다.',lose:.2,mind:4,xp:36,win:1}},
+  {n:'버틴다',f:{t:'일주일 동안 창문을 막고 지냈다. 머리카락이 빠지기 시작했다.',hp:-15,st:[['sick',30],['drained',20]],xp:10}}]})});
+
+SGA('dam',3,8,'무너진 제방','tense','댐 붕괴로 마을 전체 수몰 위기.',{
+ start:c=>({t:['새벽, 땅이 울리는 굉음. 상류의 댐이 무너졌다.','한 시간 안에 물이 마을을 덮는다. 캠프 창고엔 한 달 치 식량. 다 옮길 수는 없다.'],vfx:'water',sfx:'alarm',o:[
+  {n:'사람 먼저, 식량은 버린다',f:{t:['언덕 위에서 물이 마을을 삼키는 걸 봤다. 창고 지붕이 사라졌다.','그래도 모두 살았다. 다시 시작하면 된다.'],lose:.3,mind:6,xp:40,win:1}},
+  {n:'모래주머니로 창고를 지킨다',tag:'힘',f:chk('str',.4,{t:'모두가 모래주머니를 날랐다. 물이 창고 문턱에서 멈췄다. 기적 같은 반 뼘.',mind:8,xp:50,win:1},{t:'모래주머니가 무너졌다. 물에 휩쓸려 겨우 지붕에 매달렸다.',hp:-16,lose:.35,xp:14})},
+  {n:'보트를 만들어 다 싣는다',cost:{wood:20,scrap:10},f:{t:'문짝과 드럼통으로 만든 뗏목. 식량을 싣고 물 위로 떠올랐다. 물 위로 떠오른 놈들이 뗏목을 붙잡는다.',fight:{z:'drowned',queue:['walker'],win:{food:10}},xp:40,win:1}}]})});
+
+SGA('rain',3,4,'끝없는 폭우','horror','빗소리에 좀비 접근 소리를 들을 수 없는 밤들.',{
+ start:c=>({t:['나흘째 비. 빗소리가 모든 소리를 덮는다. 발소리도, 신음도.','어젯밤 보초 하나가 사라졌다. 비명조차 들리지 않았다.'],vfx:'water',sfx:'distant',o:[
+  {n:'울타리에 깡통 경보를 단다',cost:{scrap:8},f:{t:['깡통을 줄줄이 매달았다. 새벽, 빗소리를 뚫고 달그락. 준비된 채로 맞았다.'],fight:{z:'walker',queue:['walker'],win:{scrap:6}},xp:28,win:1}},
+  {n:'보초를 둘씩 서게 한다',tag:'감각',f:chk('per',.45,{t:'둘씩 서로 등을 맞대고. 그 뒤로 아무도 사라지지 않았다. 비가 그친 날 다 같이 햇볕에 누웠다.',mind:6,xp:30,win:1},{t:'둘 중 하나가 졸았다. 남은 하나가 비명을 질렀다.',fight:{z:'runner',queue:['walker'],win:{}},mind:-4,xp:14})},
+  {n:'사라진 보초를 찾아 나선다',f:rol(.4,{t:'보초는 개울 건너 나무 위에 있었다. 비에 불어난 물에 갇혀 있었던 것.',crew:[['나무 위의 보초','end']],xp:34,win:1},{t:'개울가에서 보초의 장화를 찾았다. 장화 속 발은… 보지 않기로 했다.',fight:{z:'drowned',queue:[],win:{}},mind:-6,xp:14})}]})});
+
+SGA('island',3,9,'고립된 섬','horror','배가 부서져 갇힌 섬, 좀비 시체가 파도를 타고 밀려온다.',{
+ start:c=>({t:['배가 암초에 부서졌다. 작은 섬. 등대 하나.','해 질 녘 파도에 무언가 실려 온다. 시체다. 하나, 열, 백. 모래사장에 닿자 일어선다.'],vfx:'water',sfx:'growl',o:[
+  {n:'등대에 올라 버틴다',tag:'체력',f:chk('end',.45,{t:['등대 계단을 막고 밤을 버텼다. 새벽 첫 햇살에 등대 불을 돌렸다.','멀리서 어선 한 척이 방향을 틀었다.'],give:{food:8,fuel:3},crew:[['어선의 선장','str']],xp:52,win:1},{t:'계단 바리케이드가 무너졌다.',fight:{z:'drowned',queue:['drowned','walker'],win:{fuel:3}},xp:20})},
+  {n:'부서진 배를 고친다',cost:{repkit:1},f:{t:'수리 키트로 구멍을 막았다. 밀물에 배가 떴다. 해변에서 놈들이 바다로 걸어 들어오며 따라왔다.',give:{fuel:2},xp:44,win:1}},
+  {n:'해변에서 맞선다',f:{t:'파도가 밀려올 때마다 놈들이 일어선다.',fight:{z:'drowned',queue:['drowned','undertow'],win:{fuel:4,$:50}},xp:26,win:1}}]})});
+
+SGA('elevator',3,6,'엘리베이터 추락','tense','초고층 빌딩에서 정전으로 엘리베이터에 갇힘.',{
+ start:c=>({t:['초고층 빌딩 37층. 엘리베이터가 덜컹 멈췄다. 비상등만 깜빡인다.','천장 해치 너머 케이블이 삐걱거린다. 그리고 문틈으로 손가락들이 비집고 들어온다. 이 층에도 놈들이 있다.'],vfx:'dark:엘리베이터가 멈췄다',sfx:'tick',o:[
+  {n:'해치로 올라가 케이블을 탄다',tag:'민첩',f:chk('agi',.45,{t:'케이블을 타고 한 층 위로. 문을 비집어 열고 빠져나왔다. 아래에서 엘리베이터가 추락하는 굉음.',vfx:'quake',give:{elec:3,$:40},xp:42,win:1},{t:'손이 미끄러졌다. 반 층을 떨어져 지붕에 처박혔다.',hp:-14,st:[['arm',10]],xp:12})},
+  {n:'문을 비집어 열고 싸운다',tag:'힘',f:chk('str',.4,{t:'문을 열자 놈들이 쏟아졌다. 좁은 공간이 오히려 유리했다.',fight:{z:'walker',queue:['walker'],win:{elec:2,$:30}},xp:24,win:1},{t:'문이 반쯤 열렸다. 그 틈으로 손들이 쏟아진다.',fight:{z:'runner',queue:['walker'],win:{}},hp:-8,xp:14})},
+  {n:'비상 전화를 들어 본다',f:rol(.3,{t:['"…누구세요?" 건물 관리실에 누군가 살아 있었다. 비상 발전기가 돌았다. 엘리베이터가 1층까지 내려갔다.','관리인은 겁에 질린 할아버지였다.'],crew:[['빌딩 관리인','per']],xp:36,win:1},{t:'전화선 너머로 숨소리만 들렸다. 사람의 것이 아니었다.',mind:-6,xp:10})}]})});
+
+/* ---------- IV. 탐색 & 생존 임무 ---------- */
+SGA('pharmacyrun',4,3,'약국 털기','tense','좀비가 드글거리는 병원 심장부에서 항생제 확보.',{
+ start:c=>({t:['캠프에 패혈증 환자가 셋. 항생제가 필요하다.','종합병원 원내 약국은 지하 1층. 응급실을 통과해야 한다. 응급실 침대마다 무언가 묶인 채 몸부림친다.'],sfx:'heart',vfx:'flicker',o:[
+  {n:'응급실을 조용히 지나간다',tag:'민첩',go:c=>PRx(sk('agi',.45))?'pharm':'er'},
+  {n:'소방 통로로 돌아간다',tag:'감각',f:chk('per',.45,{t:'도면을 읽어 소방 통로를 찾았다. 아무도 없는 계단. 약국 문은 열려 있었다.',give:{antibio:2,med:4},xp:36,win:1},{t:'소방 통로 문이 잠겨 있었다. 결국 응급실로.',fight:{z:'patient',queue:[],win:{antibio:1}},xp:14})},
+  {n:'시간 맞춰 병원 경보를 울린다',cost:{elec:2},f:{t:['반대편 병동 경보를 울렸다. 놈들이 그쪽으로 몰려간 틈에 지하로.','항생제를 한 상자 통째로.'],give:{antibio:2,med:5},sfx:'alarm',xp:40,win:1}}]}),
+ pharm:c=>({t:['응급실을 빠져나왔다. 원내 약국 철창 안에 항생제가 쌓여 있다.','철창 자물쇠가 단단하다.'],o:[
+  {n:'자물쇠를 딴다',cost:{pick:1},f:{t:'딸깍. 철창이 열렸다.',give:{antibio:3,med:4},xp:42,win:1}},
+  {n:'철창을 비틀어 연다',tag:'힘',f:chk('str',.45,{t:'철창이 비명을 지르며 벌어졌다. 손을 넣어 닿는 만큼 챙겼다.',give:{antibio:2,med:3},xp:34,win:1},{t:'소리가 응급실까지 울렸다.',fight:{z:'patient',queue:['walker'],win:{antibio:2}},xp:16})}]}),
+ er:c=>({t:['침대 하나의 끈이 끊어졌다. 환자복의 놈이 일어난다.'],vfx:'red',o:[{n:'싸운다',f:{t:'병원 냄새와 썩은 냄새.',fight:{z:'patient',queue:['walker'],win:{antibio:2,med:2}},xp:18}}]})});
+
+SGA('helicopter',4,4,'추락한 헬기','gun','아지트 근처에 추락한 군용 헬기에서 무기와 키트 확보.',{
+ start:c=>({t:['밤새 들리던 굉음의 정체. 캠프 북쪽 숲에 군용 헬기가 처박혀 있다.','동체는 반으로 꺾였고 화물칸 문이 열려 있다. 숲 여기저기 군복 입은 놈들이 비틀거린다. 추락 생존자들이었다.'],vfx:'fire',sfx:'engine',o:[
+  {n:'화물칸으로 곧장 간다',tag:'민첩',f:chk('agi',.45,{t:'놈들 사이를 미끄러지듯 지나 화물칸 상자를 끌어냈다. 탄약, 전투식량, 구급상자.',give:{ammo:2,ration:3,medkit:1},xp:40,win:1},{t:'군복 입은 놈이 화물칸 안에서 튀어나왔다.',fight:{z:'gasmask',queue:[],win:{ammo:2,ration:2}},xp:16})},
+  {n:'군인 감염자들을 먼저 정리한다',f:{t:'군복의 놈들이 무전기를 끌며 다가온다.',fight:{z:'swat',queue:['walker'],win:{ammo:2,ration:2,parts:1}},xp:26,win:1}},
+  {n:'조종석 블랙박스를 챙긴다',tag:'감각',f:chk('per',.4,{t:['블랙박스와 작전 지도. 이 헬기가 향하던 곳은 북쪽 비밀 보급 기지였다.','언젠가 쓸모가 있을 것이다.'],give:{drone:2,elec:3},xp:34,win:1},{t:'조종석에서 조종사가 눈을 떴다. 사람의 눈은 아니었다.',fight:{z:'deserter',queue:[],win:{drone:1}},xp:14})}]})});
+
+SGA('lastradio',4,7,'마지막 라디오','mystery','방송국 상층부에 올라 전국에 구호 무전 송출.',{
+ start:c=>({t:['방송국 송신탑은 아직 서 있다. 꼭대기 송출실에만 가면 전국 주파수로 보낼 수 있다.','계단은 20층. 엘리베이터는 죽었다. 층마다 무슨 소리가 난다.'],sfx:'radio',vfx:'static',o:[
+  {n:'계단으로 올라간다',tag:'체력',go:c=>PRx(sk('end',.45))?'top':'mid'},
+  {n:'외벽 비상 사다리로',tag:'민첩',go:c=>PRx(sk('agi',.4))?'top':'mid'},
+  {n:'포기한다',f:{t:'탑을 올려다보며 돌아섰다. 언젠가는.',xp:6}}]}),
+ mid:c=>({t:['12층. 복도에 방송국 직원 차림의 놈들이 가득하다. 사원증이 목에서 흔들린다.'],vfx:'red',sfx:'growl',o:[{n:'뚫고 올라간다',f:{t:'놈들이 한꺼번에 돌아섰다.',fight:{z:'walker',queue:['walker','screamer'],win:{elec:3}},xp:18}}]}),
+ top:c=>({t:['송출실. 마이크 옆에 누군가 남긴 원고. "이 방송을 듣는 모든 생존자에게."','어떤 말을 보낼까.'],sfx:'radio',o:[
+  {n:'캠프 좌표와 함께 구호를 요청한다',f:rol(.6,{t:['송출 버튼. 삼십 분 뒤, 잡음 사이로 대답이 왔다. "…들었다. 사흘 뒤 보급 낙하."'],give:{ration:3,ammo:1,medkit:1},seed:['allyGift',{g:'방송을 들은 생존자 연합'},60,140],xp:55,vfx:'gold',win:1},{t:['송출 버튼. 대답은 없었다. 대신 탑 아래로 무언가 몰려든다.'],fight:{z:'screamer',queue:['walker','walker'],win:{elec:4}},xp:22})},
+  {n:'"살아 있다. 포기하지 마라"고만 말한다',f:{t:['좌표는 말하지 않았다. 그냥 살아 있다고. 버티라고.','며칠 뒤 다른 캠프 사람들이 무전으로 말했다. "그 방송 들었어요. 그래서 버텼어요."'],mind:12,xp:44,win:1}}]})});
+
+SGA('fuel',4,5,'연료 확보전','tense','버려진 주유소 지하 탱크에서 기름을 끌어올린다.',{
+ start:c=>({t:['버려진 주유소. 지하 탱크에 아직 기름이 있다. 수동 펌프는 망가졌다.','펌프를 고치거나, 맨홀을 열고 직접 퍼 올려야 한다. 주변 도로에 놈들이 어슬렁거린다.'],sfx:'engine',o:[
+  {n:'펌프를 고친다',cost:{repkit:1},f:{t:'수리 키트로 펌프를 살렸다. 끽끽거리는 소리에 놈들이 다가왔지만, 통 다섯 개를 채우고 떠났다.',give:{fuel:10},xp:40,win:1}},
+  {n:'호스로 직접 빨아올린다',tag:'체력',f:chk('end',.45,{t:'입에 기름 맛이 가득했다. 그래도 통 세 개를 채웠다.',give:{fuel:7},hp:-4,st:[['sick',10]],xp:32,win:1},{t:'기름 냄새에 정신이 아찔했다. 놈들이 다가왔다.',fight:{z:'walker',queue:['walker'],win:{fuel:3}},xp:14})},
+  {n:'먼저 주변 놈들을 정리한다',f:{t:'도로의 놈들을 하나씩 끌어냈다.',fight:{z:'walker',queue:['runner','walker'],win:{fuel:6}},xp:22,win:1}}]})});
+
+SGA('sniper',4,7,'저격수와의 대치','gun','폐허 도시 건물 상층부에 자리 잡은 낯선 저격수.',{
+ start:c=>({t:['탕! 발 옆 아스팔트가 튀었다. 경고사격이다.','건너편 빌딩 8층 창문에서 스코프가 반짝인다. 확성기 목소리. "물건 내려놓고 꺼져."'],sfx:'gunshot',vfx:'shake',mood:'gun',o:[
+  {n:'백기를 들고 대화한다',tag:'매력',f:chk('cha',.45,{t:['"우린 그냥 지나가는 거야." 한참 침묵 끝에 대답. "…올라와. 혼자."','8층의 저격수는 은퇴한 사격 선수였다. 혼자 이 블록을 지킨 지 석 달째.'],crew:[['8층의 저격수','per']],give:{ammo:1},xp:46,win:1},{t:'탕! 백기가 찢어졌다. 대화는 끝났다.',hp:-10,xp:12})},
+  {n:'건물 사이로 우회해 올라간다',tag:'민첩',f:chk('agi',.45,{t:'사각지대만 골라 8층까지 올라갔다. 문을 걷어차자 그가 칼을 뽑았다.',fight:{z:'sniper',queue:[],win:{ammo:2,parts:1}},xp:30,win:1},{t:'탕! 어깨를 스쳤다.',hp:-14,st:[['arm',12],['bleed',8]],xp:12})},
+  {n:'물자를 내려놓고 물러난다',f:{t:'배낭 하나를 길에 내려놓고 물러났다. 다음 날 같은 자리에 쪽지가 있었다. "고맙다. 동쪽 길은 위험하다."',lose:.1,give:{drone:1},xp:16}}]})});
+
+SGA('turret',4,8,'작동 중인 자동 포탑','gun','군 시설의 무차별 자동 방어 시스템.',{
+ start:c=>({t:['군 보급 기지 정문. 포탑 두 대가 좌우로 돈다. 붉은 센서.','정문 앞 바닥에 놈들의 시체가 수십 구. 그리고 사람의 시체도.'],sfx:'tick',vfx:'red',o:[
+  {n:'센서 주기를 세어 통과한다',tag:'감각',f:chk('per',.45,{t:'4초 돌고 1초 멈춤. 그 1초마다 한 걸음. 정문 안으로 들어섰다. 보급 창고는 손대지 않은 그대로.',give:{ammo:3,ration:3,parts:2},xp:52,win:1},{t:'계산이 틀렸다. 포탑이 이쪽으로 돌았다.',fight:{z:'turret',queue:[],win:{ammo:2,parts:2}},hp:-10,xp:18})},
+  {n:'전원 케이블을 끊는다',cost:{wirekit:1},f:{t:'외벽을 돌아 배전함을 찾았다. 배선 공구로 케이블을 끊자 포탑이 고개를 떨궜다.',give:{ammo:3,ration:3,parts:2,elec:4},xp:50,win:1}},
+  {n:'시체를 방패 삼아 돌진한다',f:{t:'포탑이 불을 뿜었다.',fight:{z:'turret',queue:[],win:{ammo:3,parts:2}},xp:24,win:1}}]})});
+
+SGA('seeds',4,5,'씨앗 저장고','tense','농업 연구소에서 종자 확보.',{
+ start:c=>({t:['통조림은 언젠가 바닥난다. 농업 연구소 지하 종자 은행에 가면 몇 년을 버틸 수 있다.','연구소 온실은 덩굴로 뒤덮였다. 덩굴 사이로 연구원 가운들이 흔들린다.'],sfx:'heart',o:[
+  {n:'온실을 가로질러 간다',tag:'민첩',f:chk('agi',.45,{t:'덩굴 사이를 빠져나가 지하로. 종자 은행 냉장고가 아직 돌고 있었다.',give:{food:15,reagent:1},xp:40,win:1},{t:'덩굴에 발이 걸렸다. 가운들이 돌아본다.',fight:{z:'campus',queue:['walker'],win:{food:8}},xp:14})},
+  {n:'연구 기록부터 찾는다',tag:'감각',f:chk('per',.4,{t:['기록에 따르면 냉장고 비밀번호는 연구소 창립일. 현판에 적혀 있었다.','종자뿐 아니라 재배 지침서까지.'],give:{food:18,reagent:2},xp:44,win:1},{t:'기록실에 누군가 있었다.',fight:{z:'campus',queue:[],win:{reagent:1}},xp:14})},
+  {n:'온실을 태워 길을 낸다',cost:{molotov:1},f:{t:'덩굴과 함께 가운들이 탔다. 종자 은행은 지하라 무사했다.',give:{food:14},vfx:'fire',xp:34,win:1}}]})});
+
+SGA('carstart',4,4,'시동이 안 걸리는 차','tense','몰려오는 좀비 떼 앞에서 탈출 차량의 시동.',{
+ start:c=>({t:['키를 돌렸다. 끼릭, 끼릭. 걸리지 않는다.','백미러에 무리가 보인다. 오십 미터. 사십.'],sfx:'engine',vfx:'red',o:[
+  {n:'배선을 직결한다',tag:'감각',f:chk('per',.45,{t:['핸들 아래 선 두 개. 불꽃. 엔진이 포효했다.','범퍼가 첫 놈을 밀어내며 출발했다.'],give:{fuel:2},xp:40,win:1},{t:'불꽃만 튀었다. 창문에 손바닥이 철썩.',fight:{z:'runner',queue:['walker','walker'],win:{fuel:3}},xp:16})},
+  {n:'다 같이 밀어서 내리막에 굴린다',tag:'힘',f:chk('str',.45,{t:'내리막에서 클러치를 떼자 엔진이 걸렸다. 마지막 사람이 뒷좌석에 뛰어올랐다.',xp:36,win:1},{t:'차가 움직이지 않았다. 무리가 덮쳤다.',fight:{z:'walker',queue:['walker','runner'],win:{}},xp:14})},
+  {n:'차를 버리고 뛴다',f:{t:'차를 버렸다. 트렁크의 짐도 같이. 숨이 턱까지 차올랐다.',lose:.1,xp:12}}]})});
+
+SGA('lab',4,10,'비밀 연구소 입구','mystery','면역자의 피를 가진 아이를 데리고 정부 연구소 지하 침투.',{
+ start:c=>({t:['물려도 변하지 않는 아이. 이름은 Adam. 일곱 살.','정부 연구소 지하에 아직 연구진이 있다는 무전. 그 아이의 피가 백신이 될 수 있다.','연구소 입구는 생체 인식 보안문. 그리고 문 앞을 지키는 실험체.'],vfx:'glitch',sfx:'heart',o:[
+  {n:'실험체를 유인하고 Adam을 들여보낸다',tag:'민첩',go:c=>PRx(sk('agi',.4))?'in':'fight'},
+  {n:'보안문을 해킹한다',cost:{elec:4,wirekit:1},go:'in'},
+  {n:'Adam을 데리고 돌아간다',f:{t:['"…아저씨, 나 거기 안 가도 돼?" Adam이 내 손을 꼭 잡았다.','백신보다 이 손이 더 무거웠다.'],crew:[['면역자 Adam','end']],xp:30}}]}),
+ fight:c=>({t:['실험체가 Adam을 봤다. 냄새를 맡은 것처럼.'],vfx:'red',sfx:'scream',o:[{n:'막아선다',f:{t:'실험체가 몸을 낮췄다.',fight:{z:'subject',queue:[],win:{sample:3,reagent:2}},xp:30}}]}),
+ in:c=>({t:['지하 3층. 연구원 둘이 살아 있다. Adam의 피를 보자 둘이 울음을 터뜨렸다.','"며칠만 있으면 혈청을 만들 수 있어요. 아이는 안전하게 지킬게요. 약속해요."'],o:[
+  {n:'Adam을 맡긴다',f:{t:['Adam이 손을 흔들었다. 일주일 뒤 무전이 왔다. "첫 혈청 성공. Adam이는 잘 있어요."','상자 하나가 보급 루트로 도착했다.'],give:{suppress:3,tonic:1,$:120},vfx:'gold',mind:6,xp:70,win:1}},
+  {n:'피만 뽑아 주고 Adam은 데려간다',f:{t:'"이것만으로도 시작할 수 있어요." Adam은 주사를 꾹 참았다. 돌아오는 길, 내 등에서 잠들었다.',give:{suppress:1,$:60},crew:[['면역자 Adam','end']],xp:56,win:1}}]})});
+
+SGA('gasleak',4,6,'가스관 폭발','gas','수색 중 건드린 가스관 누출, 불꽃 하나에 폭발할 위기.',{
+ start:c=>({t:['쉬이이익- 벽 속 가스관에 금이 갔다. 내가 건드렸다.','냄새가 순식간에 퍼진다. 옆방에서 동료가 라이터를 꺼내 담배를 무는 소리.'],vfx:'gas',sfx:'hiss',o:[
+  {n:'소리쳐 막는다',tag:'민첩',f:chk('agi',.5,{t:['"켜지 마!!!" 몸을 날려 라이터를 쳐냈다.','둘이서 밸브를 찾아 잠갔다. 동료가 담배를 바닥에 버렸다. 영영.'],mind:4,give:{scrap:6},xp:36,win:1},{t:'늦었다. 섬광.',hp:-20,st:[['conc',15]],vfx:'fire',xp:14})},
+  {n:'메인 밸브를 찾는다',tag:'감각',f:chk('per',.45,{t:'지하 보일러실 메인 밸브. 잠그자 쉬익 소리가 멎었다. 보일러실 공구함까지 챙겼다.',give:{repkit:1,scrap:8},xp:38,win:1},{t:'밸브가 녹슬어 꿈쩍도 하지 않았다. 다 같이 창문으로 뛰어내렸다.',hp:-10,st:[['leg',10]],xp:14})},
+  {n:'건물에 놈들을 몰아넣고 터뜨린다',f:{t:['다들 빠져나온 뒤 건물 안으로 유인기를 던졌다. 놈들이 몰려 들어간 순간 불붙은 천을 던졌다.','폭발음이 도시를 울렸다.'],vfx:'fire',give:{scrap:12},xp:34,win:1}}]})});
+
+SGA('ally',4,6,'동맹 세력의 무전','human','정해진 시간·장소로 나오라는 자원 거래 메시지.',{
+ start:c=>({t:['"남쪽 캠프다. 식량과 탄약을 바꾸자. 내일 정오, 구 시청 앞 광장. 혼자 와."','함정일까. 진짜일까. 탄약이 절실한 건 사실이다.'],sfx:'radio',vfx:'static',o:[
+  {n:'혼자 나간다',go:'meet'},
+  {n:'대원을 숨겨 데려간다',tag:'감각',f:chk('per',.45,{t:['광장 주변 옥상마다 그들의 사람이 숨어 있었다. 우리도 마찬가지. 서로 알아채고 웃었다.','"믿음은 천천히 쌓는 거지." 공정한 거래였다.'],give:{ammo:2,ration:1},seed:['allyGift',{g:'남쪽 캠프'},60,140],xp:40,win:1},{t:'숨긴 대원이 들켰다. "약속 위반이군." 총구가 올라갔다.',fight:{z:'merc',queue:[],win:{ammo:2}},xp:16})},
+  {n:'무시한다',f:{t:'다음 날 정오가 지났다. 그 주파수는 다시 울리지 않았다.',xp:6}}]}),
+ meet:c=>({t:['광장 한가운데. 맞은편에서 여자 하나가 걸어온다. 손에 탄약 상자.','"식량부터 보여 줘."'],o:[
+  {n:'식량을 건넨다',cost:{food:15},f:{t:'그녀가 상자를 열어 보였다. 진짜 탄약. "다음 달에도 하자."',give:{ammo:2},seed:['allyGift',{g:'남쪽 캠프'},60,140],xp:42,win:1}},
+  {n:'가진 게 없다고 털어놓는다',tag:'매력',f:chk('cha',.45,{t:'"…솔직하네." 그녀가 탄약 반 상자를 내밀었다. "외상이야. 갚으러 와."',give:{ammo:1},xp:34,win:1},{t:'"시간 낭비." 그녀가 손짓하자 옥상에서 총구가 보였다.',fight:{z:'merc',queue:[],win:{ammo:1}},xp:14})}]})});
+
+SGA('ticket',4,9,'탈출선 발매권','threat','마지막 배의 탑승권을 두고 벌이는 무법지대 사투.',{
+ start:c=>({t:['항구. 마지막 배가 사흘 뒤 떠난다. 탑승권은 손목에 차는 붉은 띠.','띠는 부두 갱단이 판다. 가격은 사람마다 다르다. 띠를 노리는 칼부림이 골목마다.'],sfx:'gunshot',mood:'threat',o:[
+  {n:'갱단과 거래한다',cost:{$:150},f:{t:['붉은 띠 하나. 내 것은 아니다. 캠프의 아이 하나에게 채웠다.','배가 떠나는 날, 아이가 갑판에서 손을 흔들었다.'],mind:12,xp:60,vfx:'gold',win:1}},
+  {n:'띠를 강탈하려는 무리를 막는다',f:{t:'골목에서 노부부를 둘러싼 칼잡이들.',fight:{z:'dockgang',queue:['thug'],win:{$:80,ammo:1}},crew:[['항구의 노부부','cha']],xp:30,win:1}},
+  {n:'배에 몰래 숨어 정보만 캔다',tag:'민첩',f:chk('agi',.45,{t:['화물칸에 숨어 들었다. 배는 안전지대가 아니라 섬의 노동 수용소로 간다.','그 소식을 항구에 퍼뜨렸다. 갱단의 가격이 폭락했다.'],give:{$:60,drone:1},xp:44,win:1},{t:'선원에게 들켰다.',fight:{z:'dockgang',queue:[],win:{$:50}},xp:16})}]})});
+
+SGA('tunnel',4,6,'지하철 터널 도보 이동','horror','캄캄한 선로를 따라 수 킬로미터.',{
+ start:c=>({t:['지상은 무리로 막혔다. 남은 길은 지하철 터널. 다음 역까지 3킬로미터.','손전등 하나. 배터리 반. 레일 위에 물이 고여 있다. 저 앞 어둠 속에서 무언가 철벅거린다.'],vfx:'dark:터널 속으로',sfx:'steps',o:[
+  {n:'불을 끄고 레일을 더듬어 간다',tag:'감각',f:chk('per',.45,{t:['어둠 속에서 손끝과 귀만 믿었다. 철벅거림이 지나갈 때까지 벽에 붙어 숨을 죽였다.','다음 역 계단의 빛이 보였을 때 무릎이 풀렸다.'],give:{elec:2,scrap:6},mind:4,xp:40,win:1},{t:'발에 무언가 걸렸다. 그것이 일어섰다.',fight:{z:'nocturne',queue:['walker'],win:{}},xp:16})},
+  {n:'버려진 정비 차량을 움직인다',cost:{fuel:2},f:{t:['정비 카트의 엔진이 털털 돌았다. 헤드라이트가 터널을 갈랐다. 레일 위의 놈들이 빛에 놀라 흩어졌다.','3킬로미터를 5분에.'],give:{elec:3},xp:42,win:1}},
+  {n:'불을 켜고 정면 돌파',f:{t:'손전등 빛 안으로 하얀 얼굴들이 들어온다.',fight:{z:'nocturne',queue:['nocturne'],win:{elec:2}},xp:22,win:1}}]})});
+
+SGA('drone',4,8,'드론의 인도를 따라','mystery','누군가 드론으로 길을 안내하지만 목적지는 알 수 없다.',{
+ start:c=>({t:['윙- 소형 드론이 머리 위에서 맴돈다. 화면에 글씨. "따라와. 안전한 곳."','드론은 무리를 피해 길을 알려 준다. 정확하게. 너무 정확하게.'],sfx:'engine',vfx:'glitch',o:[
+  {n:'끝까지 따라간다',go:'end'},
+  {n:'드론을 떨어뜨려 분해한다',tag:'민첩',f:chk('agi',.45,{t:['돌을 던져 드론을 떨어뜨렸다. 메모리 카드에 지도와 수십 명의 사진. 다 우리 같은 생존자들.','안내자는 사람을 모으고 있었다. 왜인지는 모른다.'],give:{elec:5,drone:2},xp:36,win:1},{t:'드론이 높이 솟아 사라졌다. 그날 밤 캠프 주위에 낯선 발소리.',mind:-6,xp:10})},
+  {n:'무시하고 내 길을 간다',f:{t:'드론은 한참을 따라오다가 방향을 틀었다. 화면에 마지막 글씨. "아쉽네."',mind:-3,xp:8}}]}),
+ end:c=>({t:['드론이 멈춘 곳은 담장으로 둘러싸인 학교. 정문이 열린다.','안에는 아이들이 텃밭을 가꾸고 있다. 운동장에서 드론 조종기를 든 소년이 웃는다. "어른이 필요했어요. 지킬 사람이."'],sfx:'win',mood:'human',o:[
+  {n:'함께하기로 한다',f:{t:['학교는 아이들 스무 명이 만든 요새였다. 소년은 고맙다며 자기가 아끼는 드론 하나를 건넸다.','일주일에 한 번 들러 경비를 서 주기로 했다.'],give:{drone:2,food:12},crew:[['드론 소년','per']],mind:10,xp:56,vfx:'gold',win:1}},
+  {n:'물자만 나눠 주고 떠난다',cost:{food:10},f:{t:'아이들이 손을 흔들었다. 소년이 드론으로 우리 캠프까지 길을 비춰 줬다.',give:{drone:1},seed:['allyGift',{g:'아이들의 학교'},60,140],mind:8,xp:40,win:1}}]})});
+
+SGA('expire',4,10,'유통기한의 끝','human','남은 통조림마저 바닥나 거주지를 버려야 하는 순간.',{
+ start:c=>({t:['창고 마지막 통조림을 땄다. 도시 반경 10킬로미터 안의 마트, 집, 창고는 다 뒤졌다.','남쪽 농업 지대로 가야 한다. 일주일 길. 노인과 아이들도 함께.','떠나기 전날 밤, 캠프 사람들이 모닥불 앞에 모였다.'],sfx:'sob',o:[
+  {n:'모두 데리고 출발한다',tag:'체력',f:chk('end',.4,{t:['일주일 걸을 길을 열흘 걸었다. 노인 하나가 쓰러질 때마다 다 같이 멈췄다.','남쪽 들판에 도착했을 때 누군가 흙을 한 줌 쥐고 울었다. 씨앗을 심을 수 있는 땅이었다.'],give:{food:25,water:15},mind:12,xp:70,vfx:'gold',win:1},{t:'중간에 무리를 만났다. 노인 하나를 잃었다.',fight:{z:'walker',queue:['runner','walker','walker'],win:{food:10}},mind:-6,xp:24})},
+  {n:'정찰대를 먼저 보낸다',cost:{drone:1},f:{t:'정찰 정보로 안전한 길을 골랐다. 도착한 남쪽 들판엔 이미 작은 마을이 있었다. 그들은 우리를 받아 줬다.',give:{food:18,water:12},crew:[['남쪽 마을 안내인','cha']],xp:56,win:1}},
+  {n:'남는다',f:{t:['떠나지 못했다. 남은 이들과 같이 쥐를 잡고, 이끼를 끓였다.','봄이 오기까지 버틴 건 절반이었다.'],hg:-30,st:[['weak',30]],mind:-12,xp:20}}]})});
+
+/* ---------- V. 반전 & 이색 컨셉 ---------- */
+SGA('password',5,8,'백신 개발자의 유언','mystery','백신을 완성했다던 박사의 노트북, 비밀번호는 그가 사랑한 사람의 이름.',{
+ start:c=>({t:['연구실 바닥에 쓰러진 박사. 그 품에 노트북. 화면에 "백신_최종.pdf". 비밀번호 입력창.','힌트: "내가 가장 사랑한 사람." 기회는 세 번. 틀리면 데이터가 지워진다고 적혀 있다.'],sfx:'tick',vfx:'static',o:[
+  {n:'연구실을 샅샅이 뒤진다',tag:'감각',go:c=>PRx(sk('per',.45))?'clue':'guess'},
+  {n:'노트북을 통째로 들고 간다',f:{t:'노트북을 챙겼다. 언젠가 비밀번호를 아는 사람을 만날지도. 전원이 남아 있는 동안.',give:{elec:3,reagent:1},xp:20}},
+  {n:'박사의 지갑을 연다',go:'wallet'}]}),
+ wallet:c=>({t:['지갑 속 사진 두 장. 아내로 보이는 여자, "지현". 그리고 강아지, 이름표에 "보리".'],o:[
+  {n:'"지현"',go:'wrong'},
+  {n:'"보리"',f:{t:['화면이 열렸다. 박사는 매일 아침 이 강아지 이름을 쳤을 것이다.','백신은 완성이 아니었다. 다만 감염 진행을 사흘 늦추는 혈청 제조법. 그걸로도 충분하다.'],give:{suppress:2,reagent:2,$:80},vfx:'gold',xp:60,win:1}}]}),
+ wrong:c=>({t:['틀렸습니다. 남은 기회 2회.','손이 떨린다. 사진 뒷면에 아내의 글씨. "보리 산책은 당신 차례야."'],sfx:'tick',vfx:'static',o:[
+  {n:'"보리"',f:{t:['화면이 열렸다. 박사는 매일 아침 이 강아지 이름을 쳤을 것이다.','백신은 완성이 아니었다. 다만 감염 진행을 늦추는 혈청 제조법. 그걸로도 충분하다.'],give:{suppress:2,reagent:2,$:80},vfx:'gold',xp:60,win:1}},
+  {n:'노트북만 챙긴다',f:{t:'더 틀릴 수는 없었다. 노트북을 품에 안고 나왔다.',give:{elec:2},xp:12}}]}),
+ clue:c=>({t:['책상 서랍에 일기장. 마지막 장. "아내는 떠났다. 보리만 남았다. 녀석이 없었으면 나도 버티지 못했을 거다."'],o:[
+  {n:'"보리"를 입력한다',f:{t:['열렸다. 혈청 제조법과 배양 데이터.','박사의 마지막 메모. "보리야, 아빠 금방 갈게."'],give:{suppress:2,reagent:2,$:80},vfx:'gold',xp:62,win:1}}]}),
+ guess:c=>({t:['단서가 없다. 감으로 쳐야 한다.'],o:[
+  {n:'"엄마"',f:{t:'틀렸습니다. 남은 기회 2회. 다시 생각하기로 하고 노트북을 챙겼다.',give:{elec:2},xp:10}},
+  {n:'"딸"',f:{t:'틀렸습니다. 남은 기회 2회. 다시 생각하기로 하고 노트북을 챙겼다.',give:{elec:2},xp:10}},
+  {n:'박사의 지갑을 연다',go:'wallet'}]})});
+
+SGA('curable',5,10,'사실은 치료 중','horror','죽인 좀비가 치료 가능한 초기 환자였다는 뒤늦은 사실.',{
+ start:c=>({t:['버려진 보건소에서 찾은 서류철. "초기 감염 72시간 이내, 혈청 투여 시 회복률 61%."','첨부 사진 속 환자복의 사람들. 그 얼굴 하나를 안다. 지난주 우리가 처리한 감염자다.'],sfx:'sob',vfx:'glitch',o:[
+  {n:'끝까지 읽는다',go:'read'},
+  {n:'서류를 태운다',f:{t:['불길 속에서 사진이 오그라들었다. 모르는 게 나았다.','그날 밤 꿈에 그 얼굴이 나왔다. "괜찮아."라고 말했다.'],st:[['insom',20]],mind:-10,xp:16}},
+  {n:'캠프 사람들에게 알린다',tag:'매력',f:chk('cha',.4,{t:['모두 오래 말이 없었다. 그러다 누군가 말했다. "그럼 이제부터는 묶어서 데려오자."','그날부터 캠프에 격리실이 생겼다.'],mind:4,xp:40,win:1},{t:'"그래서 어쩌라고!" 누군가 서류를 찢었다. 캠프는 며칠간 무거웠다.',mind:-8,xp:14})}]}),
+ read:c=>({t:['마지막 장. 혈청 보관 위치: 보건소 지하 냉장고. 배양 방법 첨부.','지하 냉장고는 아직 돌고 있다. 그 앞에 묶인 환자 하나. 물린 지 얼마 안 된 것 같다. 아직 말을 한다. "…살려 줘요."'],vfx:'flicker',mood:'human',o:[
+  {n:'혈청을 써 본다',f:rol(.61,{t:['주사를 놓았다. 하루. 이틀. 사흘째 그녀의 눈이 다시 맑아졌다.','"…여기 어디예요?" 첫 질문이었다.'],crew:[['돌아온 환자','end']],give:{suppress:1},vfx:'gold',mind:12,xp:66,win:1},{t:['주사를 놓았다. 너무 늦었다. 그래도 그녀는 마지막에 "고마워요"라고 말했다.'],give:{suppress:1},mind:-4,xp:30})},
+  {n:'혈청만 챙긴다',f:{t:'냉장고를 비웠다. 묶인 환자의 시선이 등에 꽂혔다.',give:{suppress:3,reagent:1},mind:-10,xp:24}}]})});
+
+SGA('show',5,12,'방송용 쇼','mystery','이 아포칼립스가 거대 기업의 리얼리티 쇼였다는 의문.',{
+ start:c=>({t:['감염자의 귀에서 작은 장치가 떨어졌다. 마이크다. 렌즈가 달렸다.','근처 전봇대마다 같은 장치. 그리고 한쪽 벽에 기업 로고와 "시즌 2 · 레이크포드" 라고 적힌 스티커.'],vfx:'glitch',sfx:'static',o:[
+  {n:'신호를 추적한다',tag:'감각',go:c=>PRx(sk('per',.4))?'room':'lost'},
+  {n:'카메라에 대고 말한다',f:{t:['"보고 있다면, 이건 쇼가 아니라 사람이 죽는 거다."','렌즈의 붉은 불이 꺼졌다. 다음 날 아침 캠프 앞에 보급 상자가 놓여 있었다. 로고는 없었다.'],give:{ration:3,medkit:1},mind:-4,xp:40,win:1}},
+  {n:'장치를 다 부순다',f:{t:'박살 낸 장치에서 전자부품이 쏟아졌다. 다 부수고 나니 이상하게 홀가분했다. 진실이 뭐든.',give:{elec:6},xp:26}}]}),
+ room:c=>({t:['신호를 따라간 곳은 방송국 지하 서버실. 모니터 수백 개. 화면마다 생존자들. 그중 하나는 우리 캠프다.','콘솔에 메모. "시청률 하락 시 이벤트 투입: 무리 유도, 보급 차단."'],vfx:'glitch',o:[
+  {n:'서버를 박살 낸다',f:{t:['모니터가 하나씩 꺼졌다. 마지막 화면 속 우리 캠프 사람들이 모닥불 앞에서 웃고 있었다.','진짜든 아니든, 저 웃음은 진짜였다.'],give:{elec:8,$:100},vfx:'flash',xp:66,win:1}},
+  {n:'시스템을 거꾸로 쓴다',f:{t:['"보급 투하" 버튼을 눌렀다. 대상: 모든 캠프. 새벽 하늘에서 낙하산이 수십 개 내려왔다.','방송국 문 밖에서 사설 경비원들의 발소리.'],give:{ration:4,ammo:2},fight:{z:'merc',queue:['merc'],win:{$:120,parts:2}},xp:50,win:1}}]}),
+ lost:c=>({t:['신호가 끊겼다. 장치들도 다음 날 모두 사라져 있었다. 누가 치운 걸까.'],o:[{n:'잊는다',f:{t:'그 뒤로 가끔 전봇대를 올려다보게 됐다. 붉은 불은 없었다. 아마도.',mind:-5,xp:16}}]})});
+
+SGA('factions',5,9,'피할 수 없는 내분','threat','"자원이 3일 치밖에 없다"는 말로 시작된 파벌 싸움.',{
+ start:c=>({t:['"식량, 3일 치 남았어." 창고 담당의 말 한마디에 캠프가 둘로 갈렸다.','"약한 사람부터 내보내자"는 쪽과 "다 같이 굶자"는 쪽. 양쪽 다 무기를 들었다. 양쪽 다 나를 본다.'],sfx:'bang',vfx:'shake',mood:'threat',o:[
+  {n:'창고를 직접 확인한다',tag:'감각',f:chk('per',.45,{t:['창고 장부가 이상했다. 창고 담당이 지하 방에 식량을 빼돌리고 있었다. 3일 치가 아니라 3주 치.','두 파벌이 동시에 창고 담당을 노려봤다. 싸움은 거기서 끝났다.'],give:{food:20},mind:8,xp:50,win:1},{t:'장부는 정확했다. 확인하는 사이 첫 주먹이 날아갔다.',fight:{z:'thug',queue:['thug'],win:{food:6}},mind:-6,xp:16})},
+  {n:'원정대를 꾸려 식량을 구해 오겠다고 한다',tag:'매력',f:chk('cha',.45,{t:['"싸울 힘으로 사흘만 뒤지자." 양쪽에서 둘씩 나왔다. 넷이서 사흘.','돌아왔을 때 수레에 통조림이 가득했다. 그 뒤로 둘은 한 파벌처럼 지냈다.'],give:{food:18,water:10},mind:8,xp:52,win:1},{t:'아무도 따라오지 않았다. 혼자 나갔다 돌아오니 캠프 절반이 떠나 있었다.',lose:.25,mind:-10,xp:16})},
+  {n:'한쪽 편을 든다',f:{t:['결국 싸움이 났다. 이긴 쪽이 남고, 진 쪽이 떠났다.','식량은 충분해졌다. 캠프는 조용해졌다. 너무 조용해졌다.'],give:{food:12},mind:-12,xp:14}}]})});
+
+SGA('doorknob',5,7,'기억을 가진 좀비','human','생전의 집을 찾아와 매일 문고리를 돌리는 좀비와의 재회.',{
+ start:c=>({t:['매일 저녁 여섯 시. 캠프로 쓰는 주택 현관 문고리가 천천히 돌아간다. 딸깍. 딸깍.','문구멍으로 보면 넥타이를 맨 감염자. 손에 녹슨 열쇠를 쥐고 있다.','거실 벽 가족사진 속 남자와 같은 얼굴이다. 이 집의 주인.'],sfx:'knock',vfx:'flicker',o:[
+  {n:'문을 열어 준다',go:'home'},
+  {n:'끝을 내 준다',f:{t:['문을 열고 단번에. 그는 저항하지 않았다. 쓰러지면서도 열쇠를 놓지 않았다.','뒷마당에 묻었다. 가족사진을 같이.'],give:{scrap:4},mind:-4,xp:28,win:1}},
+  {n:'다른 집으로 캠프를 옮긴다',f:{t:'짐을 옮기던 날에도 여섯 시가 되자 문고리가 돌았다. 우리가 떠난 집 앞에서.',lose:.05,mind:-3,xp:14}}]}),
+ home:c=>({t:['문이 열리자 그는 우리를 지나쳐 거실로 들어갔다. 소파 옆에 멈춰 섰다.','가족사진 앞에서 고개를 갸웃한다. 그리고 아주 작게, "…다녀왔어."'],sfx:'sob',mood:'human',o:[
+  {n:'사진을 손에 쥐여 준다',f:{t:['그는 사진을 오래 들여다봤다. 그리고 스스로 현관 밖으로 걸어 나갔다. 다음 날부터 문고리는 돌지 않았다.','현관 앞에 녹슨 열쇠가 놓여 있었다. 지하 창고 열쇠였다.'],give:{food:12,water:10,med:3,$:50},mind:6,vfx:'gold',xp:56,win:1}},
+  {n:'편안하게 보내 준다',f:{t:'그가 소파에 앉는 순간. 집에 돌아온 사람처럼 편한 얼굴이었다.',give:{food:6,med:2},mind:2,xp:40,win:1}}]})});
+
+/* ---------- 생존 기록: 연결 ---------- */
+ALL_CH.push(...SAGA);
+function chNS(){ return ALL_CH.filter(x=>!x.saga&&!x.pc) }
+const sgOf=k=>SAGA.find(x=>x.k===k);
+const sgBonus=ch=>({$:12+ch.lv*3,xp:10+ch.lv*2});
+function sgGrant(ch,fx){ S.sgWin=S.sgWin||{}; if(S.sgWin[ch.k]) return; S.sgWin[ch.k]=Date.now(); const b=sgBonus(ch); addMoney(b.$); addXp(b.xp); fx.push(`첫 성공 보상 $${b.$} · XP +${b.xp}`); markSave() }
+/* 결과: 연출, 성공 표시, 첫 성공 보상 */
+const _chainEndSG=chainEnd; chainEnd=function(ch,ctx,r){ r=Object.assign({},r||{}); if(!ch||!ch.saga) return _chainEndSG(ch,ctx,r);
+  r.fx=(r.fx||[]).slice(); rt.sgFight=null;
+  if(r.win&&r.fight){ rt.sgFight={k:ch.k,t:Date.now()}; r.fx.push('이기면 성공') }
+  else if(r.win){ r.h=r.h||'성공 · '+ch.n; sgGrant(ch,r.fx); if(!r.vfx) r.vfx='gold' }
+  const v=r.vfx; _chainEndSG(ch,ctx,r); if(v) setTimeout(()=>SGFX(v),320) };
+const _folWinSG=folWin; folWin=function(win){ _folWinSG(win); const F=rt.sgFight; rt.sgFight=null; const ch=F&&Date.now()-F.t<15*60000&&sgOf(F.k); if(ch){ const fx=[]; sgGrant(ch,fx); if(fx.length){ toast(`「${ch.n}」 성공! `+fx.join(' · '),true); SGFX('gold') } } };
+const _runChainSG=runChain; runChain=function(ch,ctx){ rt.sgFight=null; return _runChainSG(ch,ctx) };
+/* 발생: 아직 못 본 이야기를 먼저 */
+const sgPool=()=>{ const l=lvlOf(S.xp); return SAGA.filter(x=>l>=x.lv) };
+const _openStoryChainSG=openStoryChain; openStoryChain=function(){ const P=sgPool(), seen=S.chSeen||{}, fresh=P.filter(x=>!seen[x.k]);
+  if(fresh.length&&Math.random()<.65) return runChain(stPick(fresh));
+  if(P.length&&Math.random()<.3) return runChain(stPick(P));
+  return _openStoryChainSG() };
+/* 도감 목록 */
+function sagaCodex(){ const cs=S.chSeen||{}, w=S.sgWin||{}, l=lvlOf(S.xp); let h='';
+  for(let p=1;p<SG_PART.length;p++){ const P=SG_PART[p], arr=SAGA.filter(x=>x.saga===p), seen=arr.filter(x=>cs[x.k]).length, won=arr.filter(x=>w[x.k]).length, done=(S.titles||{})[P.t];
+    h+=`<div class="sec"><div class="sec-head"><h2>생존 기록 ${esc(P.n)}</h2><p class="num">${seen}/${arr.length} · 성공 ${won}</p></div><p class="note" style="margin:0 0 10px">${esc(P.d)} 전부 겪으면 칭호 「${esc(P.t)}」${done?' · 획득함':''}. 처음 성공할 때마다 보너스 보상이 있어요.</p><div class="codex">${arr.map(x=>{ const on=!!cs[x.k], b=sgBonus(x);
+      return cxItem(on,esc(x.n)+(w[x.k]?' <span class="tag ok">성공</span>':''),on?esc(x.hint):(l>=x.lv?'아직 겪지 못했다.':`Lv.${x.lv}부터 일어나는 이야기.`),on&&!w[x.k]?`<p class="note">첫 성공 보상 $${b.$} · XP +${b.xp}</p>`:'') }).join('')}</div></div>` }
+  return h }
+const _viewCodexSG=viewCodex; viewCodex=function(){ const h=_viewCodexSG.apply(this,arguments); return (rt.cx||'relic')==='event'?h+sagaCodex():h };
+for(let p=1;p<SG_PART.length;p++){ const P=SG_PART[p]; TITLES.push({k:'saga'+p,n:P.t,d:`생존 기록 ${P.n} 전부 겪기`,c:()=>SAGA.filter(x=>x.saga===p).every(x=>(S.chSeen||{})[x.k])}) }
+window.__SG={SAGA,SGFX,sgPool};
+
+/* ================= p35: 알바 하루 3번(전체) · 펫 화면 표시 설정 · 포지션 이야기 ================= */
+/* ---------- 알바: 모두 합쳐 하루 3번 ---------- */
+function jobTot(){ jobCnt('_'); return Object.values(S.jobDay.n).reduce((a,b)=>a+(+b||0),0) }
+const _cevJobBlock35=cevJobBlock; cevJobBlock=function(e){ if(!rt.subExec&&jobTot()>=JOB_DAILY) return `오늘 알바 ${JOB_DAILY}번 다 했어요`; return _cevJobBlock35(e) };
+
+/* ---------- 펫: 화면 표시 켜고 끄기 ---------- */
+const petShow=()=>SND.set.petShow!==false;
+function petShowApply(){ document.body.classList.toggle('nopet',!petShow()) }
+function petShowSet(v){ SND.set.petShow=!!v; SND.save(); petShowApply(); if(typeof render==='function') render(); toast(v?'펫이 다시 화면에 나와요.':'펫을 화면에서 숨겼어요. 효과는 그대로예요.') }
+ACT.petShowT=()=>petShowSet(!petShow());
+(()=>{ const st=document.createElement('style'); st.textContent='body.nopet .petroam,body.nopet .mpetw{display:none!important}.petshow{margin-left:auto}'; document.head.append(st); petShowApply() })();
+const _settings35=ACT.settings; ACT.settings=function(){ _settings35.apply(this,arguments); const L=$('mbox').querySelector('.setlist'); if(!L) return; const hr=L.querySelector('[data-set=horror]'), row=hr?hr.closest('.setrow'):null;
+  (row||L).insertAdjacentHTML(row?'afterend':'afterbegin',`<label class="setrow"><span><b>펫 화면 표시</b><small>홈에서 돌아다니는 펫과 지도 위 펫을 보여 줍니다. 꺼도 펫 효과는 그대로예요.</small></span><input type="checkbox" id="setPet" ${petShow()?'checked':''}></label>`);
+  $('setPet').onchange=e=>petShowSet(e.target.checked) };
+const _petCard35=petCard; petCard=function(){ const h=_petCard35(); if(!h) return h; return h.replace('</h3>',`</h3><button class="btn sm ghost petshow" data-act="petShowT" type="button">${petShow()?'화면에서 숨기기':'화면에 보이기'}</button>`) };
+
+/* ---------- 포지션 이야기 ---------- */
+const PCH=[];
+function PCA(k,pos,lv,n,mood,hint,s){ const ch={k:'pc_'+k,n,tag:'POSITION EVENT',mood,pc:pos,lv,hint,s:{}};
+  for(const id in s){ const fn=s[id]; ch.s[id]=ctx=>{ const node=fn(ctx); node.t=[].concat(node.t);
+      node.o.forEach(o=>{ if(o.cost){ o.tag=o.tag?o.tag+' · '+costTag(o.cost):costTag(o.cost); if(!hasCost(o.cost)) o.off=true; const pre=o.pre; o.pre=c=>{ payCost(o.cost); pre&&pre(c) } }
+        if(o.f){ const f=o.f; o.f=c=>{ const r=typeof f==='function'?f(c):f; return Object.assign({},typeof r==='function'?r(c):r) } } });
+      if(node.vfx) setTimeout(()=>SGFX(node.vfx),250); return node } }
+  PCH.push(ch); return ch }
+const _SGFX35=SGFX; SGFX=function(v){ if(v==='blush'){ try{ FXL.flash('rgba(255,150,180,.38)',800); FXL.vig(.35,'rgba(200,60,110,.7)'); setTimeout(()=>FXL.vig(0),2600); sfx('heart') }catch(e){} return } return _SGFX35(v) };
+const PC_NAMES=['Logan','Theo','Remy','Eli','Milo','Ethan','Ryan','Rio','Noah','Owen','Hugo','Damon','Jesse','Rory','Nathan','Cole','Julian','Kai','Gideon','Adrian','Kyle','Sean','Jamie'];
+function manCrew(origin,bias){ let c=null; for(let i=0;i<40;i++){ const x=makeCrew(origin,bias); if(x.sex==='남'&&x.age!=='어린이'&&x.age!=='청소년'&&x.age!=='노인'){ c=x; break } } if(!c){ c=makeCrew(origin,bias); c.sex='남'; c.age='어른'; c.name=stPick(NM_M)+' '+c.name.split(' ').slice(1).join(' ') } const nm=String(origin).split(' ').pop(); if(PC_NAMES.includes(nm)) c.name=nm; return c }
+/* ----- T: 리드하는 쪽 ----- */
+PCA('t_scout','T',1,'업혀 온 정찰병','human','다리를 다친 정찰병을 업고 캠프까지.',{
+ start:c=>({t:['배수로 옆에 청년 하나가 주저앉아 있다. 발목이 퉁퉁 부었다. 다른 캠프의 정찰병이다.','"괜찮아요, 혼자 갈 수 있어요." 일어서다 그대로 휘청인다. 내 팔을 붙잡은 손이 얼음장이다.'],sfx:'heart',o:[
+  {n:'말없이 등을 내민다',tag:'체력',f:chk('end',.45,{h:'성공 · 업혀 온 정찰병',t:['"…무거울 텐데." 등에 업힌 그가 한참 버티다 이마를 내 어깨에 기댔다.','캠프 문 앞에서 내려 주자 그가 귀까지 빨개져서 고개를 못 들었다. "저, 여기 남아도 돼요?"'],man:[['업혀 온 정찰병','agi']],fame:3,xp:28,vfx:'blush',win:1},{t:'반쯤 가서 다리가 풀렸다. 둘이 같이 굴렀다. 그가 웃음을 터뜨렸다. 그래도 끝까지 데려다줬다.',hp:-8,fame:1,xp:14})},
+  {n:'부목을 대고 부축한다',cost:{splint:1},f:{h:'성공 · 업혀 온 정찰병',t:['부목을 감는 동안 그가 내 손만 보고 있었다.','"손이 따뜻하네요." 부축해 걷는 길, 그가 일부러 천천히 걷는 것 같았다.'],man:[['부목을 감아 준 정찰병','agi']],fame:2,xp:24,vfx:'blush',win:1}},
+  {n:'그의 캠프 방향만 알려 준다',f:{t:'"고마워요." 그가 절뚝이며 멀어졌다. 몇 번이나 뒤돌아봤다.',xp:8}}]})});
+
+PCA('t_rival','T',2,'라이벌의 도발','threat','다른 무리의 대장이 굳이 나한테만 시비를 건다.',{
+ start:c=>({t:['동쪽 무리의 대장 Logan. 보급 상자 앞에서 또 마주쳤다. 이번 주만 세 번째다.','"또 너냐. 일부러 따라다니는 거 아니지?" 그가 상자를 발로 누르고 비스듬히 웃는다. 눈은 웃지 않는다.'],sfx:'bang',o:[
+  {n:'팔씨름으로 결판내자고 한다',tag:'힘',go:c=>PRx(sk('str',.45))?'win':'lose'},
+  {n:'한 걸음 다가가 눈을 맞춘다',tag:'매력',f:chk('cha',.45,{h:'성공 · 라이벌의 도발',t:['한 걸음. 또 한 걸음. 그가 먼저 눈을 피했다. 귀 끝이 붉다.','"…가져가. 이번만이야." 그는 상자를 밀어 주고 휙 돌아섰다. 다음 날 같은 자리에 상자가 하나 더 있었다. 쪽지와 함께. "빚진 거 아니다."'],give:{food:10,scrap:8},fame:4,xp:30,vfx:'blush',win:1},{t:'"뭘 봐." 그가 내 이마를 손가락으로 툭 밀었다. 상자는 그가 가져갔다.',st:[['fluster',10]],xp:10})},
+  {n:'상자를 양보한다',f:{t:'"…뭐야, 싱겁게." 그가 오히려 당황했다. 그날 밤 캠프 앞에 통조림 몇 개가 놓여 있었다.',give:{food:5},xp:12}}]}),
+ win:c=>({t:['탁. 그의 손등이 상자에 닿았다. 잡은 손을 그가 바로 놓지 않는다.','"…한 번 더." 숨이 거칠다. 지는 게 처음인 얼굴이다.'],vfx:'blush',o:[
+  {n:'"몇 번을 해도 똑같아"',f:{h:'성공 · 라이벌의 도발',t:['세 번 더 했다. 세 번 다 이겼다. 그가 바닥에 털썩 앉아 웃었다.','"좋아. 인정. 네 밑으로 갈 생각은 없지만… 옆이면 생각해 보지." 그날부터 그의 무리와 동맹이 됐다.'],give:{food:8,ammo:1},fame:8,xp:40,win:1}},
+  {n:'"같이 다니자"고 손을 내민다',f:{h:'성공 · 라이벌의 도발',t:['그가 내민 손을 한참 내려다봤다. 그리고 잡았다. 아까보다 훨씬 조심스럽게.'],man:[['동쪽 무리의 Logan','str']],fame:5,xp:38,vfx:'blush',win:1}}]}),
+ lose:c=>({t:['내 손등이 상자에 닿았다. 그가 바로 놓지 않고 몸을 숙인다.','"이 정도였어? 실망인데." 숨이 닿을 거리.'],o:[
+  {n:'"한 번 더"',tag:'힘',f:chk('str',.5,{h:'성공 · 라이벌의 도발',t:'두 번째는 내가 이겼다. 그가 진 손을 털며 투덜댔다. "…다음에 또 하자." 다음이 있다는 말이었다.',give:{food:6},fame:4,xp:26,win:1},{t:'또 졌다. 그가 상자를 들고 가다 돌아봤다. "다음 주에도 여기 와."',st:[['shame',10]],xp:10})}]})});
+
+PCA('t_jealous','T',3,'정비공의 토라짐','human','다른 사람과 웃는 걸 본 정비공이 하루 종일 말을 안 한다.',{
+ start:c=>({t:['캠프 정비공 Theo가 오늘따라 공구를 세게 내려놓는다. 쾅. 쾅.','아침에 상인과 웃으며 이야기한 게 문제인 것 같다. 말을 걸면 "바쁜데요."만 돌아온다.'],sfx:'bang',o:[
+  {n:'옆에 앉아 공구를 같이 잡는다',tag:'매력',f:chk('cha',.45,{h:'성공 · 정비공의 토라짐',t:['말없이 렌치를 건네받았다. 한 시간 동안 둘이 발전기만 만졌다.','"…그 상인이랑 무슨 얘기했어요?" "네 생일 선물 값 흥정." Theo가 렌치를 떨어뜨렸다.'],give:{repkit:1},mind:6,fame:2,xp:30,vfx:'blush',win:1},{t:'"제가 할게요." Theo가 공구를 빼앗아 갔다. 오늘은 안 되겠다.',xp:8})},
+  {n:'그가 좋아하는 통조림 복숭아를 내민다',cost:{food:3},f:{h:'성공 · 정비공의 토라짐',t:['복숭아 캔을 보더니 입꼬리가 실룩였다. "…이런다고 풀리는 거 아니에요."','다 먹고 나서야 그가 작게 말했다. "다음엔 나도 데려가요, 장 보러."'],man:[['정비공 Theo','per']],mind:4,xp:28,vfx:'blush',win:1}},
+  {n:'모른 척한다',f:{t:'저녁까지 발전기 소리가 유난히 시끄러웠다.',mind:-3,xp:6}}]})});
+
+PCA('t_bar','T',4,'폐허의 바텐더','threat','취객에게 시달리는 바텐더 앞을 막아선다.',{
+ start:c=>({t:['지하 바. 촛불 몇 개, 남은 술 몇 병. 생존자들이 모이는 곳이다.','앳된 얼굴의 바텐더 Remy의 손목을 덩치 큰 취객이 붙잡고 있다. "한 잔 더 따르라니까?" Remy가 웃으려 애쓴다. 손이 떨린다.'],sfx:'bang',mood:'threat',o:[
+  {n:'취객의 손목을 비튼다',tag:'힘',f:chk('str',.45,{h:'성공 · 폐허의 바텐더',t:['손목을 잡아 비틀자 취객이 비명을 질렀다. 바 전체가 조용해졌다.','Remy가 내 앞에 조용히 잔을 놓았다. "제일 좋은 거예요. 아껴 뒀던." 손은 더 이상 떨리지 않았다.'],give:{food:6,$:20},fame:6,xp:32,vfx:'blush',win:1},{t:'취객의 주먹이 먼저 날아왔다.',fight:{z:'thug',queue:[],win:{$:25}},xp:12,win:1})},
+  {n:'"그 사람은 내 일행이야"',tag:'매력',f:chk('cha',.45,{h:'성공 · 폐허의 바텐더',t:['취객이 나를 훑더니 손을 놓고 투덜대며 나갔다.','Remy가 작게 웃었다. "일행이요?" "싫어?" "…아뇨." 가게 문을 닫을 때 그가 짐을 쌌다. 같이 가겠다고.'],man:[['바텐더 Remy','cha']],fame:3,xp:30,vfx:'blush',win:1},{t:'"웃기네." 취객이 테이블을 엎었다.',fight:{z:'thug',queue:[],win:{$:20}},xp:10})},
+  {n:'구석에서 술만 마신다',f:{t:'취객은 결국 제풀에 나갔다. Remy가 잔을 닦다 나를 한 번 봤다. 실망한 눈이었다.',mind:-4,xp:6}}]})});
+
+PCA('t_rain','T',2,'버스 정류장의 비','human','비에 젖어 떨던 남자에게 겉옷을 벗어 준다.',{
+ start:c=>({t:['소나기. 부서진 버스 정류장 지붕 아래 남자 하나가 웅크리고 있다. 입술이 파랗다. 빗소리 너머로 놈들의 신음이 멀리 들린다.','"…자리 있어요." 그가 비켜 앉는다. 어깨가 닿을 만큼 좁다.'],vfx:'water',sfx:'distant',o:[
+  {n:'겉옷을 벗어 덮어 준다',f:{h:'성공 · 버스 정류장의 비',t:['그가 놀라 나를 봤다. 그리고 겉옷 깃을 코끝까지 끌어올렸다. "…냄새 좋네요." 비가 그칠 때까지 아무도 일어나지 않았다.','헤어질 때 그가 주머니에서 무언가를 꺼내 쥐여 줬다. 손때 묻은 라이터와 지도 한 장.'],give:{fuel:2,drone:1},hp:-3,fame:2,xp:24,vfx:'blush',win:1}},
+  {n:'불을 피워 둘이 쬔다',cost:{wood:4},f:{h:'성공 · 버스 정류장의 비',t:['젖은 나무를 겨우 살렸다. 그가 불빛 너머로 나를 오래 봤다.','"이런 세상에서 이런 사람도 있네." 그는 다음 날 캠프 문을 두드렸다.'],man:[['정류장의 남자','end']],xp:26,vfx:'blush',win:1}},
+  {n:'비가 그치자마자 떠난다',f:{t:'뒤에서 그가 재채기를 했다. 돌아보지 않았다.',xp:6}}]})});
+
+PCA('t_medic','T',4,'손이 떨리는 의대생','human','나를 치료하던 의대생이 자꾸 손을 떤다.',{
+ start:c=>({t:['팔뚝을 길게 베였다. 캠프 의대생 Eli가 봉합 바늘을 든다. 그런데 손이 떨린다.','"죄, 죄송해요. 원래 이러지 않는데…" 바늘이 두 번이나 빗나갔다. 그가 내 얼굴은 한 번도 안 본다.'],sfx:'heart',o:[
+  {n:'떨리는 손을 잡아 준다',tag:'매력',f:chk('cha',.45,{h:'성공 · 손이 떨리는 의대생',t:['손을 감싸 쥐자 떨림이 멎었다. 대신 그의 얼굴이 새빨개졌다.','봉합은 완벽했다. 실을 자르며 그가 중얼거렸다. "…다치지 마요. 다른 사람이 꿰매는 거 싫어요."'],cure:['bleed'],hp:15,give:{suture:1},fame:2,xp:30,vfx:'blush',win:1},{t:'손을 잡자 그가 바늘을 떨어뜨렸다. 결국 내가 직접 꿰맸다. 삐뚤빼뚤했다.',hp:-4,xp:10})},
+  {n:'"천천히 해. 안 아파"라고 웃는다',f:rol(.6,{h:'성공 · 손이 떨리는 의대생',t:['그가 숨을 고르고 한 땀씩 꿰맸다. 끝나고 붕대를 감다 말고 갑자기 고백하듯 말했다.','"사실 처음 왔을 때부터 말 걸고 싶었어요." 그는 그날부터 내 순찰에 따라나섰다.'],man:[['의대생 Eli','per']],hp:10,xp:28,vfx:'blush',win:1},{t:'웃었더니 그가 더 긴장했다. 봉합이 한 시간 걸렸다.',hp:5,xp:10})},
+  {n:'다른 사람을 부른다',f:{t:'Eli가 말없이 장갑을 벗었다. 그날 저녁 식판을 혼자 구석에서 들고 있었다.',hp:8,mind:-3,xp:6}}]})});
+
+PCA('t_heir','T',6,'건방진 도련님의 호위','threat','부잣집 아들을 안전지대까지 데려다준다.',{
+ start:c=>({t:['"$100. 저를 남쪽 안전지대까지." 깨끗한 코트, 비싼 시계. 재벌가 아들 Milo가 지폐를 흔든다.','"근데 당신, 생각보다 별로 안 세 보이네요?" 첫마디부터 얄밉다.'],sfx:'coin',o:[
+  {n:'받아들이고 길을 나선다',go:'road'},
+  {n:'"말 잘 들으면" 이라고 조건을 단다',tag:'매력',f:chk('cha',.4,{h:'성공 · 건방진 도련님의 호위',t:['Milo가 입을 삐죽였지만 고개를 끄덕였다. 가는 내내 내 소매를 놓지 않았다.','안전지대 앞에서 그가 돈 대신 시계를 풀어 줬다. "이게 더 비싸요. …또 봐요."'],give:{$:120},fame:4,xp:34,vfx:'blush',win:1},{t:'"제가 고객인데요?" 그는 다른 호위를 찾아 떠났다.',xp:6})}]}),
+ road:c=>({t:['폐허 한가운데서 무리와 마주쳤다. Milo가 얼어붙었다. 아까의 건방진 얼굴은 어디로 갔는지.','"…저, 저기요." 그가 내 등 뒤로 숨는다.'],sfx:'growl',vfx:'red',o:[
+  {n:'"내 뒤에 있어"',f:{h:'성공 · 건방진 도련님의 호위',t:'그를 등 뒤로 감추고 섰다. 놈들이 몰려온다.',fight:{z:'walker',queue:['runner'],win:{$:100,ration:1}},fame:5,xp:30,win:1}},
+  {n:'그를 안아 들고 달린다',tag:'체력',f:chk('end',.45,{h:'성공 · 건방진 도련님의 호위',t:['그를 번쩍 안아 들고 뛰었다. 안전지대 문이 닫히고 나서야 내려 줬다.','Milo가 코트를 여미며 시선을 피했다. "…돈 두 배로 줄게요. 그리고 나 여기 안 남을래요. 당신이랑 갈래요."'],give:{$:100},man:[['도련님 Milo','cha']],fame:4,xp:38,vfx:'blush',win:1},{t:'숨이 차서 멈췄다. 결국 싸웠다.',fight:{z:'walker',queue:['walker'],win:{$:80}},xp:12})}]})});
+
+PCA('t_watch','T',3,'새벽 경계 근무','human','말수 적은 저격수와 담요 하나를 나눠 쓴다.',{
+ start:c=>({t:['새벽 세 시, 망루. 저격수 Ethan과 둘이다. 그는 하루 종일 다섯 마디도 안 하는 사람이다.','바람이 차다. 담요는 하나. 그가 담요를 내 쪽으로 밀어 두고 혼자 떤다.'],vfx:'cold',sfx:'distant',o:[
+  {n:'담요를 펼쳐 같이 덮는다',f:{h:'성공 · 새벽 경계 근무',t:['어깨가 닿았다. 그가 굳었다가, 천천히 힘을 뺐다.','새벽 다섯 시쯤, 그가 내 어깨에 기대 잠들었다. 해가 뜰 때까지 깨우지 않았다. 일어난 그가 처음으로 길게 말했다. "…고마워. 다음에도 같이 서."'],man:[['저격수 Ethan','per']],mind:6,xp:28,vfx:'blush',win:1}},
+  {n:'따뜻한 차를 끓여 온다',cost:{water:2,food:1},f:{h:'성공 · 새벽 경계 근무',t:'김이 오르는 컵을 건네자 그가 두 손으로 받았다. 손끝이 스쳤다. 그는 다 마실 때까지 컵만 봤다.',mind:5,fame:1,xp:22,vfx:'blush',win:1}},
+  {n:'담요를 그냥 쓴다',f:{t:'따뜻했다. 옆에서 이가 딱딱 부딪히는 소리가 밤새 들렸다.',mind:-2,xp:6}}]})});
+
+PCA('t_ex','T',7,'세상이 끝나기 전의 그 사람','human','헤어졌던 옛 연인이 다른 무리와 함께 나타났다.',{
+ start:c=>({t:['교환 시장. 맞은편 천막에서 익숙한 뒷모습이 돌아섰다. Ryan. 세상이 무너지기 한 달 전에 헤어진 사람.','그가 들고 있던 깡통을 떨어뜨렸다. "…살아 있었구나."'],sfx:'sob',o:[
+  {n:'"잘 지냈어?"라고 먼저 웃는다',go:'talk'},
+  {n:'모른 척 지나간다',f:{t:['뒤에서 이름이 불렸다. 한 번. 두 번. 돌아보지 않았다.','시장을 나와서야 손이 떨린다는 걸 알았다.'],mind:-6,xp:10}}]}),
+ talk:c=>({t:['둘이 무너진 분수대에 앉았다. 그동안 있었던 일을 서로 털어놨다. 잃은 사람들, 버틴 날들.','"그때 내가 먼저 연락할걸." 그가 웃는다. 예전 그 웃음이다. 그의 무리가 저 멀리서 부른다.'],vfx:'blush',o:[
+  {n:'"이번엔 내가 먼저 할게. 같이 가자"',f:{h:'성공 · 세상이 끝나기 전의 그 사람',t:['그가 오래 나를 봤다. 그리고 자기 무리 쪽으로 손을 흔들었다. 작별 인사였다.','돌아오는 길, 그가 예전처럼 내 주머니에 손을 넣었다.'],man:[['다시 만난 Ryan','cha']],mind:12,xp:44,vfx:'blush',win:1}},
+  {n:'"살아 있으면 됐어"라고 보낸다',f:{h:'성공 · 세상이 끝나기 전의 그 사람',t:'그가 나를 한 번 꽉 안고 돌아섰다. 우리 캠프와 그의 무리는 그날부터 서로의 물자를 나눴다.',seed:['allyGift',{g:'Ryan의 무리'},60,140],mind:8,xp:36,win:1}}]})});
+
+PCA('t_sword','T',8,'더 강한 자만 따르는 검객','threat','자기보다 강한 사람만 따르겠다는 칼잡이와의 대련.',{
+ start:c=>({t:['폐허의 체육관. 감염자 서른을 혼자 베었다는 소문의 남자가 목검을 던진다. "나는 나보다 강한 사람만 따라."','그의 이름은 Rio. 지금까지 그를 이긴 사람은 없다고 한다. 구경꾼들이 숨을 죽인다.'],sfx:'bang',o:[
+  {n:'목검을 집는다',tag:'민첩',go:c=>PRx(sk('agi',.42))?'win':'lose'},
+  {n:'"따르는 사람 말고 옆에 설 사람을 찾아"',tag:'매력',f:chk('cha',.4,{h:'성공 · 더 강한 자만 따르는 검객',t:['Rio가 처음으로 목검을 내렸다. "…옆이라." 한참 웃더니 내 옆에 섰다. 정말 옆에.'],man:[['검객 Rio','agi']],fame:4,xp:36,vfx:'blush',win:1},{t:'"말로는 안 돼." Rio가 목검을 겨눴다.',st:[['fluster',8]],xp:8})}]}),
+ win:c=>({t:['목검 끝이 그의 목에 닿았다. 체육관이 조용해졌다.','Rio가 무릎을 꿇는 대신, 내 손목을 잡아 자기 쪽으로 끌었다. "…이긴 사람 얼굴은 가까이서 봐 둬야지."'],vfx:'blush',o:[
+  {n:'"그럼 오래 봐"',f:{h:'성공 · 더 강한 자만 따르는 검객',t:'Rio가 웃었다. 처음 보는 웃음이었다. 그는 그날 칼을 챙겨 우리 캠프로 왔다.',man:[['검객 Rio','agi']],fame:10,give:{whet:1},xp:46,win:1}}]}),
+ lose:c=>({t:['목검이 손에서 튕겨 나갔다. Rio의 목검이 내 턱 밑에 멈췄다.','"…아깝네. 다시 와. 기다릴 테니까."'],o:[{n:'반드시 다시 오겠다고 한다',f:{t:'Rio가 내 떨어진 목검을 주워 건넸다. "이건 가져가. 연습해."',give:{whet:1},hp:-8,xp:16}}]})});
+
+PCA('t_gift','T',6,'선물로 보내진 사람','threat','다른 무리가 "선물"이라며 청년을 보냈다. 선택은 그에게.',{
+ start:c=>({t:['서쪽 무리가 화해의 표시라며 보급품과 함께 청년 하나를 보냈다. 손목에 끈 자국.','"이제부터 당신 거래요." 청년 Noah가 고개를 숙인다. 눈은 텅 비어 있다.'],sfx:'sob',mood:'threat',o:[
+  {n:'끈을 풀어 주고 "넌 누구 것도 아니야"',f:{h:'성공 · 선물로 보내진 사람',t:['끈을 끊었다. Noah가 손목을 문지르며 나를 봤다. 처음으로 눈에 초점이 돌아왔다.','"…그럼 내가 고르면 돼요?" "응." 그는 한참 고민하다 말했다. "여기 있을래요. 내가 골랐어요."'],man:[['스스로 남은 Noah','agi']],mind:8,fame:6,xp:40,vfx:'blush',win:1}},
+  {n:'서쪽 무리에 항의하러 간다',f:{h:'성공 · 선물로 보내진 사람',t:'"사람은 선물이 아니야." 서쪽 무리 문 앞에서 그렇게 말했다. 대답 대신 쇠파이프가 나왔다.',fight:{z:'raider',queue:['raider'],win:{$:40,food:8}},fame:8,xp:30,win:1}},
+  {n:'보급품만 받고 돌려보낸다',f:{t:'Noah는 말없이 돌아갔다. 손목의 끈은 그대로였다.',give:{food:8},mind:-8,xp:6}}]})});
+
+PCA('t_notes','T',5,'숨은 쪽지의 주인','mystery','매일 아침 침낭 옆에 놓이는 쪽지와 복숭아 캔.',{
+ start:c=>({t:['일주일째. 아침마다 침낭 옆에 복숭아 캔과 쪽지가 있다. "오늘도 다치지 마요."','글씨가 단정하다. 캠프 남자들 중 누구 글씨인지 모르겠다.'],sfx:'tick',o:[
+  {n:'밤새 자는 척하며 기다린다',tag:'감각',f:chk('per',.45,{h:'성공 · 숨은 쪽지의 주인',t:['새벽, 살금살금 다가온 발소리. 눈을 뜨자 취사 담당 Owen이 캔을 든 채 굳었다.','"아, 그게… 남는 거라서…" 캔에 붙은 가격표는 그가 아끼던 마지막 하나였다. 그 캔을 둘이 나눠 먹었다.'],give:{food:6},man:[['쪽지를 남기던 Owen','end']],mind:6,xp:32,vfx:'blush',win:1},{t:'깜빡 잠들었다. 아침에 쪽지가 있었다. "자는 척 다 보였어요."',xp:12,st:[['fluster',10]]})},
+  {n:'답장을 써서 같은 자리에 둔다',f:{h:'성공 · 숨은 쪽지의 주인',t:['"고마워. 얼굴 보고 말해 줘." 다음 날 쪽지 대신 사람이 와 있었다. 귀가 새빨간 취사 담당 Owen.'],man:[['쪽지를 남기던 Owen','end']],mind:5,xp:28,vfx:'blush',win:1}},
+  {n:'캔만 챙긴다',f:{t:'복숭아는 달았다. 쪽지는 그날 이후 오지 않았다.',give:{food:3},xp:6}}]})});
+
+/* ----- B: 지켜지고 휘둘리는 쪽 ----- */
+PCA('b_carry','B',1,'번쩍 들린 날','human','발목을 접질린 나를 덩치 큰 남자가 안아 든다.',{
+ start:c=>({t:['돌무더기에서 미끄러져 발목을 접질렸다. 일어나려는데 그림자가 드리운다.','캠프의 덩치 큰 Hugo다. "다쳤네." 말이 끝나기도 전에 몸이 붕 떴다. 안겨 있다. 모두가 보는 앞에서.'],vfx:'blush',sfx:'heart',o:[
+  {n:'"내려 줘! 걸을 수 있어!"',f:{t:['"못 걷던데." Hugo는 못 들은 척 캠프까지 그대로 걸었다. 사람들 휘파람 소리.','침상에 내려놓고 그가 무뚝뚝하게 말했다. "다음엔 넘어지기 전에 불러."'],st:[['fluster',15]],cure:['leg'],hp:8,xp:20,win:1,h:'성공 · 번쩍 들린 날'}},
+  {n:'얌전히 목을 끌어안는다',f:{h:'성공 · 번쩍 들린 날',t:['Hugo의 걸음이 순간 멈칫했다. 귀가 빨개졌다.','"…꽉 잡아." 캠프까지 가는 길이 이상하게 길었다. 그 뒤로 그가 정찰 때마다 내 옆자리를 맡았다.'],man:[['덩치 큰 Hugo','str']],cure:['leg'],hp:10,xp:28,win:1}},
+  {n:'혼자 일어나려 버둥댄다',tag:'체력',f:chk('end',.5,{t:'겨우 내려와 절뚝이며 걸었다. Hugo가 반 걸음 뒤에서 팔을 벌린 채 따라왔다. 넘어지면 받으려고.',hp:-3,xp:14},{t:'버둥대다 둘이 같이 넘어졌다. Hugo 위로. 일어나는 데 한참 걸렸다.',st:[['fluster',15]],xp:12})}]})});
+
+PCA('b_boss','B',3,'약탈자 대장의 관심','threat','약탈자 대장이 나만 보면 길을 막고 웃는다.',{
+ start:c=>({t:['또 그다. 약탈자 대장 Damon. 오토바이로 길을 막고 헬멧을 벗는다.','"오늘도 혼자야? 위험하게." 그가 내 배낭을 툭 친다. "우리 쪽으로 오면 이런 거 안 메도 되는데."'],sfx:'engine',mood:'threat',o:[
+  {n:'눈웃음으로 받아친다',tag:'매력',f:chk('cha',.45,{h:'성공 · 약탈자 대장의 관심',t:['"그럼 오늘 짐은 당신이 들어 줄래?" Damon이 웃음을 터뜨렸다.','그는 정말 내 배낭을 오토바이에 싣고 캠프 앞까지 데려다줬다. 배낭 안에 자기네 통조림을 잔뜩 넣어서.'],give:{food:14,water:8,fuel:2},fame:4,xp:32,vfx:'blush',win:1},{t:'"귀엽네." 그가 내 볼을 꼬집고 배낭에서 통조림 두 개를 빼 갔다. "통행료."',st:[['fluster',12]],lose:.05,xp:10})},
+  {n:'"관심 없어"라고 딱 자른다',f:{t:['Damon이 한참 나를 보다 헬멧을 다시 썼다. "알았어. 그래도 이 길은 우리 애들이 안 건드릴 거야."','진짜였다. 그 길은 그 뒤로 안전했다.'],fame:2,xp:18,win:1,h:'성공 · 약탈자 대장의 관심'}},
+  {n:'오토바이 뒤에 탄다',f:rol(.5,{h:'성공 · 약탈자 대장의 관심',t:['바람이 세서 그의 허리를 꽉 잡았다. 그가 일부러 더 밟았다.','언덕 위 그의 아지트. "구경시켜 주고 싶었어." 창고 하나를 통째로 열어 줬다. "필요한 만큼."'],give:{food:12,ammo:1,fuel:3},fame:3,xp:34,vfx:'blush',win:1},{t:['아지트에 도착하자 부하들이 휘파람을 불었다. Damon이 버럭 화를 냈다. "손님이야!"','어색하게 저녁만 먹고 돌아왔다. 배는 불렀다.'],hg:30,st:[['fluster',10]],xp:16})}]})});
+
+PCA('b_chef','B',2,'잔소리하는 요리사','human','끼니를 거른다고 전직 셰프가 밥상을 들고 쫓아온다.',{
+ start:c=>({t:['"또 안 먹었지." 캠프 취사장의 전직 셰프 Jesse가 식판을 들고 서 있다.','"세 끼 중에 두 끼를 거르는 사람이 어디 있어. 앉아." 거절할 틈이 없다.'],sfx:'eat',o:[
+  {n:'투덜대며 먹는다',f:{h:'성공 · 잔소리하는 요리사',t:['한 숟갈 먹자 말이 사라졌다. 맛있다. 진짜로.','다 먹을 때까지 Jesse가 팔짱 끼고 지켜봤다. "내일 아침도 여기서 먹어. 안 오면 찾으러 간다."'],hg:40,hp:10,mind:4,xp:20,win:1}},
+  {n:'"먹여 주면 먹을게"라고 장난친다',tag:'매력',f:chk('cha',.4,{h:'성공 · 잔소리하는 요리사',t:['Jesse가 굳었다. 그리고 정말로 숟가락을 들었다. "…아." 이번엔 내가 굳었다.','그 뒤로 정찰 나갈 때마다 내 배낭엔 그의 도시락이 들어 있었다.'],man:[['셰프 Jesse','end']],hg:40,mind:6,xp:30,vfx:'blush',win:1},{t:'"애야?" Jesse가 식판을 내 무릎에 내려놓고 딱밤을 놨다.',hg:35,st:[['fluster',10]],xp:12})},
+  {n:'도망친다',tag:'민첩',f:chk('agi',.5,{t:'도망쳤다. 저녁에 침낭 옆에 식은 주먹밥과 쪽지. "다 먹어. 확인한다."',hg:20,xp:12},{t:'뒷덜미를 잡혔다. 결국 두 그릇 먹었다.',hg:50,st:[['fluster',8]],xp:12})}]})});
+
+PCA('b_coat','B',2,'말없이 덮어 준 코트','human','추위에 떨자 누군가 말없이 코트를 벗어 준다.',{
+ start:c=>({t:['밤 행군. 기온이 뚝 떨어졌다. 이가 딱딱 부딪힌다.','어깨 위로 묵직한 게 내려앉았다. 앞서 걷던 경비대 Rory의 코트다. 그는 이미 셔츠 바람으로 앞을 걷고 있다.'],vfx:'cold',sfx:'steps',o:[
+  {n:'코트 소매를 붙잡고 따라 걷는다',f:{h:'성공 · 말없이 덮어 준 코트',t:['소매를 잡자 Rory가 걸음을 늦췄다. 내 보폭에 맞춰.','캠프에 도착해 코트를 돌려주려 하자 그가 고개를 저었다. "가져. 너한테 더 잘 어울려."'],cure:['weak'],mind:6,xp:24,vfx:'blush',win:1}},
+  {n:'코트를 같이 걸치자고 한다',f:{h:'성공 · 말없이 덮어 준 코트',t:['코트 하나를 둘이 걸쳤다. 걸음이 자꾸 엉켰다. Rory가 결국 웃었다. 처음 듣는 웃음소리였다.'],man:[['경비대 Rory','end']],mind:5,xp:28,vfx:'blush',win:1}},
+  {n:'"괜찮아"하고 돌려준다',f:{t:'"그래." 그가 코트를 받아 들었다. 십 분 뒤 다시 내 어깨 위에 있었다.',st:[['fluster',8]],xp:12}}]})});
+
+PCA('b_soldier','B',4,'"내 뒤에 있어"','gun','몰려오는 놈들 앞에서 군인이 나를 등 뒤로 감춘다.',{
+ start:c=>({t:['골목 끝이 막혔다. 놈들이 양쪽에서 몰려온다. 무기가 부러졌다.','그때 누군가 내 팔을 끌어 벽 쪽으로 밀었다. 낯선 군복. "내 뒤에 있어. 절대 나오지 마."'],sfx:'gunshot',vfx:'shake',o:[
+  {n:'시키는 대로 등 뒤에 숨는다',f:{h:'성공 · "내 뒤에 있어"',t:'넓은 등이 시야를 가렸다. 총성과 비명. 그는 한 번도 물러서지 않았다.',fight:{z:'walker',queue:['runner'],win:{ammo:1}},xp:22,win:1}},
+  {n:'"나도 싸울 수 있어"라며 옆에 선다',tag:'힘',f:chk('str',.45,{h:'성공 · "내 뒤에 있어"',t:['그가 놀란 얼굴로 봤다가 픽 웃었다. "좋아. 왼쪽 맡아."','다 끝나고 그가 내 머리를 헝클었다. "제법인데. 이름 뭐야?" 그 군인, Nathan은 그날부터 우리 캠프 사람이 됐다.'],man:[['군인 Nathan','str']],fame:3,xp:34,win:1},{t:'한 발 내디뎠다가 넘어졌다. 그가 한 손으로 나를 일으켜 다시 등 뒤로 밀었다. "뒤에 있으랬지."',fight:{z:'walker',queue:['walker'],win:{ammo:1}},st:[['fluster',10]],xp:14})},
+  {n:'틈을 봐서 도망친다',tag:'민첩',f:chk('agi',.5,{t:'달리면서 돌아봤다. 그가 놈들을 막고 서서 나를 향해 고개를 끄덕였다. 다시 만나면 고맙다고 해야겠다.',xp:14},{t:'놈 하나가 앞을 막았다. 그 군인이 달려와 막아섰다.',fight:{z:'runner',queue:[],win:{}},xp:12})}]})});
+
+PCA('b_two','B',5,'둘 중 누구랑','human','누가 나를 호위할지 두 남자가 다툰다.',{
+ start:c=>({t:['정찰 조 편성. "내가 같이 간다." "어제도 네가 갔잖아." 사냥꾼 Cole과 정비병 Julian이 서로를 노려본다.','둘 다 내 쪽을 본다. "…골라."'],sfx:'bang',o:[
+  {n:'과묵한 사냥꾼 Cole',f:{h:'성공 · 둘 중 누구랑',t:['Cole이 아무 말 없이 내 배낭을 들었다. 가는 내내 내 앞의 나뭇가지를 꺾어 줬다.','돌아왔을 때 Julian이 문 앞에서 기다리고 있었다. 팔짱을 끼고, 입을 내민 채.'],man:[['사냥꾼 Cole','per']],give:{food:8},xp:28,vfx:'blush',win:1}},
+  {n:'수다쟁이 정비병 Julian',f:{h:'성공 · 둘 중 누구랑',t:['Julian은 가는 내내 떠들었다. 웃겼다. 고장 난 라디오를 고쳐서 옛날 노래를 틀어 줬다.','돌아왔을 때 Cole이 모닥불 앞에서 혼자 칼을 갈고 있었다. 평소보다 세게.'],man:[['정비병 Julian','cha']],give:{elec:3},xp:28,vfx:'blush',win:1}},
+  {n:'"셋이 가자"',tag:'매력',f:chk('cha',.45,{h:'성공 · 둘 중 누구랑',t:['둘이 동시에 "…뭐?" 했다. 그리고 셋이 갔다. 둘은 서로 앞서서 나를 지키겠다고 경쟁했다.','덕분에 그날 정찰은 역대 최고 수확이었다.'],give:{food:10,scrap:10,elec:2},fame:3,mind:4,xp:34,win:1},{t:'둘 다 삐졌다. 결국 혼자 갔다.',xp:8})}]})});
+
+PCA('b_tease','B',3,'장난꾸러기의 간식 도둑','human','자꾸 간식을 뺏어 먹는 녀석에게 복수한다.',{
+ start:c=>({t:['아껴 둔 초콜릿이 또 사라졌다. 범인은 안다. 캠프의 장난꾸러기 Kai.','저기 담벼락 위에서 은박지를 흔들며 웃고 있다. "찾는 거 이거야?"'],sfx:'click',o:[
+  {n:'잡으러 쫓아간다',tag:'민첩',f:chk('agi',.45,{h:'성공 · 장난꾸러기의 간식 도둑',t:['담을 넘어 덮쳤다. 둘이 풀밭에 굴렀다. 위에서 내려다보는 Kai가 갑자기 조용해졌다.','"…이거 반 줄게." 그가 남은 초콜릿을 내 입에 밀어 넣고 도망쳤다. 귀가 빨갰다.'],hg:10,mind:6,xp:24,vfx:'blush',win:1},{t:'놓쳤다. Kai가 지붕 위에서 초콜릿을 다 먹었다. 마지막 조각은 입 모양으로만 "미안".',st:[['fluster',8]],xp:10})},
+  {n:'똑같이 그의 육포를 훔친다',f:{h:'성공 · 장난꾸러기의 간식 도둑',t:['그날 밤 Kai의 육포를 훔쳤다. 다음 날 아침, 그가 침낭 앞에 쪼그려 앉아 있었다.','"선전포고야?" "응." 그 뒤로 둘의 간식 전쟁은 캠프의 명물이 됐다. 늘 그가 져 줬다.'],man:[['장난꾸러기 Kai','agi']],give:{food:4},xp:26,win:1}},
+  {n:'못 본 척 무시한다',f:{t:'Kai가 시무룩하게 내려와 초콜릿을 내밀었다. "…재미없잖아."',hg:10,xp:12}}]})});
+
+PCA('b_fever','B',4,'열이 내리던 밤','human','열에 시달리는 나를 무뚝뚝한 사냥꾼이 밤새 돌본다.',{
+ start:c=>({t:['열이 올랐다. 물린 데는 없는데, 혹시라는 생각이 떠나지 않는다. 누군가 이마에 차가운 수건을 얹는다.','"움직이지 마." 무뚝뚝한 목소리. 사냥꾼 Gideon이다. 평소엔 나한테 말 한마디 안 거는 사람.'],vfx:'flicker',sfx:'heart',o:[
+  {n:'그의 소매를 붙잡는다',f:{h:'성공 · 열이 내리던 밤',t:['"…가지 마." 열에 들떠서 한 말이었다. Gideon이 한참 가만히 있다가, 침대 옆에 의자를 끌어다 앉았다.','새벽에 눈을 떴을 때 그가 내 손을 잡은 채 졸고 있었다. 열은 내렸다.'],man:[['사냥꾼 Gideon','per']],cure:['sick','insom'],hp:20,mind:8,xp:30,vfx:'blush',win:1}},
+  {n:'"혼자 괜찮아"라고 버틴다',tag:'체력',f:chk('end',.5,{t:'"그래." 그가 나갔다. 아침에 보니 문 밖에 Gideon이 등을 기대고 앉아 자고 있었다.',cure:['sick'],hp:12,mind:4,xp:20,win:1,h:'성공 · 열이 내리던 밤'},{t:'열이 더 올랐다. Gideon이 아무 말 없이 다시 들어와 수건을 갈았다.',hp:6,st:[['fluster',10]],xp:14})},
+  {n:'약을 먹고 잠든다',cost:{med:1},f:{t:'꿈속에서 누군가 내 머리를 쓰다듬었다. 아침엔 아무도 없었다. 머리맡에 물 한 컵.',cure:['sick'],hp:15,xp:16}}]})});
+
+PCA('b_dance','B',6,'무너진 연회장의 왈츠','human','고장 난 축음기 소리에 누군가 춤을 청한다.',{
+ start:c=>({t:['바리케이드를 친 호텔 연회장. 샹들리에가 바닥에 떨어져 있다. 누군가 축음기를 돌렸다. 지직거리는 왈츠.','등 뒤에서 손이 내밀어졌다. 정찰대장 Adrian. "한 곡만. 세상 끝나기 전에 꼭 해 보고 싶었거든."'],sfx:'radio',o:[
+  {n:'손을 잡는다',f:{h:'성공 · 무너진 연회장의 왈츠',t:['그가 리드했다. 깨진 유리를 피해 천천히. 발을 두 번 밟았다. 그가 웃으며 허리를 끌어당겼다. "괜찮아. 내가 맞출게."','곡이 끝났는데 둘 다 손을 놓지 않았다.'],man:[['정찰대장 Adrian','cha']],mind:12,xp:32,vfx:'blush',win:1}},
+  {n:'"춤 못 춰"라고 빼다가 끌려 나간다',f:{h:'성공 · 무너진 연회장의 왈츠',t:['못 춘다고 했는데 그가 그냥 내 손을 잡고 돌렸다. 엉망이었다. 둘 다 웃다가 바닥에 주저앉았다.'],st:[['fluster',10]],mind:10,xp:26,vfx:'blush',win:1}},
+  {n:'축음기를 챙겨 간다',f:{t:'Adrian이 내민 손이 허공에 남았다. 축음기는 무거웠다.',give:{elec:3},mind:-4,xp:8}}]})});
+
+PCA('b_guard','B',7,'공짜 경호원','threat','용병이 돈도 안 받고 나를 지키겠다고 따라다닌다.',{
+ start:c=>({t:['사설 경비 출신 용병 Kyle. 다들 몸값이 비싸다고 하는 남자다.','그런 그가 사흘째 내 뒤를 따라다닌다. "돈? 필요 없어. 네가 위험한 데만 골라 다녀서 그래."'],sfx:'steps',o:[
+  {n:'"왜 나야?"라고 따진다',go:'why'},
+  {n:'따돌려 본다',tag:'민첩',f:chk('agi',.45,{t:'골목 세 개를 돌아 따돌렸다. 캠프에 도착하니 Kyle이 문 앞에 서 있었다. "느려."',st:[['fluster',10]],xp:16},{t:'따돌리려다 놈들 소굴로 들어갔다. Kyle이 한숨을 쉬며 앞으로 나섰다.',fight:{z:'runner',queue:['walker'],win:{ammo:1}},xp:14})}]}),
+ why:c=>({t:['Kyle이 처음으로 눈을 피했다. "…석 달 전에 다리 밑에서 붕대 감아 준 거, 기억 안 나?"','기억났다. 피투성이로 쓰러져 있던 남자. 이름도 안 묻고 지나갔던.'],vfx:'blush',o:[
+  {n:'"이제 이름 물어봐도 돼?"',f:{h:'성공 · 공짜 경호원',t:'"Kyle. 이제 기억해." 그는 그날부터 공짜 경호원에서 우리 캠프 사람이 됐다.',man:[['용병 Kyle','str']],fame:4,mind:6,xp:40,win:1}},
+  {n:'"빚 갚은 걸로 하자"',f:{h:'성공 · 공짜 경호원',t:'"아직 멀었어." 그가 돌아서며 탄약 상자 하나를 내 발밑에 놓았다. 다음 날도 그는 내 뒤에 있었다.',give:{ammo:2},fame:3,xp:30,win:1}}]})});
+
+PCA('b_rooftop','B',8,'옥상의 고백','human','말수 적은 대원이 옥상에서 할 말이 있다고 한다.',{
+ start:c=>({t:['노을. 캠프 옥상. 늘 조용하던 대원 Sean이 할 말이 있다며 불렀다.','한참 난간만 잡고 있던 그가 겨우 입을 연다. "…이런 세상에서 이런 말 하면 안 되는 거 아는데."'],vfx:'blush',sfx:'heart',o:[
+  {n:'끝까지 기다려 준다',f:{h:'성공 · 옥상의 고백',t:['"좋아해. 처음 본 날부터." 그의 목소리가 떨렸다. 대답 대신 난간 위 그의 손에 내 손을 겹쳤다.','해가 다 질 때까지 둘 다 아무 말도 하지 않았다. 그래도 충분했다.'],man:[['옥상의 Sean','end']],mind:15,fame:2,xp:40,win:1}},
+  {n:'"나도 할 말 있어"라고 먼저 말한다',tag:'매력',f:chk('cha',.4,{h:'성공 · 옥상의 고백',t:['Sean이 눈을 크게 떴다. 그리고 웃었다. 처음 보는 얼굴로.','"…먼저 말하려고 연습 엄청 했는데." 그날 캠프 사람들은 옥상에서 들려오는 웃음소리를 들었다.'],man:[['옥상의 Sean','end']],mind:15,xp:42,win:1},{t:'말이 꼬였다. 둘 다 얼굴만 빨개진 채 계단을 내려왔다. 다음 노을에 다시 올라가기로 했다.',st:[['fluster',15]],mind:6,xp:18})},
+  {n:'"지금은 살아남는 게 먼저야"',f:{t:'"…응. 알아." Sean이 웃었다. 그래도 그날 이후 그는 늘 내 등 뒤를 지켰다.',mind:-2,fame:1,xp:14}}]})});
+
+PCA('b_photo','B',5,'즉석카메라','human','낡은 즉석카메라로 나를 찍겠다는 사진가.',{
+ start:c=>({t:['약탈당한 사진관. 전직 사진가 Jamie가 먼지 쌓인 즉석카메라를 찾아냈다. 필름이 딱 한 장 남았다.','"마지막 한 장, 너 찍고 싶은데." 그가 렌즈 너머로 나를 본다.'],sfx:'click',o:[
+  {n:'어색하게 브이를 한다',f:{h:'성공 · 즉석카메라',t:['찰칵. 사진이 천천히 떠올랐다. 웃고 있는 내가 있었다. 오랜만에 보는 얼굴.','"이건 내가 가질게." Jamie가 사진을 가슴 주머니에 넣었다.'],mind:10,xp:22,vfx:'flash',win:1}},
+  {n:'"같이 찍자"고 그를 끌어당긴다',f:{h:'성공 · 즉석카메라',t:['팔을 쭉 뻗어 둘이 찍었다. 사진 속 Jamie는 렌즈가 아니라 나를 보고 있었다.','사진은 반으로 접지 않았다. 캠프 벽에 붙였다.'],man:[['사진가 Jamie','per']],mind:10,xp:28,vfx:'blush',win:1}},
+  {n:'필름을 다른 데 쓰자고 한다',f:{t:'"…그래, 지도 찍어 두자." Jamie가 실망한 걸 숨기지 못했다.',give:{drone:1},xp:10}}]})});
+
+/* ---------- 연결 ---------- */
+ALL_CH.push(...PCH);
+const pcPool=()=>{ const t=S.tmb, l=lvlOf(S.xp); if(!t) return []; return PCH.filter(x=>l>=x.lv&&(t==='M'||x.pc===t)) };
+const isPosSrc=src=>Array.isArray(src)&&src.length&&src.every(x=>POS_T.includes(x)||POS_B.includes(x));
+const _openStory35=openStory; openStory=function(src){ if(isPosSrc(src)){ const P=pcPool(), seen=S.chSeen||{}, fresh=P.filter(x=>!seen[x.k]), fin=src.some(x=>x.final); if(P.length&&Math.random()<(fin?.35:fresh.length?.7:.45)) return runChain(stPick(fresh.length?fresh:P)) } return _openStory35(src) };
+const _chainEnd35=chainEnd; chainEnd=function(ch,ctx,r){ r=Object.assign({},r||{}); if(!ch||!ch.pc) return _chainEnd35(ch,ctx,r); r.fx=(r.fx||[]).slice();
+  (r.man||[]).forEach(([o,b])=>{ const c=addCrew(o,b,manCrew(o,b)); r.fx.push(c?`대원 합류: ${c.name} (${Object.entries(c.st).map(([a,v])=>STN[a]+' '+v).join(' · ')})`:'자리가 없어 함께하지 못했다') });
+  if(r.fame){ S.fame=Math.max(0,(S.fame||0)+r.fame); r.fx.push(`명성 +${r.fame}`) }
+  if(r.win){ const k=ch.pc==='T'?'tCount':'bCount'; S[k]=(S[k]||0)+1; S.pcWin=S.pcWin||{}; if(!S.pcWin[ch.k]){ S.pcWin[ch.k]=Date.now(); const b={$:10+ch.lv*3,xp:8+ch.lv*2}; addMoney(b.$); addXp(b.xp); r.fx.push(`첫 성공 보상 $${b.$} · XP +${b.xp}`) } if(!r.vfx&&!r.fight) r.vfx='blush' }
+  const v=r.vfx; delete r.man; _chainEnd35(ch,ctx,r); if(v) setTimeout(()=>SGFX(v),320) };
+const _viewCodex35=viewCodex; viewCodex=function(){ const h=_viewCodex35.apply(this,arguments); if((rt.cx||'relic')!=='event') return h; const t=S.tmb, cs=S.chSeen||{}, w=S.pcWin||{}, l=lvlOf(S.xp);
+  const arr=PCH.filter(x=>!t||t==='M'||x.pc===t), seen=arr.filter(x=>cs[x.k]).length;
+  return h+`<div class="sec"><div class="sec-head"><h2>포지션 이야기 ${t?`· ${t}`:''}</h2><p class="num">${seen}/${arr.length} · 성공 ${arr.filter(x=>w[x.k]).length}</p></div><p class="note" style="margin:0 0 10px">${t==='T'?'리드하는 쪽의 이야기예요.':t==='B'?'지켜지고 휘둘리는 쪽의 이야기예요.':'M은 T와 B 이야기를 모두 겪어요.'} 포지션 사건이 일어날 때 함께 나와요.</p><div class="codex">${arr.map(x=>cxItem(!!cs[x.k],esc(x.n)+` <span class="tag">${x.pc}</span>`+(w[x.k]?' <span class="tag ok">성공</span>':''),cs[x.k]?esc(x.hint):(l>=x.lv?'아직 겪지 못했다.':`Lv.${x.lv}부터 일어나는 이야기.`))).join('')}</div></div>` };
+window.__PC={PCH,pcPool};
+/* ================= p36: 유혹 포지션 이야기 · 동행 턴 결과 · 날씨 연출 · 지원 사격 피드백 ================= */
+/* ---------- 유혹 계열 포지션 이야기 (T: 먼저 꼬드기는 쪽 · B: 꼬드김을 받는 쪽) ---------- */
+PCA('t_husband','T',3,'대장의 남편','human','캠프 대장의 남편이 자꾸 이쪽을 본다. 열쇠는 그가 쥐고 있다.',{
+ start:c=>({t:['이웃 캠프 대장 Marla의 남편 Graham. 보급 창고 열쇠를 허리에 차고 다니는 남자다.','배급 줄에서 눈이 마주쳤다. 그가 먼저 피했다. 그리고 다시 봤다. 왼손 약지의 반지를 엄지로 돌리면서.'],sfx:'heart',vfx:'blush',o:[
+  {n:'창고 뒤에서 일부러 마주친다',go:'shed'},
+  {n:'배급 줄에서 슬쩍 손등을 스친다',tag:'매력',f:chk('cha',.45,{h:'성공 · 대장의 남편',t:['손등이 스치자 Graham의 숨이 멎었다. 배급 담당이 그였다. 내 몫의 통조림이 두 배였다.','돌아서는데 그가 낮게 말했다. "…내일도 이 줄에 서." 반지를 돌리는 손이 빨라졌다.'],give:{food:12,water:6},fame:2,xp:24,win:1},{t:'Marla가 정확히 그 순간을 봤다. 그녀의 웃음이 얼어붙었다. 그날 배급은 반이었다.',lose:.08,st:[['shame',10]],xp:8})},
+  {n:'남의 남자는 건드리지 않는다',f:{t:'그가 반지를 돌리는 걸 못 본 척했다. 다음 날, 그는 배급 줄에서 내 쪽을 보지 않으려 애썼다.',xp:6}}]}),
+ shed:c=>({t:['창고 뒤 그늘. "여기서 뭐 해?" Graham의 목소리가 쉬어 있다.','"열쇠 구경." 그의 허리춤을 내려다봤다. 그가 한 걸음 물러섰다가, 반 걸음 다시 다가왔다.'],vfx:'blush',sfx:'heart',o:[
+  {n:'"Marla는 지금 회의 중이잖아"',tag:'매력',f:c2=>PRx(sk('cha',.45))?(PRx(.75)?{h:'성공 · 대장의 남편',t:['열쇠 꾸러미가 내 손바닥에 내려앉았다. "…십 분." 그가 반지를 빼서 주머니에 넣었다. 그 손이 떨렸다.','창고 문이 닫히기 전, 나는 그의 넥타이를 한 번 당겼다 놓았다. 그게 다였다. 그는 그걸로 충분해 보였다.'],give:{food:16,med:3,ammo:1},fame:4,xp:36,win:1}:{t:['열쇠를 받은 순간, 등 뒤에서 Marla의 목소리. "여보?"','Graham의 얼굴이 하얗게 질렸다. 그녀의 경호원들이 다가온다.'],fight:{z:'thug',queue:['thug'],win:{food:8}},st:[['shame',15]],xp:14}):{t:'"…그만하자." Graham이 고개를 젓고 돌아섰다. 반지는 다시 손가락에 끼워져 있었다.',xp:10}},
+  {n:'열쇠만 빼 오고 손을 뗀다',tag:'민첩',f:chk('agi',.45,{h:'성공 · 대장의 남편',t:'그가 눈을 감은 사이 열쇠 꾸러미만 빼냈다. 눈을 떴을 때 나는 이미 창고 안이었다. 문틈으로 그가 웃는 게 보였다. 화가 나 보이진 않았다.',give:{food:12,med:2},xp:30,win:1},{t:'손이 열쇠에 닿기 전에 그가 손목을 잡았다. "그렇게는 안 되지." 놓아주지도 않았다.',st:[['fluster',12]],xp:10})}]})});
+
+PCA('t_guard2','T',2,'창고 경비의 십 분','threat','야간 창고 경비에게 담배 한 개비를 내민다.',{
+ start:c=>({t:['새벽 두 시, 보급 창고. 경비 Wes가 혼자 하품을 한다.','상자 위, 그의 옆자리에 걸터앉았다. 무릎이 닿을 만큼. 그가 소총을 고쳐 쥔다.'],sfx:'tick',o:[
+  {n:'담배를 물려 주고 불을 붙여 준다',tag:'매력',f:chk('cha',.45,{h:'성공 · 창고 경비의 십 분',t:['라이터 불빛에 그의 얼굴이 가까이 들어왔다. 연기를 내뱉으며 그가 웃었다. "…십 분이야. 난 저쪽 담장 보고 있을게."','십 분 뒤 돌아왔을 때 그가 말했다. "내일 밤도 내 근무야."'],give:{scrap:12,food:8,elec:2},xp:28,win:1},{t:'"수작 부리지 마." 그가 웃으며 내 담배를 빼앗아 자기가 피웠다.',xp:8})},
+  {n:'추운 척 그의 외투 안으로 손을 넣는다',f:rol(.5,{h:'성공 · 창고 경비의 십 분',t:'Wes가 굳었다. 그 사이 그의 외투 안주머니에서 창고 열쇠가 내 손으로 옮겨 왔다. 그는 끝까지 몰랐다. 아니, 모른 척했을지도.',give:{scrap:10,med:2,fuel:2},xp:30,win:1},{t:'"…야." 그가 내 손목을 잡았다. 열쇠 대신 그의 심장 소리만 손바닥에 남았다. 순찰 교대 시간이었다.',st:[['fluster',10]],xp:10})},
+  {n:'그냥 같이 밤을 지킨다',f:{t:'둘이서 별을 봤다. 아무 일도 없었다. 그게 그에게는 더 오래 기억에 남은 모양이다.',mind:4,xp:10}}]})});
+
+PCA('t_priest','T',6,'맹세한 사제','mystery','금욕을 맹세한 흰 옷의 젊은 사제를 시험한다.',{
+ start:c=>({t:['흰 옷 교단의 젊은 사제 Silas. 모든 욕망을 끊었다고 설교하는 남자. 교단의 약품 창고 열쇠도 그가 쥐고 있다.','고해실 칸막이 너머로 그의 숨소리가 들린다. "말씀하세요, 형제여."'],sfx:'whisper',vfx:'flicker',o:[
+  {n:'"제 죄는… 당신을 생각한 거예요"',tag:'매력',f:chk('cha',.42,{h:'성공 · 맹세한 사제',t:['칸막이 너머가 한참 조용했다. 묵주 알이 바닥에 떨어져 굴렀다.','"…다음 주 같은 시간에, 다시 고해하러 오세요." 그가 칸막이 아래로 약품 창고 열쇠를 밀어 넣었다. 손끝이 떨렸다.'],give:{med:5,antibio:1},fame:3,xp:38,win:1},{t:'"사탄이 여기 있다!" 그가 고해실을 뛰쳐나가 종을 쳤다. 흰 옷들이 몰려온다.',fight:{z:'cultist',queue:['cultist'],win:{med:2}},xp:14})},
+  {n:'칸막이 창살 사이로 손가락을 넣는다',f:rol(.5,{h:'성공 · 맹세한 사제',t:'그의 손이 내 손가락을 피하지 않았다. 아주 잠깐. 그가 손을 빼며 기도문을 중얼거렸다. 기도문이 엉망이었다. 나갈 때 내 주머니엔 교단의 보급표가 들어 있었다.',give:{food:10,med:3},xp:32,win:1},{t:'그가 창살을 탁 닫았다. "나가세요." 목소리는 떨렸지만 문은 열리지 않았다.',xp:10})},
+  {n:'진짜로 고해만 하고 나온다',f:{t:'어떤 죄를 말했는지는 비밀이다. 나오는 길에 그가 축복을 빌어 줬다. 마음이 조금 가벼웠다.',mind:6,xp:10}}]})});
+
+PCA('t_rivalbf','T',5,'라이벌의 연인','threat','적대 세력 대장의 애인을 몰래 불러낸다.',{
+ start:c=>({t:['적대 세력 대장 Victor의 애인 Jasper. 대장 곁에서 늘 지루한 얼굴을 하고 있는 남자.','교환 시장에서 그와 눈이 마주쳤다. 내가 먼저 웃었다. 그가 대장 몰래 웃음을 돌려줬다.'],sfx:'heart',vfx:'blush',o:[
+  {n:'쪽지로 다리 밑에서 보자고 한다',go:'bridge'},
+  {n:'대장 앞에서 대놓고 그에게 술을 건넨다',tag:'매력',f:chk('cha',.4,{h:'성공 · 라이벌의 연인',t:['Jasper가 대장 앞에서 내 잔을 받았다. Victor의 턱에 힘이 들어갔다.','그날 저녁 그 세력 안에서 소리 지르는 싸움이 났다는 소문. 다음 날 그들의 보급 트럭이 반으로 줄었다.'],fame:6,give:{scrap:10},xp:30,win:1},{t:'Victor가 잔을 쳐서 떨어뜨렸다. "내 거 건드리지 마."',fight:{z:'enforcer',queue:[],win:{$:30}},xp:12})},
+  {n:'관심 없는 척 지나간다',f:{t:'뒤통수에 시선이 오래 꽂혔다. 다음 교환 시장에서 그가 먼저 다가올 것 같다.',xp:6}}]}),
+ bridge:c=>({t:['자정, 무너진 다리 밑. Jasper가 후드를 쓰고 왔다. "들키면 나 죽어." 그래놓고 왔다.','"그 사람은 날 장식품처럼 데리고 다녀." 그가 내 코트 깃을 만지작거린다.'],vfx:'blush',o:[
+  {n:'"그럼 나한테 그 사람 얘기 다 해 봐"',f:{h:'성공 · 라이벌의 연인',t:['그가 털어놨다. 순찰 시간, 창고 위치, 무기 수. 말하는 내내 내 손을 놓지 않았다.','헤어질 때 그가 물었다. "다음에도 만나 줄 거야?" 대답 대신 그의 후드를 다시 씌워 줬다.'],give:{drone:2},fame:4,xp:40,win:1}},
+  {n:'"그 사람 버리고 나한테 와"',tag:'매력',f:chk('cha',.45,{h:'성공 · 라이벌의 연인',t:'Jasper가 한참 나를 보다 웃었다. "…미쳤어." 사흘 뒤, 그는 Victor의 금고 열쇠를 들고 우리 캠프 문을 두드렸다.',man:[['라이벌의 연인 Jasper','cha']],give:{$:80},fame:8,xp:46,win:1},{t:'"그건 못 해." 그가 뒷걸음질 쳤다. 다리 위에서 손전등 불빛. 누군가 따라왔다.',fight:{z:'enforcer',queue:['raider'],win:{$:40}},xp:16})}]})});
+
+PCA('t_ring','T',7,'반지 낀 의사','human','결혼반지를 낀 진료소 의사에게 늦은 밤 진찰을 받으러 간다.',{
+ start:c=>({t:['물린 사람을 가려내는 검역 진료소 의사 Dr. Hale. 아내 사진을 책상에 세워 두는 남자. 약장 열쇠는 늘 그의 목에 걸려 있다.','문 닫을 시간에 찾아갔다. "어디가 아파서요?" 그가 청진기를 든다.'],sfx:'heart',o:[
+  {n:'"심장이 좀 빨리 뛰어서요"',tag:'매력',f:chk('cha',.45,{h:'성공 · 반지 낀 의사',t:['청진기가 가슴에 닿았다. 그가 한참 듣기만 했다. "…정상인데요." 그의 목소리가 정상이 아니었다.','나올 때 그가 아무 말 없이 약장을 열어 둔 채 등을 돌렸다. 책상 위 아내 사진이 엎어져 있었다.'],give:{med:5,suture:1,antibio:1},xp:36,win:1},{t:'"농담은 낮에 하세요." 그가 사진을 바로 세웠다. 그래도 진통제 한 통은 챙겨 줬다.',give:{painkiller:1},xp:10})},
+  {n:'사진을 슬쩍 엎어 놓는다',f:rol(.5,{h:'성공 · 반지 낀 의사',t:'그가 엎어진 사진을 봤다. 그리고 다시 세우지 않았다. "…오늘은 진찰이 길어지겠네요." 진찰은 정말 길었다. 진찰만.',give:{med:4,medkit:1},xp:34,win:1},{t:'그가 사진을 세우고 문을 열었다. "다음 환자요." 다음 환자는 없었다.',st:[['shame',10]],xp:8})},
+  {n:'진짜 진찰만 받는다',f:{t:'혈압, 맥박, 상처 소독. 그는 친절했다. 아내 얘기를 많이 했다.',hp:12,xp:8}}]})});
+
+PCA('t_merchant','T',4,'상인의 저녁 식사','human','값을 깎아 주는 대신 단둘이 저녁을 먹자는 상인.',{
+ start:c=>({t:['총 든 호위 넷을 거느린 떠돌이 상인 행렬의 주인 Felix. 약탈한 반지를 세 개나 낀 손으로 저울을 두드린다.','"값은 정가. 단, 오늘 밤 내 마차에서 저녁 먹어 주면 반값."'],sfx:'coin',o:[
+  {n:'저녁을 먹으며 그를 애태운다',tag:'매력',f:chk('cha',.45,{h:'성공 · 상인의 저녁 식사',t:['와인 한 병. 그가 다가올 때마다 잔을 채워 줬다. 그가 말할 때마다 웃어 줬다. 딱 거기까지.','새벽에 마차에서 내릴 때 Felix가 장부를 찢었다. "외상 다 지워 줄게. 다음 달에도 와."'],give:{$:70,parts:1},fame:2,xp:34,win:1},{t:'그가 너무 취했다. 저녁은 그의 코 고는 소리로 끝났다. 반값 약속은 기억도 못 했다.',xp:10})},
+  {n:'저녁만 먹고 정가를 낸다',cost:{$:20},f:{t:'"재미없는 손님이네." 그래도 그는 디저트까지 내왔다. 통조림 복숭아였다.',give:{parts:1,food:4},xp:16}},
+  {n:'다른 상인한테 간다',f:{t:'뒤에서 Felix가 혀를 찼다. 다른 상인은 두 배를 불렀다.',xp:4}}]})});
+
+/* ----- B: 꼬드김을 받는 쪽 ----- */
+PCA('b_married','B',3,'밤마다 찾아오는 유부남','human','반지를 주머니에 넣고 텐트에 찾아오는 정비공.',{
+ start:c=>({t:['밤 열한 시. 텐트 밖에서 조심스러운 기척. 정비공 Victor다. 캠프 발전기와 철조망을 혼자 고치는 남자. 아내 Nina와 같은 텐트를 쓴다.','"잠깐 얘기만." 그가 통조림 복숭아를 내민다. 왼손 약지에 반지 자국만 하얗게 남아 있다.'],sfx:'knock',vfx:'blush',o:[
+  {n:'텐트 문을 반만 열어 둔다',go:'tent'},
+  {n:'"반지는 어디 뒀어요?"라고 묻는다',tag:'감각',f:chk('per',.5,{t:['그가 주머니를 움찔 쥐었다. "…그건." 대답을 못 했다. 복숭아만 놓고 돌아갔다.','다음 날부터 그는 내 발전기를 공짜로 고쳐 줬다. 눈은 마주치지 않으면서.'],give:{repkit:1,food:3},xp:24,win:1,h:'성공 · 밤마다 찾아오는 유부남'},{t:'"아내는 잠들었어." 그는 질문을 못 들은 척했다. 그게 더 무서웠다.',st:[['fluster',10]],xp:8})},
+  {n:'문을 닫고 등불을 끈다',f:{t:'한참 서 있던 그림자가 멀어졌다. 텐트 밖에 복숭아 캔 하나가 남아 있었다.',give:{food:3},xp:8}}]}),
+ tent:c=>({t:['그가 텐트 입구에 앉았다. 반은 안, 반은 밖. "Nina는 날 안 봐. 너는 보잖아."','그의 손이 내 발목 근처 바닥을 짚는다. 닿을 듯 말 듯.'],vfx:'blush',sfx:'heart',o:[
+  {n:'모르는 척 그의 말을 끝까지 들어 준다',f:rol(.6,{h:'성공 · 밤마다 찾아오는 유부남',t:['한 시간 동안 그는 떠들기만 했다. 손은 끝내 바닥 위에 있었다. 떠나면서 그가 말했다. "고마워. 내일 또 와도 돼?"','그 뒤로 내 텐트 앞에는 매일 무언가 놓여 있었다. 부품, 통조림, 손으로 만든 칼.'],give:{elec:3,food:8,scrap:8},xp:32,win:1},{t:['"Victor?" 바깥에서 Nina의 목소리. 그가 튕기듯 일어났다.','다음 날 아침, 캠프 사람들의 시선이 이상했다. Nina가 내 물통을 발로 찼다.'],lose:.08,st:[['shame',20]],mind:-6,xp:12})},
+  {n:'"집에 가요, Victor"',f:{h:'성공 · 밤마다 찾아오는 유부남',t:'그가 한숨처럼 웃었다. "…응." 다음 날 그는 Nina의 손을 잡고 배급 줄에 섰다. 나를 보고 고개를 살짝 숙였다.',mind:6,xp:20,win:1}}]})});
+
+PCA('b_boss2','B',5,'대장의 애인의 초대','threat','적 대장의 애인이 할 얘기가 있다며 나를 자기 방으로 부른다.',{
+ start:c=>({t:['포로 교환 협상 중. 적 대장의 애인 Lucien이 나만 따로 불렀다. "협상은 저 사람들끼리 하라고 하고."','그의 방. 벨벳 소파, 와인, 촛불. 이 세상에 남은 마지막 사치 같은 방이다. 그가 다리를 꼬고 웃는다. "앉아. 무서워하지 말고."'],sfx:'heart',vfx:'blush',o:[
+  {n:'그의 옆자리에 앉는다',go:'sofa'},
+  {n:'문 옆에 서서 버틴다',tag:'체력',f:chk('end',.5,{t:'"재미없네." 그가 와인을 혼자 마셨다. 그래도 협상장에 돌아갔을 때 조건이 조금 나아져 있었다.',give:{food:6},xp:16},{t:'"앉으랬지." 그가 일어나 다가왔다. 너무 가까이. 문이 등 뒤에 닿았다.',st:[['fluster',15]],xp:10})}]}),
+ sofa:c=>({t:['그가 내 잔을 채운다. "그 사람, 나한테 아무것도 안 물어봐. 지루해 죽겠어."','그의 손가락이 내 손목 맥박 위에 멈춘다. "…빨리 뛰네. 귀엽게."'],vfx:'blush',sfx:'heart',o:[
+  {n:'수줍은 척 받아 주며 정보를 빼낸다',tag:'매력',f:chk('cha',.45,{h:'성공 · 대장의 애인의 초대',t:['그는 내가 얼굴을 붉힐 때마다 비밀 하나씩을 흘렸다. 창고 위치. 대장의 약점.','"다음에 또 와. 협상 없어도." 나오는 길, 그가 내 주머니에 열쇠 하나를 넣었다.'],give:{drone:2,$:60},fame:5,xp:42,win:1},{t:'정보를 캐려는 걸 그가 눈치챘다. "어머, 영리하네." 그가 웃으며 나를 내보냈다. 협상은 결렬됐다.',lose:.06,xp:12})},
+  {n:'잔을 내려놓고 일어선다',f:{t:'"…가게?" 그가 붙잡지 않았다. 대신 문을 닫기 직전 말했다. "넌 다시 올 거야." 그 말이 오래 귓가에 남았다.',st:[['fluster',10]],xp:14}}]})});
+
+PCA('b_coach','B',4,'교관의 연장 수업','human','엄한 격투 교관이 수업이 끝난 뒤에도 자세를 고쳐 준다.',{
+ start:c=>({t:['감염자 목을 꺾는 법을 가르치는 격투 교관 Reid. 맨손으로 놈들 셋을 상대했다는 남자. 누구에게도 칭찬 한 마디 안 한다.','수업이 끝났다. 다들 나갔다. "너는 남아." 그가 내 등 뒤에 선다. 손이 허리에 닿는다. "중심이 틀렸어."'],sfx:'steps',vfx:'blush',o:[
+  {n:'일부러 계속 틀린다',tag:'매력',f:chk('cha',.45,{h:'성공 · 교관의 연장 수업',t:['세 번째 틀렸을 때 그가 웃음을 참는 게 느껴졌다. "…일부러지." 허리의 손은 떨어지지 않았다.','수업은 한 시간 더 이어졌다. 다음 날 내 자세는 완벽했다. 그가 아쉬운 얼굴을 했다.'],xp:30,give:{whet:1},mind:4,win:1},{t:'"장난할 거면 나가." 그가 손을 뗐다. 그날 밤 팔굽혀펴기 백 개.',hp:-6,st:[['drained',10]],xp:12})},
+  {n:'진지하게 배운다',tag:'힘',f:chk('str',.45,{h:'성공 · 교관의 연장 수업',t:'마지막 한 번, 그를 바닥에 메쳤다. Reid가 누운 채로 나를 올려다봤다. "…잘했어." 처음 듣는 칭찬이었다. 그가 일어날 생각을 하지 않았다.',xp:34,win:1},{t:'오히려 내가 매트에 눕혀졌다. 그가 위에서 내려다봤다. "오늘은 여기까지." 숨이 차서 일어나지 못했다.',st:[['fluster',12]],xp:12})}]})});
+
+PCA('b_brothers','B',6,'형제의 비밀','human','형과 동생이 각자 몰래 나를 불러낸다.',{
+ start:c=>({t:['사냥꾼 형제 Wyatt와 Beau. 둘 다 무뚝뚝하고, 둘 다 나한테만 말이 많다.','오늘 아침 형이 쪽지를 줬다. "해 질 때 헛간." 점심엔 동생이 귓속말했다. "해 질 때 우물가."'],sfx:'tick',o:[
+  {n:'형의 헛간으로 간다',f:{h:'성공 · 형의 헛간',t:['Wyatt는 말없이 사슴 가죽 조끼를 건넸다. 직접 무두질했다고. 입혀 주면서 단추를 하나하나 채웠다. 아주 천천히.','멀리 우물가에서 누군가 돌을 걷어차는 소리가 났다.'],give:{food:10},man:[['사냥꾼 형 Wyatt','str']],xp:30,win:1}},
+  {n:'동생의 우물가로 간다',f:{h:'성공 · 동생의 우물가',t:['Beau는 들꽃을 들고 있었다. 들킬까 봐 자꾸 뒤를 돌아보면서. "형한텐 비밀이야." 내 귀 뒤에 꽃을 꽂아 줬다.','멀리 헛간 쪽에서 문이 쾅 닫히는 소리가 났다.'],give:{food:6,water:6},man:[['사냥꾼 동생 Beau','agi']],xp:30,win:1}},
+  {n:'둘 다 같은 곳으로 부른다',tag:'매력',f:chk('cha',.4,{h:'성공 · 형제의 비밀',t:['헛간에 셋이 마주 섰다. 형제가 서로를 노려봤다. 나는 웃기만 했다.','그 뒤로 형제는 나를 두고 사냥 시합을 했다. 덕분에 캠프 고기 창고가 넘쳤다.'],give:{food:20},fame:4,xp:38,win:1},{t:'형제가 동시에 화를 냈다. 그리고 동시에 나를 무시했다. 일주일 동안.',mind:-5,xp:10})}]})});
+
+PCA('b_mask','B',8,'가면 파티의 발코니','mystery','생존자 가면무도회, 가면 쓴 남자가 발코니로 손을 이끈다.',{
+ start:c=>({t:['무너진 오페라 극장. 생존자 연합의 가면무도회. 오늘 밤만은 휴전이다.','검은 가면의 남자가 손을 내민다. 말없이 발코니로 이끈다. 장갑 낀 손가락이 내 손가락 사이로 깍지를 낀다.'],sfx:'radio',vfx:'blush',o:[
+  {n:'끌려가 준다',go:'balcony'},
+  {n:'가면을 먼저 벗겨 본다',tag:'민첩',f:chk('agi',.45,{t:'가면 아래는 적대 세력의 대장 Ashford였다. 그가 웃었다. "들켰네." 휴전의 밤이라 그는 그냥 잔을 들고 사라졌다. 그의 무리 동선을 하나 알게 됐다.',give:{drone:1},xp:22,win:1,h:'성공 · 가면 파티의 발코니'},{t:'그가 내 손목을 잡아 막았다. "아직." 가면 너머 눈이 웃는다.',st:[['fluster',10]],xp:8})}]}),
+ balcony:c=>({t:['발코니 난간. 아래로 불 꺼진 도시. 극장 철문을 긁는 감염자들의 신음이 바람에 실려 온다. 그가 내 가면 끈을 손가락에 감는다. "벗겨도 돼?"','그 목소리를 안다. 적대 세력의 대장 Ashford.'],vfx:'blush',sfx:'heart',o:[
+  {n:'"당신 것부터"라고 속삭인다',tag:'매력',f:chk('cha',.45,{h:'성공 · 가면 파티의 발코니',t:['그가 가면을 벗었다. 휴전의 밤, 적의 대장이 내 앞에서 무방비했다.','"내일이면 다시 적이겠지." 그가 내 장갑 한 짝을 가져갔다. 대신 자기 무리의 통행증을 내 손에 쥐여 줬다.'],give:{$:90,drone:1},fame:8,xp:46,win:1},{t:'그가 웃으며 물러섰다. "다음에." 발코니엔 나 혼자 남았다. 심장이 오래 진정되지 않았다.',st:[['fluster',15]],mind:4,xp:16})},
+  {n:'난간에서 물러선다',f:{t:'"겁쟁이." 그가 웃었지만 붙잡지 않았다. 무도회가 끝날 때까지 시선이 따라다녔다.',xp:12}}]})});
+
+
+/* ---------- 동행 사건: 각자 고른 행동을 보이고, 결과는 한 사람씩 턴으로 ---------- */
+const _onPact36=onPact; onPact=function(m){ const P=rt.party, d=m.data||{}; if(P&&d.kind==='vote'&&P.ev&&d.id===P.ev.id&&m.by){ P.choice=P.choice||{}; P.choice[m.by]=clamp(d.c|0,0,3); setTimeout(()=>partyRender(),0) } return _onPact36(m) };
+const _pVote36=ACT.pVote; ACT.pVote=el=>{ const P=rt.party; _pVote36(el); if(P&&P.ev&&P.ev.my!=null){ P.choice=P.choice||{}; P.choice[rt.myId]=P.ev.my; partyRender() } };
+const effTxt=o=>{ if(!o) return '변화 없음'; const a=[]; if(o.hp) a.push(`체력 ${o.hp>0?'+':''}${o.hp}`); for(const k in o.res||{}){ const v=o.res[k]|0; if(v&&RES[k]) a.push(`${RES[k].n} ${v>0?'+':''}${v}`) } if(o.money) a.push(`$${o.money}`); if(o.item&&ITEMS[o.item]) a.push(ITEMS[o.item].n); if(o.hunger) a.push(`허기 ${o.hunger}`); if(o.xp) a.push(`XP +${o.xp}`); return a.join(' · ')||'변화 없음' };
+const _onPev36=onPev; onPev=function(m){ const P=rt.party, d=m.data||{};
+  if(P&&m.by===P.leader&&d.type==='ev'){ P.choice={}; P.evMem={id:d.id,k:d.k} }
+  const em=P&&(P.ev&&P.ev.id===d.id?P.ev:P.evMem&&P.evMem.id===d.id?P.evMem:null);
+  if(P&&m.by===P.leader&&d.type==='res'&&em&&P.turnId!==d.id){ P.turnId=d.id; const ev=PEV.find(e=>e.k===em.k), ch=Object.assign({},P.choice||{},d.ch||{}), ids=Object.keys(d.per||{}).length?Object.keys(d.per):Object.keys(ch);
+    if(ev&&ids.length){ clearInterval(P.turnT); P.turns={n:ev.n,t:String(d.t||'').slice(0,300),list:ids.map(id=>({id,nm:nameOf(id),opt:ev.o[ch[id]]!=null?ev.o[ch[id]]:'(고르지 않음)',eff:effTxt((d.per||{})[id]),me:id===rt.myId})),shown:0,at:Date.now()};
+      const T=P.turns, iv=setInterval(()=>{ const Q=rt.party; if(!Q||Q.turns!==T){ clearInterval(iv); return } if(T.shown>=T.list.length){ clearInterval(iv); T.done=Date.now(); partyRender(); return } const x=T.list[T.shown++]; sfx(x.me?'hit':'click'); plog(`${T.shown}턴 · ${x.nm}: ${x.opt} → ${x.eff}`,x.me?'me':'v'); },1100); P.turnT=iv } }
+  return _onPev36(m) };
+const _partyRender36=partyRender; partyRender=function(){ _partyRender36(); const P=rt.party, el=$('party'); if(!P||!el) return;
+  if(P.ev){ const ev=PEV.find(e=>e.k===P.ev.k), box=el.querySelector('[data-act=pVote]')?.closest('.pev'); if(ev&&box){ const ch=P.choice||{}, mem=peersIn().filter(p=>!P.dead[p.by]);
+      box.insertAdjacentHTML('beforeend',`<ul class="pchoice">${mem.map(p=>{ const c=ch[p.by]; return `<li class="${c!=null?'on':''}"><b>${esc(p.isMe?S.nick:nameOf(p.by))}${p.by===P.leader?' <em>대장</em>':''}</b><span>${c!=null?esc(ev.o[c]||''):'고르는 중…'}</span></li>` }).join('')}</ul>`) } }
+  const T=P.turns; if(T&&(!T.done||Date.now()-T.done<20000)){ const side=el.querySelector('.pt-side .pt-log'); if(side) side.insertAdjacentHTML('beforebegin',`<div class="pev pturn"><b>턴 진행 · ${esc(T.n)}</b><ol>${T.list.slice(0,T.shown).map((x,i)=>`<li class="${x.me?'me':''}"><span class="num">${i+1}턴</span><b>${esc(x.nm)}</b> ${esc(x.opt)}<small>${esc(x.eff)}</small></li>`).join('')}${T.shown<T.list.length?'<li class="wait">…</li>':''}</ol>${T.done?`<p>${esc(T.t)}</p>`:''}</div>`) } };
+
+/* ---------- 날씨 연출: 지금 바깥 상황에 따라 화면이 변한다 ---------- */
+const WX=(()=>{ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches; let el=null, cv=null, cur='', parts=[], raf=0;
+  const on=()=>SND.set.wx!==false;
+  function mk(){ if(el) return; el=document.createElement('div'); el.id='wxl'; el.setAttribute('aria-hidden','true'); el.innerHTML='<div class="wx-tint"></div><canvas class="wx-cv"></canvas>'; document.body.prepend(el); cv=el.querySelector('canvas') }
+  function size(){ if(!cv) return; cv.width=innerWidth; cv.height=innerHeight }
+  function seed(k){ parts=[]; const W=innerWidth, H=innerHeight; const n=k==='cold'?70:k==='acid'?110:k==='bloodmoon'?24:k==='fog'?0:k==='power'?0:k==='quiet'?26:k==='raiders'?30:0;
+    for(let i=0;i<n;i++) parts.push({x:Math.random()*W,y:Math.random()*H,v:k==='acid'?8+Math.random()*6:k==='cold'?.5+Math.random()*1.1:.2+Math.random()*.4,r:k==='cold'?1+Math.random()*2.4:k==='quiet'?1+Math.random()*1.5:k==='raiders'?20+Math.random()*40:1,s:Math.random()*6.28}) }
+  function frame(){ raf=0; if(!cv||!cur) return; const g=cv.getContext('2d'), W=cv.width, H=cv.height; g.clearRect(0,0,W,H);
+    for(const p of parts){ if(cur==='acid'){ g.strokeStyle='rgba(190,220,90,.28)'; g.lineWidth=1; g.beginPath(); g.moveTo(p.x,p.y); g.lineTo(p.x-3,p.y+14); g.stroke(); p.y+=p.v; p.x-=1.2; if(p.y>H){ p.y=-20; p.x=Math.random()*(W+60) } }
+      else if(cur==='cold'){ g.fillStyle='rgba(255,255,255,.7)'; g.beginPath(); g.arc(p.x,p.y,p.r,0,6.28); g.fill(); p.s+=.02; p.y+=p.v; p.x+=Math.sin(p.s)*.5; if(p.y>H){ p.y=-5; p.x=Math.random()*W } }
+      else if(cur==='bloodmoon'){ g.fillStyle='rgba(160,20,20,.22)'; g.beginPath(); g.arc(p.x,p.y,1.4,0,6.28); g.fill(); p.y-=p.v; p.x+=Math.sin(p.s+=.01)*.3; if(p.y<0){ p.y=H; p.x=Math.random()*W } }
+      else if(cur==='quiet'){ g.fillStyle='rgba(255,240,200,.25)'; g.beginPath(); g.arc(p.x,p.y,p.r,0,6.28); g.fill(); p.s+=.01; p.y-=p.v*.4; p.x+=Math.sin(p.s)*.3; if(p.y<0){ p.y=H; p.x=Math.random()*W } }
+      else if(cur==='raiders'){ const gr=g.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r); gr.addColorStop(0,'rgba(70,60,50,.10)'); gr.addColorStop(1,'rgba(70,60,50,0)'); g.fillStyle=gr; g.fillRect(p.x-p.r,p.y-p.r,p.r*2,p.r*2); p.y-=p.v; p.x+=.2; if(p.y<H*.55){ p.y=H+20; p.x=Math.random()*W } } }
+    if(parts.length&&!reduce&&!document.hidden) raf=requestAnimationFrame(frame) }
+  function set(k){ mk(); if(!on()) k=''; if(k===cur) return; cur=k; el.className=k?'wx-'+k:''; size(); seed(k); if(raf) cancelAnimationFrame(raf); raf=0; if(parts.length) frame(); else if(cv) cv.getContext('2d').clearRect(0,0,cv.width,cv.height) }
+  function tick(){ try{ if(!S||!S.intro) return set(''); const k=curEv().def.k; set(k);
+      if(on()&&!reduce&&$('modal').hidden&&!rt.enc){ if(k==='power'&&Math.random()<.18) FXL.flicker(); if(k==='horde'&&Math.random()<.12&&SND.set.horror!==false) FXL.shake(3,500); if(k==='heli'&&Math.random()<.2){ el.classList.remove('sweep'); void el.offsetWidth; el.classList.add('sweep') } if(k==='screamer'&&Math.random()<.1) FXL.staticOn(300) } }catch(e){} }
+  addEventListener('resize',()=>{ size(); seed(cur) }); document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&parts.length&&!raf) frame() });
+  setInterval(tick,6000); setTimeout(tick,1500);
+  return {set,tick,cur:()=>cur} })();
+(()=>{ const st=document.createElement('style'); st.textContent=`
+#wxl{position:fixed;inset:0;pointer-events:none;z-index:25}#wxl .wx-tint,#wxl .wx-cv{position:absolute;inset:0;width:100%;height:100%}#wxl .wx-tint{transition:opacity 2s,background 2s;opacity:0}
+#wxl.wx-cold .wx-tint{opacity:1;background:radial-gradient(ellipse at center,transparent 52%,rgba(190,225,255,.22) 74%,rgba(225,242,255,.62) 100%);box-shadow:inset 0 0 60px rgba(210,235,255,.55),inset 0 0 160px rgba(160,200,240,.25);backdrop-filter:saturate(.8) hue-rotate(-8deg)}
+#wxl.wx-cold::after{content:"";position:absolute;inset:0;opacity:.55;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 -.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");-webkit-mask:radial-gradient(ellipse at center,transparent 60%,#000 100%);mask:radial-gradient(ellipse at center,transparent 60%,#000 100%)}
+#wxl.wx-acid .wx-tint{opacity:1;background:linear-gradient(180deg,rgba(150,170,40,.10),rgba(120,140,20,.06))}
+#wxl.wx-fog .wx-tint{opacity:1;background:radial-gradient(ellipse at 20% 30%,rgba(200,205,205,.28),transparent 55%),radial-gradient(ellipse at 80% 70%,rgba(200,205,205,.24),transparent 55%),radial-gradient(ellipse at center,transparent 40%,rgba(190,195,195,.4) 100%);background-size:200% 200%;animation:wxfog 40s ease-in-out infinite alternate}
+@keyframes wxfog{from{background-position:0% 0%}to{background-position:100% 100%}}
+#wxl.wx-bloodmoon .wx-tint{opacity:1;background:radial-gradient(ellipse at center,transparent 50%,rgba(120,0,0,.35) 100%);animation:wxpulse 6s ease-in-out infinite}
+@keyframes wxpulse{50%{opacity:.6}}
+#wxl.wx-horde .wx-tint{opacity:1;background:radial-gradient(ellipse at center,transparent 60%,rgba(20,15,10,.35) 100%)}
+#wxl.wx-raiders .wx-tint{opacity:1;background:linear-gradient(0deg,rgba(80,65,50,.14),transparent 45%)}
+#wxl.wx-screamer .wx-tint{opacity:1;background:radial-gradient(ellipse at center,transparent 55%,rgba(110,80,140,.22) 100%)}
+#wxl.wx-dogs .wx-tint{opacity:1;background:radial-gradient(ellipse at 50% 120%,rgba(60,40,20,.18),transparent 60%)}
+#wxl.wx-power .wx-tint{opacity:1;background:radial-gradient(ellipse at 50% -10%,rgba(150,210,255,.14),transparent 60%)}
+#wxl.wx-quiet .wx-tint{opacity:1;background:radial-gradient(ellipse at center,transparent 55%,rgba(10,20,40,.22) 100%)}
+#wxl.wx-heli .wx-tint{opacity:0}#wxl.wx-heli.sweep .wx-tint{opacity:1;background:linear-gradient(105deg,transparent 40%,rgba(255,250,220,.18) 50%,transparent 60%);background-size:300% 100%;animation:wxsweep 2.6s ease-in-out 1}
+@keyframes wxsweep{from{background-position:100% 0}to{background-position:0 0}}
+#wxl.wx-caravan .wx-tint,#wxl.wx-rally .wx-tint{opacity:1;background:radial-gradient(ellipse at 50% 110%,rgba(255,190,110,.12),transparent 60%)}
+body.sheet-open #wxl{display:none}
+@media (prefers-reduced-motion:reduce){#wxl .wx-tint{animation:none!important}}
+.pchoice{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:12.5px}.pchoice li{display:flex;justify-content:space-between;gap:8px;color:var(--muted)}.pchoice li.on{color:var(--fg)}.pchoice li.on span{color:var(--accent);font-weight:600}.pchoice em{font-style:normal;font-size:10.5px;color:var(--muted)}
+.pturn ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}.pturn li{font-size:13px;line-height:1.45;animation:pturnIn .35s ease}.pturn li .num{display:inline-block;min-width:34px;color:var(--warn);font-weight:700;font-size:11px}.pturn li b{margin-right:6px}.pturn li small{display:block;margin-left:34px;color:var(--muted);font-size:11.5px}.pturn li.me b{color:var(--accent)}.pturn li.wait{color:var(--muted)}
+@keyframes pturnIn{from{opacity:0;transform:translateX(-6px)}}
+.btn.supcd{position:relative;overflow:hidden;opacity:.85}.btn.supcd::before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--cd,0%);background:color-mix(in srgb,var(--accent) 22%,transparent);transition:width .2s linear}
+.btn.supfire{animation:supfire .45s ease}@keyframes supfire{30%{transform:scale(.94);background:var(--warn);color:#111}}
+.supnum{position:fixed;z-index:60;font:700 18px/1 var(--mono,monospace);color:var(--warn);pointer-events:none;text-shadow:0 1px 0 #000;animation:supnum 1.1s ease-out forwards}@keyframes supnum{to{transform:translateY(-38px);opacity:0}}
+.supcnt{font-size:11px;color:var(--muted);margin-left:4px}
+`; document.head.append(st) })();
+const _settings36=ACT.settings; ACT.settings=function(){ _settings36.apply(this,arguments); const L=$('mbox').querySelector('.setlist'); if(!L) return; const sp=$('setPet'), row=sp?sp.closest('.setrow'):null;
+  (row||L).insertAdjacentHTML(row?'afterend':'afterbegin',`<label class="setrow"><span><b>날씨 연출</b><small>한파엔 화면 가장자리가 얼고 눈이 내리고, 산성비·안개·붉은 달에도 화면이 바뀌어요.</small></span><input type="checkbox" id="setWx" ${SND.set.wx!==false?'checked':''}></label>`);
+  $('setWx').onchange=e=>{ SND.set.wx=e.target.checked; SND.save(); WX.set(''); WX.tick() } };
+
+/* ---------- 습격 지원 사격: 눌렀는지 분명하게 ---------- */
+const SUP_CD=3000;
+const _support36=ACT.support; ACT.support=function(){ const now=Date.now(); if(now-(rt.supT||0)<SUP_CD){ const b=document.querySelector('[data-act=support]'); if(b){ b.classList.remove('supfire'); FXL.shake&&b.animate&&b.animate([{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'none'}],{duration:220}) } return toast(`재장전 중 · ${((SUP_CD-(now-(rt.supT||0)))/1000).toFixed(1)}초`) }
+  const d0=S.raid.dmg, s0=S.res.scrap||0; _support36.apply(this,arguments); const d=Math.round(S.raid.dmg-d0); if(d>0&&(S.res.scrap||0)<s0){ S.supN=S.supN||{}; const rid=raidId(); S.supN[rid]=(S.supN[rid]||0)+1; sfx('gunshot'); FXL.flash('rgba(255,220,120,.35)',220);
+    setTimeout(()=>{ const b=document.querySelector('[data-act=support]'), bar=$('raidBar'); if(b){ b.classList.add('supfire') } const t=(bar||b); if(t){ const r=t.getBoundingClientRect(), n=document.createElement('span'); n.className='supnum'; n.textContent=`-${d}`; n.style.left=(r.left+r.width*(bar?.5:.4))+'px'; n.style.top=(r.top-6)+'px'; document.body.append(n); setTimeout(()=>n.remove(),1200) } },30) } };
+setInterval(()=>{ try{ const b=document.querySelector('[data-act=support]'); if(!b) return; const left=SUP_CD-(Date.now()-(rt.supT||0)), rid=raidId(), n=((S.supN||{})[rid])||0;
+  if(left>0){ b.classList.add('supcd'); b.style.setProperty('--cd',(100-left/SUP_CD*100).toFixed(0)+'%'); b.firstChild&&(b.firstChild.nodeType===3)&&(b.dataset.lb=b.dataset.lb||b.firstChild.textContent); b.textContent=`재장전 ${(left/1000).toFixed(1)}초` }
+  else { if(b.classList.contains('supcd')){ b.classList.remove('supcd','supfire'); b.style.removeProperty('--cd'); b.textContent='지원 사격 · 고철 8' } }
+  if(n&&!b.parentNode.querySelector('.supcnt')) b.insertAdjacentHTML('afterend',`<span class="supcnt num">지원 ${n}회</span>`); else { const c=b.parentNode.querySelector('.supcnt'); if(c) c.textContent=`지원 ${n}회` } }catch(e){} },150);
+for(const c of PCH) if(!ALL_CH.includes(c)) ALL_CH.push(c); PC_NAMES.push('Jasper','Wyatt','Beau');
+window.__WX=WX;
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
