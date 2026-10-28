@@ -2778,7 +2778,7 @@ ACT.mapGo=el=>{ const to=el.dataset.n, n=MAP[to]; if(!n||rt.enc||S.travel||to===
   toast(`${n.n}(으)로 ${v?v.n+' 타고 ':''}이동 · ${mmss(sec*1000)}${fuelUse?` · 연료 -${fuelUse}`:''}${mk?' · 구역 지도 사용':''}`); markSave(); render() };
 function travelTick(){ if(S.travel&&Date.now()>=S.travel.e){ const tv=S.travel, n=MAP[tv.to]; S.pos=tv.to; S.visited=S.visited||{}; S.visited[S.pos]=1; S.travel=null; toast(`${n.n}에 도착했다.`); slog(`${n.n}에 도착했다.`); markSave(); if(!inputFocused()&&$('modal').hidden) render();
     const safe=tv.v&&VEH[tv.v]?.safe||1, amb=!n.home&&Math.random()<encChance(.12*n.dg)*safe;
-    if(tv.scan>0&&!n.home&&!resting()){ const per=Math.round(n.sec*(rt.party&&rt.party.on?.85:1)*(petOn('owl')?.9:1)); S.scan={z:tv.to,n:tv.scan,i:0,s:Date.now(),per,got:{},cash:0,ings:[],finds:[],log:[],miss:0}; if(amb){ S.pend=S.pend||[]; S.pend.push({k:'z',z:tv.to,t:Date.now()}) } toast(`${n.n} 도착 · 조사 ${tv.scan}회 시작`); markSave(); if(!inputFocused()&&$('modal').hidden) render(); return }
+    if(tv.scan>0&&!n.home&&!resting()){ const per=Math.round(n.sec*(rt.party&&rt.party.on?.85:1)*(petOn('owl')?.9:1)); S.scan={z:tv.to,n:tv.scan,i:0,s:Date.now(),per:Math.min(per,Math.floor(SCAN_MAX/tv.scan)),got:{},cash:0,ings:[],finds:[],log:[],miss:0}; if(amb){ S.pend=S.pend||[]; S.pend.push({k:'z',z:tv.to,t:Date.now()}) } toast(`${n.n} 도착 · 조사 ${tv.scan}회 시작`); markSave(); if(!inputFocused()&&$('modal').hidden) render(); return }
     if(amb) setTimeout(()=>{ if(canAct()&&$('modal').hidden) startEnc({src:'arrive'}) },600) } }
 
 /* ================= 발견 ================= */
@@ -2825,7 +2825,7 @@ function canStoryLv(){ return true }
 ACT.scanN=el=>{ rt.scanN=clamp((rt.scanN||3)+(+el.dataset.d),1,10); render() };
 ACT.scanStart=()=>{ if(!canAct()) return; if(S.scan) return; const z=S.pos, n=MAP[z]; if(n.home) return;
   const N=clamp(rt.scanN||3,1,10), per=Math.round(n.sec*(rt.party&&rt.party.on?.85:1)*(petOn('owl')?.9:1));
-  S.scan={z,n:N,i:0,s:Date.now(),per,got:{},cash:0,ings:[],finds:[],log:[],miss:0}; toast(`${n.n} 조사 ${N}회 시작 · 약 ${mmss(N*per*1000)}`); markSave(); render() };
+  S.scan={z,n:N,i:0,s:Date.now(),per:Math.min(per,Math.floor(SCAN_MAX/N)),got:{},cash:0,ings:[],finds:[],log:[],miss:0}; toast(`${n.n} 조사 ${N}회 시작 · 약 ${mmss(Math.min(SCAN_MAX,N*per)*1000)}`); markSave(); render() };
 ACT.scanStop=()=>{ if(!S.scan) return; finishScan(true) };
 function scanTick(){ const sc=S.scan; if(!sc) return; const now=Date.now(); let k=0;
   while(sc.i<sc.n&&now>=sc.s+sc.per*1000&&k<12){ sc.s+=sc.per*1000; scanOnce(sc.z,sc.s); sc.i++; k++ }
@@ -3032,11 +3032,11 @@ function zonePanel(){
   else if(here&&sc){ const p=clamp((Date.now()-sc.s)/(sc.per*1000),0,1);
     act=`<div class="scanbox"><div class="row spread"><b>${sc.deep?esc(T.sp):'조사 중'} <span class="num">${sc.i}/${sc.n}</span></b><span class="num" id="scLeft">${mmss((sc.n-sc.i)*sc.per*1000-(Date.now()-sc.s))}</span></div><div class="bar"><i id="scBar" style="width:${p*100}%"></i></div>
       <ol class="scanlog">${sc.log.slice(-5).map(x=>`<li>${esc(x)}</li>`).join('')||'<li class="muted">첫 조사 중…</li>'}</ol><div class="row"><button class="btn sm" data-act="scanStop">${sc.deep?'중단':'여기까지만 하고 정리'}</button><span class="note">창을 닫아도 계속 진행돼요.</span></div></div>` }
-  else if(here&&!n.home){ act=`<div class="scanset"><span class="note">조사 횟수</span><div class="stepper"><button class="btn sm" data-act="scanN" data-d="-1" aria-label="줄이기" ${N<=1?'disabled':''}>−</button><b class="num">${N}</b><button class="btn sm" data-act="scanN" data-d="1" aria-label="늘리기" ${N>=10?'disabled':''}>+</button></div>${qn('scanSet',N)}<span class="note num">회당 ${mmss(n.sec*1000)} · 총 ${mmss(N*n.sec*1000*(rt.party&&rt.party.on?.85:1))}</span></div>
+  else if(here&&!n.home){ act=`<div class="scanset"><span class="note">조사 횟수</span><div class="stepper"><button class="btn sm" data-act="scanN" data-d="-1" aria-label="줄이기" ${N<=1?'disabled':''}>−</button><b class="num">${N}</b><button class="btn sm" data-act="scanN" data-d="1" aria-label="늘리기" ${N>=10?'disabled':''}>+</button></div>${qn('scanSet',N)}<span class="note num">회당 ${mmss(Math.min(n.sec,SCAN_MAX/N)*1000)} · 총 ${mmss(Math.min(SCAN_MAX*1000,N*n.sec*1000*(rt.party&&rt.party.on?.85:1)))} (최대 10분)</span></div>
     <div class="row"><button class="btn pri lg" data-act="scanStart" ${canAct()?'':'disabled'}>조사 시작</button>${T.sp?`<button class="btn lg${spDone(sel)?'':' sp'}" data-act="special" ${canAct()&&!spDone(sel)?'':'disabled'}>${spDone(sel)?'특수 조사 완료':esc(T.sp)}</button>`:''}</div>
     <p class="note">허탕도 나옵니다. 조사 중 생긴 전투·사건은 '처리할 일'로 쌓였다가 나중에 한 번에 처리해요.</p>` }
   else if(here) act=`<p class="note">캠프입니다. 여기선 조사할 게 없어요. 다른 지점으로 이동하세요.</p>`;
-  else act=!open?`<button class="btn lg" disabled>아직 갈 수 없는 곳</button>`:sc?`<button class="btn lg" disabled>조사 중에는 이동 불가</button>`:`<div class="gobox"><div class="row spread"><b>이동 · <span class="num">${mmss(sec*1000)}</span>${MAP[sel].d!==MAP[S.pos].d?' · 구역 넘어감':''}${v?` · ${esc(v.n)}${v.fuel?` · 연료 ${fuelNeed(v,sel)}`:''}`:''}</b>${n.home?'':`<span class="note">도착 후 조사 ${N}회 · ${mmss(N*n.sec*1000)}</span>`}</div>
+  else act=!open?`<button class="btn lg" disabled>아직 갈 수 없는 곳</button>`:sc?`<button class="btn lg" disabled>조사 중에는 이동 불가</button>`:`<div class="gobox"><div class="row spread"><b>이동 · <span class="num">${mmss(sec*1000)}</span>${MAP[sel].d!==MAP[S.pos].d?' · 구역 넘어감':''}${v?` · ${esc(v.n)}${v.fuel?` · 연료 ${fuelNeed(v,sel)}`:''}`:''}</b>${n.home?'':`<span class="note">도착 후 조사 ${N}회 · ${mmss(Math.min(SCAN_MAX,N*n.sec)*1000)}</span>`}</div>
     ${n.home?'':`<div class="scanset"><span class="note">도착하면 바로</span><div class="stepper"><button class="btn sm" data-act="scanN" data-d="-1" aria-label="줄이기" ${N<=1?'disabled':''}>−</button><b class="num">${N}</b><button class="btn sm" data-act="scanN" data-d="1" aria-label="늘리기" ${N>=10?'disabled':''}>+</button></div>${qn('scanSet',N)}<span class="note">회 조사</span></div>`}
     <div class="row">${n.home?'':`<button class="btn pri lg" data-act="mapGo" data-n="${sel}" data-scan="${N}" ${rt.enc?'disabled':''}>이동 후 조사 ${N}회</button>`}<button class="btn lg${n.home?' pri':''}" data-act="mapGo" data-n="${sel}" ${rt.enc?'disabled':''}>이동만</button></div></div>`;
   return `<section class="pcard mapinfo"><div class="pc-h">${icon('pin')}<h3>${esc(n.n)}</h3><span class="tagx ${n.dg>=4?'red':n.dg>=3?'warn':''}">위험 ${'■'.repeat(n.dg)}${'□'.repeat(5-n.dg)}</span></div>
@@ -4971,7 +4971,7 @@ ACT.pkSel=el=>{ if(!rt.pk) return; rt.pk.sel=+el.dataset.i; render() };
 ACT.pkN=el=>{ rt.pkN=clamp((rt.pkN||3)+(+el.dataset.d),1,10); render() };
 ACT.pkStart=()=>{ const pk=rt.pk; if(!pk||pk.sel==null) return toast('뒤질 장소를 먼저 고르세요.'); if(!canAct()||S.scan||S.forage) return toast('지금은 다른 일을 하는 중이다.');
   const si=pk.spots[pk.sel], sp=SPOTS[pk.kind][si], N=clamp(rt.pkN||3,1,10), per=Math.round(PK_SEC[sp[3]]*(petOn('owl')?.9:1));
-  S.forage={kind:pk.kind,si,n:N,i:0,s:Date.now(),per,got:{},foods:{},log:[],combo:0,pos:S.pos}; pk.sel=null; sfx(pk.kind==='food'?'can':'rummage'); toast(`${sp[0]} · ${N}회 · 약 ${mmss(N*per*1000)}`); markSave(); render() };
+  S.forage={kind:pk.kind,si,n:N,i:0,s:Date.now(),per:Math.min(per,Math.floor(SCAN_MAX/N)),got:{},foods:{},log:[],combo:0,pos:S.pos}; pk.sel=null; sfx(pk.kind==='food'?'can':'rummage'); toast(`${sp[0]} · ${N}회 · 약 ${mmss(Math.min(SCAN_MAX,N*per)*1000)}`); markSave(); render() };
 ACT.pkStop=()=>{ if(S.forage) forageFinish(true) };
 function forageOnce(F,at){ const sp=SPOTS[F.kind][F.si], [nm,,bias,risk]=sp, mul=(1+risk*.35)*(1+F.combo*.08)*statBonus.gather()*(S.route==='solo'&&F.kind==='search'?1.6:1)*(S.route==='family'&&F.kind==='food'?1.15:1)*2.5;
   const n=MAP[F.pos]||MAP[S.pos], pend=k=>{ S.pend=S.pend||[]; if(S.pend.length<PEND_MAX) S.pend.push({k,z:F.pos,t:at}) };
@@ -5003,7 +5003,7 @@ function pickHtml2(down){ if(!rt.pk) rt.pk={kind:'search',spots:rollSpots('searc
     <div class="seg pk-tabs"><button class="segb${pk.kind==='search'?' on':''}" data-act="pkTab" data-k="search">근처 뒤지기</button><button class="segb${pk.kind==='food'?' on':''}" data-act="pkTab" data-k="food">식량 구하기</button></div>
     <p class="note">뒤질 장소를 고르고 횟수를 정하면 시간이 지나며 알아서 뒤져요. 위험한 곳일수록 오래 걸리지만 많이 나와요. 마주친 감염자·사건·사람은 '처리할 일'로 쌓여요.</p>
     <div class="spots">${pk.spots.map((si,i)=>{ const [nm,hint,,risk]=L[si]; return `<button class="spot r${risk}${pk.sel===i?' on':''}" data-act="pkSel" data-i="${i}" ${down?'disabled':''} aria-pressed="${pk.sel===i}"><b>${esc(nm)}</b><span>${esc(hint)}</span><em class="rk r${risk}">${RISK[risk]} · 회당 ${mmss(PK_SEC[risk]*1000)}</em></button>` }).join('')}</div>
-    <div class="scanset"><span class="note">횟수</span><div class="stepper"><button class="btn sm" data-act="pkN" data-d="-1" aria-label="줄이기" ${N<=1?'disabled':''}>−</button><b class="num">${N}</b><button class="btn sm" data-act="pkN" data-d="1" aria-label="늘리기" ${N>=10?'disabled':''}>+</button></div>${qn('pkSet',N)}${sel?`<span class="note num">총 ${mmss(N*PK_SEC[sel[3]]*1000)}</span>`:''}
+    <div class="scanset"><span class="note">횟수</span><div class="stepper"><button class="btn sm" data-act="pkN" data-d="-1" aria-label="줄이기" ${N<=1?'disabled':''}>−</button><b class="num">${N}</b><button class="btn sm" data-act="pkN" data-d="1" aria-label="늘리기" ${N>=10?'disabled':''}>+</button></div>${qn('pkSet',N)}${sel?`<span class="note num">총 ${mmss(Math.min(SCAN_MAX,N*PK_SEC[sel[3]])*1000)}</span>`:''}
       <button class="btn pri" data-act="pkStart" ${!sel||down||S.scan?'disabled':''}>${sel?esc(sel[0])+' 뒤지기':'장소를 고르세요'}</button></div></section>` }
 
 /* ================= 연속 선택지 이야기 엔진 ================= */
@@ -8807,6 +8807,192 @@ const _viewMap42=viewMap; viewMap=function(){ const h=_viewMap42(), tp=document.
 (()=>{ const st=document.createElement('style'); st.textContent=`.needwide{margin:0 0 12px}.needwide .needbox .row.qn{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px}.needwide .needbox .chipb{flex:0 0 auto}.huntc{margin-bottom:12px}
 .mapinfo .pc-h .mapme{margin-left:8px}.scanwhat{margin:4px 0 8px;padding:6px 9px;border-left:3px solid var(--accent);background:var(--accent-soft,transparent);font-size:12px}
 .citymap .me-dot,.citymap .me-halo,.citymap .mpetw,.citymap .mpet,.citymap g.me,.citymap .pmate.me{pointer-events:none}`; document.head.append(st) })();
+/* ================= p43: 공동 작전 이름 · 채팅 속 동행 모집 · 이벤트 간격 · 조사 10분 · 글로 이벤트 넣기 ================= */
+/* ---------- 야간 작전 → 공동 작전 ---------- */
+(()=>{ const v=NAV.find(x=>x.k==='ops'); if(v){ v.n='공동 작전'; v.eb='JOINT OPERATIONS'; v.big='JOINT' } if(TUT.ops) TUT.ops.t='공동 작전' })();
+
+/* ---------- 동행 이벤트 약 2분 간격 ---------- */
+rt.ptc={amb:60000,ev1:[90000,130000],evGap:120000,vote:20000};
+
+/* ---------- 채팅 속 동행 모집 ---------- */
+rt.rq={};
+const RQ_MS=180000;
+function rqMine(){ return Object.values(rt.rq).find(r=>r.by===rt.myId&&!r.closed) }
+function rqSend(o){ if(rt.room) rt.room.emit('pinv',o).catch(()=>{}) }
+ACT.recOpen=()=>{ if(rt.solo||!rt.room) return toast('공유 서버에 연결되어 있어야 해요.'); if(rt.party) return toast('이미 동행 중이에요.'); if(subOn()) return toast('굴복 상태에서는 못 해요.'); if(rqMine()) return toast('이미 모집 중이에요.');
+  const id=pid(), r={pid:id,by:rt.myId,nick:S.nick,lvl:lvlOf(S.xp),zone:(MAP[S.pos]||{}).n||'',until:Date.now()+RQ_MS,mem:[rt.myId],names:{[rt.myId]:S.nick}}; rt.rq[id]=r;
+  rqSend({rq:'open',pid:id,nick:r.nick,lvl:r.lvl,zone:r.zone,until:r.until}); toast('무전실에 동행 모집을 올렸어요. 나 포함 3명이 되면 바로 출발해요.',true); sfx('send'); rqDraw() };
+ACT.recJoin=el=>{ const r=rt.rq[el.dataset.id]; if(!r||r.closed||Date.now()>r.until) return toast('이미 마감된 모집이에요.'); if(rt.party) return toast('이미 동행 중이에요.'); if(r.by===rt.myId) return; if(subOn()) return toast('굴복 상태에서는 못 해요.'); if(r.mem.includes(rt.myId)) return toast('이미 참가했어요. 출발을 기다리는 중이에요.');
+  r.asked=1; rqSend({rq:'join',pid:r.pid,to:r.by,nick:S.nick,lvl:lvlOf(S.xp)}); toast('참가 신청을 보냈어요. 선착순이에요.'); rqDraw() };
+ACT.recCancel=el=>{ const r=rt.rq[el.dataset.id]; if(!r||r.by!==rt.myId) return; r.closed=1; rqSend({rq:'cancel',pid:r.pid}); toast('모집을 취소했어요.'); rqDraw() };
+ACT.recLeave=el=>{ const r=rt.rq[el.dataset.id]; if(!r||r.by===rt.myId) return; rqSend({rq:'leave',pid:r.pid,to:r.by}); r.mem=r.mem.filter(x=>x!==rt.myId); r.asked=0; rqDraw() };
+async function rqGo(r){ if(r.closed) return; r.closed=1; rqSend({rq:'go',pid:r.pid,mem:r.mem}); rqDraw(); await partyOpen(r.pid,rt.myId); toast(`동행 출발! ${r.mem.length}명`,true) }
+const _onInvite43=onInvite; onInvite=function(m){ const d=m.data||{}; if(!d.rq||typeof d.pid!=='string'||!/^pt-[a-z0-9]{4,30}$/.test(d.pid)) return _onInvite43(m);
+  let r=rt.rq[d.pid];
+  if(d.rq==='open'){ if(m.isMe) return; rt.rq[d.pid]=r={pid:d.pid,by:m.by,nick:String(d.nick||'생존자').slice(0,20),lvl:clamp(d.lvl|0,1,999),zone:String(d.zone||'').slice(0,20),until:Math.min(+d.until||0,Date.now()+RQ_MS+5000),mem:[m.by],names:{[m.by]:String(d.nick||'').slice(0,20)}};
+    if(!rt.party&&rt.tab!=='radio'){ sfx('invite'); msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>임시 동행 모집</b></div><p><b>${esc(r.nick)}</b> (Lv.${r.lvl})님이 같이 움직일 사람을 찾아요. 선착순 3명.</p><div class="row"><button class="btn sm pri" data-act="recJoin" data-id="${esc(d.pid)}">참가하기</button><button class="btn sm ghost" data-act="go" data-view="radio">무전실</button></div>`,'inv rq-'+d.pid,30000) } rqDraw(); return }
+  if(!r) return;
+  if(d.rq==='join'&&d.to===rt.myId&&r.by===rt.myId){ if(r.closed||Date.now()>r.until||r.mem.length>=P_SIZE){ rqSend({rq:'no',pid:r.pid,to:m.by}); return } if(!r.mem.includes(m.by)){ r.mem.push(m.by); r.names[m.by]=String(d.nick||nameOf(m.by)).slice(0,20) }
+    rqSend({rq:'upd',pid:r.pid,mem:r.mem,names:r.names}); sfx('join'); rqDraw(); if(r.mem.length>=P_SIZE) rqGo(r); return }
+  if(d.rq==='leave'&&d.to===rt.myId&&r.by===rt.myId&&!r.closed){ r.mem=r.mem.filter(x=>x!==m.by); rqSend({rq:'upd',pid:r.pid,mem:r.mem,names:r.names}); rqDraw(); return }
+  if(d.rq==='upd'&&m.by===r.by){ r.mem=(Array.isArray(d.mem)?d.mem:[]).filter(x=>typeof x==='string').slice(0,P_SIZE); if(d.names&&typeof d.names==='object') for(const k in d.names) r.names[k]=String(d.names[k]).slice(0,20); rqDraw(); return }
+  if(d.rq==='no'&&d.to===rt.myId){ r.asked=0; toast('아쉽게도 자리가 다 찼어요.'); rqDraw(); return }
+  if(d.rq==='cancel'&&m.by===r.by){ r.closed=1; document.querySelectorAll('#msgs .msgc.rq-'+r.pid).forEach(e=>e.remove()); rqDraw(); return }
+  if(d.rq==='go'&&m.by===r.by){ r.closed=1; document.querySelectorAll('#msgs .msgc.rq-'+r.pid).forEach(e=>e.remove()); const mem=Array.isArray(d.mem)?d.mem:[]; rqDraw(); if(mem.includes(rt.myId)&&!rt.party){ toast('동행 출발! 동행 방에 들어갑니다.',true); partyOpen(r.pid,r.by) } return } };
+setInterval(()=>{ try{ const now=Date.now(); for(const k in rt.rq){ const r=rt.rq[k];
+    if(r.by===rt.myId&&!r.closed&&now>=r.until){ if(r.mem.length>=2) rqGo(r); else { r.closed=1; rqSend({rq:'cancel',pid:r.pid}); toast('3분 동안 아무도 오지 않아 모집을 닫았어요.'); rqDraw() } }
+    if(now>r.until+60000) delete rt.rq[k] }
+  document.querySelectorAll('[data-rq-left]').forEach(e=>{ const r=rt.rq[e.dataset.rqLeft]; if(r) e.textContent=mmss(Math.max(0,r.until-now)) }) }catch(e){} },1000);
+function rqBubble(r){ const now=Date.now(), me=r.by===rt.myId, inn=r.mem.includes(rt.myId), live=!r.closed&&now<r.until, full=r.mem.length>=P_SIZE;
+  return `<div class="rqb${live?'':' off'}"><div class="rqh"><span class="rqic">${icon('people')}</span><b>${esc(r.nick)}님의 임시 동행 모집</b><span class="num rqn">${r.mem.length}/${P_SIZE}명</span></div>
+    <p class="rqp">${r.mem.map(id=>`<span class="rqm${id===r.by?' lead':''}">${esc(r.names[id]||nameOf(id))}${id===r.by?' · 대장':''}</span>`).join('')}${Array.from({length:Math.max(0,P_SIZE-r.mem.length)}).map(()=>'<span class="rqm empty">빈자리</span>').join('')}</p>
+    <div class="rqf">${live?`<span class="note">남은 시간 <b class="num" data-rq-left="${esc(r.pid)}">${mmss(Math.max(0,r.until-now))}</b> · Lv.${r.lvl}${r.zone?' · '+esc(r.zone):''}</span>`:`<span class="note">${full||r.mem.length>=2?'출발했어요':'마감됐어요'}</span>`}
+      ${live?(me?`<button class="btn sm" data-act="recCancel" data-id="${esc(r.pid)}">모집 취소</button>`:inn?`<button class="btn sm ghost" data-act="recLeave" data-id="${esc(r.pid)}">참가 취소</button>`:`<button class="btn sm pri" data-act="recJoin" data-id="${esc(r.pid)}" ${r.asked||rt.party||full?'disabled':''}>${r.asked?'신청 중…':full?'가득 참':'참가하기'}</button>`):''}</div></div>` }
+function rqDraw(){ const log=$('chatlog'); if(!log) return; let box=$('rqInChat'); const L=Object.values(rt.rq).filter(r=>Date.now()<r.until+60000).sort((a,b)=>a.until-b.until);
+  if(!L.length){ if(box) box.remove(); return } if(!box){ box=document.createElement('div'); box.id='rqInChat'; } if(box.parentNode!==log||log.lastElementChild!==box) log.append(box);
+  const html=L.map(rqBubble).join(''); if(box.__h!==html){ box.__h=html; box.innerHTML=html; log.scrollTop=log.scrollHeight }
+  const b=$('recOpenBtn'); if(b){ b.disabled=!!(rt.solo||rt.party||rqMine()); b.textContent=rqMine()?'모집 중…':'임시 동행 공개 구인' } }
+const _renderChat43=renderChat; renderChat=function(force){ _renderChat43(force); rqDraw() };
+viewRadio=function(){ const h=_viewRadio42(); return h.replace('<form class="chatform" id="chatform">',`<div class="rqbar"><button class="btn sm pri" id="recOpenBtn" data-act="recOpen" type="button" ${rt.solo||rt.party||rqMine()?'disabled':''}>${rqMine()?'모집 중…':'임시 동행 공개 구인'}</button><span class="note">누르면 이 채팅방에 참가 창이 올라가요. 나 포함 3명이면 바로 출발 · 최대 3분</span></div><form class="chatform" id="chatform">`) };
+(()=>{ const st=document.createElement('style'); st.textContent=`.rqbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 6px}.rqbar .note{font-size:11.5px}
+.rqb{margin:8px 4px;padding:10px 12px;border:1px solid var(--accent);border-radius:12px 12px 12px 2px;background:var(--accent-soft,rgba(31,143,131,.12));max-width:420px}.rqb.off{opacity:.55;border-color:var(--line2)}
+.rqh{display:flex;align-items:center;gap:6px}.rqh b{font-size:13.5px}.rqn{margin-left:auto;font-weight:700;color:var(--accent)}.rqic .ic{width:16px;height:16px}
+.rqp{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0}.rqm{font-size:12px;padding:2px 8px;border:1px solid var(--line2);border-radius:999px;background:var(--panel)}.rqm.lead{border-color:var(--accent)}.rqm.empty{border-style:dashed;color:var(--muted);background:none}
+.rqf{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}`; document.head.append(st) })();
+
+/* ---------- 조사·근처 뒤지기: 한 번에 최대 10분 ---------- */
+const SCAN_MAX=600;
+
+/* ---------- 글로 이벤트 넣기 (메모장 양식) ---------- */
+const rev=m=>Object.fromEntries(Object.entries(m).filter(([k])=>k).map(([k,v])=>[v.replace(/\s*\(.*\)$/,''),k]));
+const CEVT={mood:rev(CEV_MOOD),sfx:rev(CEV_SFX),fx:rev(CEV_FX),stat:rev(CEV_STAT)};
+const byName=(o,n)=>{ n=String(n||'').trim(); if(!n) return ''; if(o[n]) return n; const e=Object.entries(o).find(([k,v])=>v&&v.n===n); return e?e[0]:'' };
+const CEV_TEMPLATE=`=== 이벤트: 버려진 약국
+태그: INCIDENT
+포지션:
+레벨: 1
+발생: 무작위 2
+한 번만: 아니오
+
+--- 1
+분위기: 긴장
+소리: 심장 박동
+연출: 깜빡임
+약국 셔터가 반쯤 내려와 있다.
+안쪽에서 무언가 선반을 긁는 소리가 난다.
+
+> 셔터를 끝까지 올린다 [힘]
+  성공: 셔터가 올라갔다. 약장이 그대로 남아 있다. | 다음 2 | XP 10
+  실패: 셔터가 미끄러져 손을 찧었다. | 체력 -10 | 끝
+> 그냥 지나간다
+  결과: 긁는 소리가 등 뒤에서 오래 따라왔다. | 정신 -3 | 끝
+
+--- 2
+분위기: 공포
+약장 앞에 흰 가운을 입은 감염자가 웅크리고 있다.
+
+> 조용히 약만 챙긴다 [민첩]
+  성공: 들키지 않고 진통제를 챙겼다. | 아이템 진통제 2 | XP 15 | 끝
+  실패: 놈이 고개를 들었다. | 전투 비틀거리는 감염자 | 끝
+> 맞서 싸운다
+  결과: 녀석이 몸을 일으킨다. | 전투 비틀거리는 감염자 | 아이템 붕대 1 | 끝
+`;
+const CEV_GUIDE=`[양식 설명]
+=== 이벤트: 제목          ← 새 이벤트 시작. 여러 개를 한 번에 붙여 넣어도 돼요
+아이디: abc123          ← (선택) 내보내기로 받은 글에 있어요. 있으면 그 이벤트를 고쳐 씁니다
+태그: INCIDENT          ← 창 맨 위 작은 글씨
+포지션: T, B            ← 비우면 모두. T / M / B
+레벨: 3                 ← 이 레벨부터
+발생: 무작위 2          ← 무작위 1~3 (클수록 자주) · 도착 장소이름 · 레벨 5 · 직접
+한 번만: 예 / 아니오
+구역: 장소 구역이름     ← (선택) 비우면 모든 구역
+
+--- 1                   ← 단계 번호 (1부터, 최대 8)
+분위기: ${Object.values(CEV_MOOD).join(' / ')}
+소리: ${Object.values(CEV_SFX).filter(Boolean).slice(0,12).join(' / ')} …
+연출: ${Object.values(CEV_FX).filter(Boolean).join(' / ')}
+그 아래 줄들 = 상황 문장 (한 줄 = 한 단락, 최대 6줄)
+
+> 선택지 문장 [힘]       ← [ ] 안에 판정: 힘 / 민첩 / 감각 / 매력 / 체력 (없으면 판정 없음)
+  성공: 결과 문장 | 효과 | 효과   ← 판정이 있으면 성공/실패 두 줄
+  실패: 결과 문장 | 효과
+> 판정 없는 선택지
+  결과: 결과 문장 | 효과
+
+[효과] 체력 -10 · 정신 5 · 허기 -10 · 달러 30 · XP 15 · 아이템 붕대 2 · 상태 출혈 10(분) · 치료 출혈
+       전투 비틀거리는 감염자 · 대원 합류 · 대원 사망 · 기절 이동 · 소리 비명 · 연출 암전
+       다음 2 (2단계로) · 끝 (여기서 마침. 안 쓰면 끝)`;
+function cevParse(txt){ const out=[], errs=[]; const blocks=String(txt||'').replace(/\r/g,'').split(/^===\s*이벤트\s*[:：]\s*/m).slice(1);
+  for(const b of blocks){ const lines=b.split('\n'); const title=lines.shift().trim(); const E={t:title,tag:'INCIDENT',pos:[],lv:1,once:false,trig:{k:'random',w:2},steps:[],d:''}; let st=null, op=null, id='';
+    const res=(s,line)=>{ const parts=s.split('|').map(x=>x.trim()); const r={t:parts.shift()||'',go:-1};
+      for(const p of parts){ let m;
+        if((m=p.match(/^다음\s*(\d+)$/))) r.go=clamp(+m[1]-1,0,7);
+        else if(p==='끝') r.go=-1;
+        else if((m=p.match(/^(체력|정신|허기|달러|XP|경험치)\s*([+-]?\d+)$/i))){ const k={체력:'hp',정신:'mind',허기:'hg',달러:'$',XP:'xp',xp:'xp',경험치:'xp'}[m[1]]; r[k]=+m[2] }
+        else if((m=p.match(/^아이템\s+(.+?)\s+(\d+)$/))){ const k=byName(ITEMS,m[1]); if(k){ r.it=k; r.iq=+m[2] } else errs.push(`「${title}」 ${line}: 아이템 '${m[1]}'을(를) 못 찾았어요`) }
+        else if((m=p.match(/^상태\s+(.+?)\s+(\d+)$/))){ const k=byName(STS,m[1]); if(k){ r.st=k; r.sm=+m[2] } else errs.push(`「${title}」 ${line}: 상태 '${m[1]}'을(를) 못 찾았어요`) }
+        else if((m=p.match(/^치료\s+(.+)$/))){ const k=byName(STS,m[1]); if(k) r.cure=k; else errs.push(`「${title}」 ${line}: 상태 '${m[1]}'을(를) 못 찾았어요`) }
+        else if((m=p.match(/^전투\s+(.+)$/))){ const k=byName(ZOMBIES,m[1]); if(k) r.z=k; else errs.push(`「${title}」 ${line}: 감염자 '${m[1]}'을(를) 못 찾았어요`) }
+        else if(p==='대원 합류') r.crew=true; else if(p==='대원 사망') r.kill=true; else if(p==='기절 이동') r.move=true;
+        else if((m=p.match(/^소리\s+(.+)$/))) r.sfx=CEVT.sfx[m[1].trim()]||'';
+        else if((m=p.match(/^연출\s+(.+)$/))) r.fx=CEVT.fx[m[1].trim()]||'';
+        else if(p) errs.push(`「${title}」 ${line}: '${p}'을(를) 이해하지 못했어요`) }
+      return r };
+    lines.forEach((raw,li)=>{ const line=raw.trim(), ln=`${li+2}번째 줄`; if(!line||line.startsWith('//')) return; let m;
+      if(!st){ if((m=line.match(/^아이디\s*[:：]\s*(.*)$/))) id=m[1].trim().replace(/[^a-zA-Z0-9_-]/g,'').slice(0,40);
+        else if((m=line.match(/^태그\s*[:：]\s*(.*)$/))) E.tag=m[1].trim().slice(0,24)||'INCIDENT';
+        else if((m=line.match(/^포지션\s*[:：]\s*(.*)$/))) E.pos=(m[1].toUpperCase().match(/[TMB]/g)||[]);
+        else if((m=line.match(/^레벨\s*[:：]\s*(\d+)/))) E.lv=clamp(+m[1],1,100);
+        else if((m=line.match(/^한\s*번만\s*[:：]\s*(.*)$/))) E.once=/예|네|o|y|1/i.test(m[1]);
+        else if((m=line.match(/^구역\s*[:：]\s*(.*)$/))){ const k=DIST.find(x=>x.n===m[1].trim()); E.d=k?k.k:'' }
+        else if((m=line.match(/^발생\s*[:：]\s*(.*)$/))){ const v=m[1].trim(); let q;
+          if((q=v.match(/^무작위\s*(\d)?/))) E.trig={k:'random',w:clamp(+(q[1]||2),1,3)};
+          else if((q=v.match(/^도착\s+(.+)$/))){ const node=Object.keys(MAP).find(k=>MAP[k].n===q[1].trim()); if(node) E.trig={k:'arrive',node}; else errs.push(`「${title}」 ${ln}: 장소 '${q[1]}'을(를) 못 찾았어요`) }
+          else if((q=v.match(/^레벨\s*(\d+)/))) E.trig={k:'level',lv:+q[1]};
+          else if(/^직접/.test(v)) E.trig={k:'manual'} }
+        else if((m=line.match(/^---\s*(\d+)/))){ st={p:[],mood:'tense',sfx:'',fx:'',o:[]}; E.steps.push(st) }
+        else errs.push(`「${title}」 ${ln}: '${line.slice(0,20)}' — 단계(--- 1)보다 먼저 나올 수 없는 줄이에요`); return }
+      if((m=line.match(/^---\s*(\d+)/))){ st={p:[],mood:'tense',sfx:'',fx:'',o:[]}; E.steps.push(st); op=null; return }
+      if((m=line.match(/^분위기\s*[:：]\s*(.*)$/))){ st.mood=CEVT.mood[m[1].trim()]||'tense'; return }
+      if((m=line.match(/^소리\s*[:：]\s*(.*)$/))){ st.sfx=CEVT.sfx[m[1].trim()]||''; return }
+      if((m=line.match(/^연출\s*[:：]\s*(.*)$/))){ st.fx=CEVT.fx[m[1].trim()]||''; return }
+      if((m=line.match(/^>\s*(.+)$/))){ let n=m[1].trim(), ck='', pos=[]; const c=n.match(/\[(힘|민첩|감각|매력|체력)\]/); if(c){ ck=CEVT.stat[c[1]]||''; n=n.replace(c[0],'').trim() } const pp=n.match(/\(([TMB ,·\/]+)\)\s*$/); if(pp){ pos=pp[1].match(/[TMB]/g)||[]; n=n.replace(pp[0],'').trim() }
+        op={n:n.slice(0,80),ck,pos,ok:{t:'',go:-1},no:{t:'',go:-1}}; if(st.o.length>=4) errs.push(`「${title}」 ${ln}: 선택지는 단계마다 4개까지예요`); else st.o.push(op); return }
+      if((m=line.match(/^(성공|결과)\s*[:：]\s*(.*)$/))){ if(!op) return errs.push(`「${title}」 ${ln}: 결과 앞에 선택지(>)가 없어요`); op.ok=res(m[2],ln); if(m[1]==='결과') op.no=op.ok; return }
+      if((m=line.match(/^실패\s*[:：]\s*(.*)$/))){ if(!op) return errs.push(`「${title}」 ${ln}: 결과 앞에 선택지(>)가 없어요`); op.no=res(m[1],ln); return }
+      if(st.p.length<6) st.p.push(line.slice(0,600)) });
+    if(!E.steps.length||!E.steps.some(s=>s.o.length)){ errs.push(`「${title}」: 단계(--- 1)와 선택지(>)가 하나 이상 있어야 해요`); continue }
+    E.steps.forEach((s,i)=>s.o.forEach(o=>{ if(!o.ck) o.no=o.ok; [o.ok,o.no].forEach(r=>{ if(r.go>=E.steps.length){ errs.push(`「${title}」 ${i+1}단계 '${o.n}': ${r.go+1}단계가 없어요`); r.go=-1 } }) }));
+    out.push({id:id||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),e:E}) }
+  return {list:out,errs} }
+function cevToText(e){ const R=r=>{ const a=[r.t||'…']; if(r.hp) a.push(`체력 ${r.hp}`); if(r.mind) a.push(`정신 ${r.mind}`); if(r.hg) a.push(`허기 ${r.hg}`); if(r.$) a.push(`달러 ${r.$}`); if(r.xp) a.push(`XP ${r.xp}`); if(r.it&&r.iq) a.push(`아이템 ${ITEMS[r.it].n} ${r.iq}`); if(r.st&&r.sm) a.push(`상태 ${STS[r.st].n} ${r.sm}`); if(r.cure) a.push(`치료 ${STS[r.cure].n}`); if(r.z) a.push(`전투 ${ZOMBIES[r.z].n}`); if(r.crew) a.push('대원 합류'); if(r.kill) a.push('대원 사망'); if(r.move) a.push('기절 이동'); if(r.sfx) a.push(`소리 ${CEV_SFX[r.sfx]}`); if(r.fx) a.push(`연출 ${CEV_FX[r.fx]}`); a.push(r.go>=0?`다음 ${r.go+1}`:'끝'); return a.join(' | ') };
+  const T=e.trig||{}, tr=T.k==='arrive'&&MAP[T.node]?`도착 ${MAP[T.node].n}`:T.k==='level'?`레벨 ${T.lv}`:T.k==='manual'?'직접':`무작위 ${T.w||2}`;
+  let s=`=== 이벤트: ${e.t}\n아이디: ${e.id}\n태그: ${e.tag||'INCIDENT'}\n포지션: ${(e.pos||[]).join(', ')}\n레벨: ${e.lv||1}\n발생: ${tr}\n한 번만: ${e.once?'예':'아니오'}\n${e.d&&DOF[e.d]?`구역: ${DOF[e.d].n}\n`:''}`;
+  (e.steps||[]).forEach((st,i)=>{ s+=`\n--- ${i+1}\n분위기: ${CEV_MOOD[st.mood]||'긴장'}\n${st.sfx?`소리: ${CEV_SFX[st.sfx]}\n`:''}${st.fx?`연출: ${CEV_FX[st.fx]}\n`:''}${(st.p||[]).join('\n')}\n\n`;
+    (st.o||[]).forEach(o=>{ s+=`> ${o.n}${o.ck?` [${CEV_STAT[o.ck]}]`:''}${(o.pos||[]).length?` (${o.pos.join(',')})`:''}\n`; if(o.ck){ s+=`  성공: ${R(o.ok)}\n  실패: ${R(o.no)}\n` } else s+=`  결과: ${R(o.ok)}\n` }) });
+  return s+'\n' }
+function cevTextModal(){ rt.modalLock=true;
+  openModal(`<div class="eyebrow">ADMIN <span class="dash"></span> TEXT</div><h2>글로 이벤트 넣기</h2>
+    <p class="note">메모장에서 양식대로 쓴 글을 통째로 붙여 넣으면 돼요. 여러 이벤트를 한 번에 넣을 수 있어요. 지금 있는 이벤트를 「글로 내보내기」 하면 같은 양식으로 나오니까, 고쳐서 다시 넣으면 그대로 고쳐져요.</p>
+    <div class="row"><button class="btn" id="ctTpl" type="button">양식 예시 넣기</button><button class="btn" id="ctGuide" type="button">양식 설명 보기</button><button class="btn" id="ctOut" type="button">글로 내보내기 (${(rt.cev||[]).filter(e=>e.id!=='_ann').length}개)</button><button class="btn" id="ctCopy" type="button">칸 전체 복사</button></div>
+    <textarea id="ctTx" rows="14" class="cbtx" spellcheck="false" placeholder="=== 이벤트: 제목 으로 시작하는 글을 붙여 넣으세요"></textarea>
+    <div id="ctPrev" class="note"></div>
+    <div class="row"><button class="btn" id="ctChk" type="button">검사하기</button><button class="btn warn" id="ctSave" type="button">저장하기</button><button class="btn" id="ctBack" type="button">편집기로</button></div>`);
+  const T=$('ctTx');
+  const check=()=>{ const r=cevParse(T.value); $('ctPrev').innerHTML=(r.list.length?`<b>${r.list.length}개</b> 읽음: ${r.list.map(x=>`${esc(x.e.t)} (${x.e.steps.length}단계)`).join(', ')}`:'읽은 이벤트가 없어요.')+(r.errs.length?`<ul class="cterr">${r.errs.slice(0,12).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''); return r };
+  $('ctTpl').onclick=()=>{ T.value=CEV_TEMPLATE; check() };
+  $('ctGuide').onclick=()=>{ T.value=CEV_GUIDE+'\n\n'+CEV_TEMPLATE; check() };
+  $('ctOut').onclick=()=>{ T.value=(rt.cev||[]).filter(e=>e.id!=='_ann').map(cevToText).join('\n'); check() };
+  $('ctCopy').onclick=async()=>{ T.focus(); T.select(); try{ await navigator.clipboard.writeText(T.value); toast('복사했어요.') }catch(e){ try{ document.execCommand('copy'); toast('복사했어요.') }catch(_){ toast('칸을 길게 눌러 복사하세요.') } } };
+  $('ctChk').onclick=check; T.oninput=()=>{ clearTimeout(T.__t); T.__t=setTimeout(check,500) };
+  $('ctBack').onclick=()=>{ rt.modalLock=false; cevOpen() };
+  $('ctSave').onclick=async()=>{ if(!rt.db) return toast('공유 서버에 연결되어 있어야 해요.'); const r=check(); if(!r.list.length) return toast('저장할 이벤트가 없어요.'); let n=0, bad=0;
+    for(const {id,e} of r.list){ const c=cevClean(id,Object.assign({on:true},e)); if(!c){ bad++; continue } const doc=Object.assign({},c,{at:Date.now()}); delete doc.id; try{ await rt.db.doc('cevents/'+id).set(doc); n++ }catch(err){ bad++ } }
+    toast(`이벤트 ${n}개 저장${bad?` · ${bad}개 실패`:''}`,true); $('ctPrev').insertAdjacentHTML('afterbegin',`<p class="okc">${n}개 저장했어요. 편집기 목록에서 확인하세요.</p>`) } }
+ACT.cevText=()=>cevTextModal();
+const _cevOpen43=cevOpen; cevOpen=function(){ _cevOpen43(); const box=$('mbox'); if(!box||!rt.isAdmin) return; const mv=box.querySelector('[data-act=cevMove]'); if(mv&&!box.querySelector('[data-act=cevText]')) mv.insertAdjacentHTML('afterend',`<button class="btn pri" data-act="cevText" type="button">📝 글로 이벤트 넣기 (메모장 양식)</button>`) };
+(()=>{ const st=document.createElement('style'); st.textContent=`#ctTx{font-family:var(--f-mono,monospace);font-size:12.5px;line-height:1.55;width:100%}.cterr{margin:6px 0 0;padding-left:18px;color:var(--blood)}.okc{color:var(--accent);font-weight:600;margin:0 0 4px}`; document.head.append(st) })();
+window.__CEV={cevParse,cevToText,CEV_TEMPLATE};
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
