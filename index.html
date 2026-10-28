@@ -1578,9 +1578,9 @@ void main(){
     const bg=hex(cs.getPropertyValue('--gl-bg'));
     gl.uniform3fv(U.uBg,bg);gl.uniform3fv(U.uA,hex(cs.getPropertyValue('--gl-a')));gl.uniform3fv(U.uB,hex(cs.getPropertyValue('--gl-b')));gl.uniform3fv(U.uC,hex(cs.getPropertyValue('--gl-c')));
     gl.uniform1f(U.uDark,(bg[0]+bg[1]+bg[2])/3<.5?1:0);
-    if(reduce) draw(performance.now());
+    if(reduce||window.__noBg) draw(performance.now());
   }
-  function resize(){cv.width=Math.max(1,Math.round(innerWidth*scale));cv.height=Math.max(1,Math.round(innerHeight*scale));gl.viewport(0,0,cv.width,cv.height);gl.uniform2f(U.uRes,cv.width,cv.height);gl.uniform1f(U.uScale,scale);if(reduce)draw(performance.now())}
+  function resize(){cv.width=Math.max(1,Math.round(innerWidth*scale));cv.height=Math.max(1,Math.round(innerHeight*scale));gl.viewport(0,0,cv.width,cv.height);gl.uniform2f(U.uRes,cv.width,cv.height);gl.uniform1f(U.uScale,scale);if(reduce||window.__noBg)draw(performance.now())}
   function draw(now){gl.uniform1f(U.uT,now/1000);gl.uniform1f(U.uPulse,pulse);gl.uniform2f(U.uM,mx,my);gl.drawArrays(gl.TRIANGLES,0,3)}
   function frame(now){
     raf=requestAnimationFrame(frame);
@@ -1596,7 +1596,7 @@ void main(){
   new MutationObserver(theme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   resize(); theme();
   if(reduce) draw(performance.now()); else raf=requestAnimationFrame(frame);
-  api.pulse=()=>{pulse=1;if(reduce)draw(performance.now())}; api.theme=theme; api.resize=resize;
+  api.pulse=()=>{pulse=1;if(reduce||window.__noBg)draw(performance.now())}; api.theme=theme; api.resize=resize;
   return api;
 })();
 
@@ -8599,6 +8599,38 @@ const _settings38=ACT.settings; ACT.settings=function(){ _settings38.apply(this,
   L.querySelectorAll('[data-fx]').forEach(i=>i.onchange=()=>{ SND.set[i.dataset.fx]=i.checked; SND.save(); SND.apply&&SND.apply(); fxApply(); if(i.dataset.fx==='wx'){ WX.set(''); WX.tick() } if(i.checked) sfx('toast') }) };
 /* 인트로 휴대폰: 알림이 많아지면 가장 오래된 것부터 정리 (반쯤 잘린 채로 남지 않게) */
 setInterval(()=>{ const box=document.getElementById('phNotes'); if(!box||!box.offsetParent) return; const max=innerWidth<=760?4:5; while(box.children.length>max) box.lastElementChild.remove() },250);
+/* ================= p39: 입력 중인 글 보존 · 쪽지 말풍선 길이 ================= */
+(()=>{ const st=document.createElement('style'); st.textContent='.nm.in{align-self:flex-start;justify-items:start}.nm p{width:fit-content;max-width:100%}'; document.head.append(st) })();
+/* 쓰던 글은 화면이 다시 그려져도, 알림 창이 떠도 지워지지 않게 */
+const DRAFT_IDS=['chatIn','pChatIn','nTx','nRepTx'];
+const draftKey=el=>{ if(!el||!el.id||!DRAFT_IDS.includes(el.id)) return ''; return el.id==='nRepTx'?'nRepTx:'+(rt.noteW||''):el.id==='nTx'?'nTx:'+(el.closest('form')?.dataset.to||rt.noteTo||''):el.id };
+rt.drafts={}; rt.drFocus=null;
+document.addEventListener('input',e=>{ const k=draftKey(e.target); if(k){ rt.drafts[k]=e.target.value; rt.drFocus=e.target.id } },true);
+document.addEventListener('focusin',e=>{ if(draftKey(e.target)) rt.drFocus=e.target.id },true);
+document.addEventListener('submit',e=>{ e.target.querySelectorAll('input,textarea').forEach(x=>{ const k=draftKey(x); if(k) delete rt.drafts[k] }); setTimeout(()=>{ rt.drFocus=null },0) },true);
+const _openNote39=openNote; openNote=function(to){ rt.noteTo=to; return _openNote39(to) };
+let drBusy=false; new MutationObserver(()=>{ if(drBusy) return; drBusy=true; try{ for(const id of DRAFT_IDS){ const el=document.getElementById(id); if(!el) continue; const k=draftKey(el), v=rt.drafts[k];
+    if(v&&el.value===''&&el.dataset.drv!==v){ el.value=v; el.dataset.drv=v; if(rt.drFocus===id&&(document.activeElement===document.body||!document.activeElement)){ try{ el.focus({preventScroll:true}); el.setSelectionRange(v.length,v.length) }catch(e){} } } } }finally{ drBusy=false } }).observe(document.body,{childList:true,subtree:true});
+/* ================= p40: 파견 보고가 멈춘 듯 보이던 문제 ================= */
+ACT.collectMission=el=>{
+  const i=(S.missions||[]).findIndex(m=>m.id===el.dataset.id); if(i<0) return; const m=S.missions[i]; if(Date.now()<m.e) return;
+  S.missions.splice(i,1); let lines;
+  try{ lines=resolveMission(m) }catch(e){ console.warn('[FH] 파견 보고 오류',e); (S.crew||[]).forEach(c=>{ if(c.state==='away'&&(m.crew||[]).includes(c.id)) c.state='idle' }); lines=[{k:'none',t:'무전에 잡음만 들렸다. 그래도 파견대는 무사히 돌아왔다.',fx:[]}] }
+  if(!Array.isArray(lines)||!lines.length) lines=[{k:'none',t:'파견대가 빈손으로 돌아왔다.',fx:[]}];
+  markSave(); schedulePub(2000);
+  const nodeN=(MAP[m.node]||{n:'?'}).n, rid='rep'+Date.now().toString(36); let k=0, done=false, tm=0;
+  const lineEl=r=>{ const d=document.createElement('div'); d.className='rline b'+(r.bad||0); d.innerHTML=`<span class="ric">${r.bad>=3?'✕':r.bad===2?'☣':r.bad?'!':'+'}</span><div><p></p>${(r.fx||[]).length?`<small>${r.fx.map(esc).join(' · ')}</small>`:''}</div>`; d.querySelector('p').textContent=r.t; return d };
+  const finish=()=>{ if(done) return; done=true; clearTimeout(tm); const rep=document.getElementById(rid); if(rep){ while(k<lines.length) rep.append(lineEl(lines[k++])); const rx=$('rx'); if(rx) rx.hidden=true; const ok=$('repOk'), sk=$('repSkip'); if(sk) sk.hidden=true; if(ok){ ok.hidden=false; ok.focus({preventScroll:true}) } } };
+  const lost=()=>{ done=true; clearTimeout(tm); rt.modalLock=false; const rest=lines.slice(Math.max(0,k-0)); msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>파견 보고 · ${esc(nodeN)}</b></div>${lines.map(r=>`<p>${esc(r.t)}${(r.fx||[]).length?`<br><small>${esc(r.fx.join(' · '))}</small>`:''}</p>`).join('')}`,'',15000); render() };
+  rt.modalLock=true;
+  openModal(`<div class="eyebrow">FIELD REPORT <span class="dash"></span> ${esc(nodeN)}</div><h2>파견 보고</h2><div class="radio-rx" id="rx"><span class="rxbar"></span>무전 수신 중…</div><div class="report" id="${rid}"></div><div class="row"><button class="btn pri" id="repOk" hidden>확인</button><button class="btn ghost sm" id="repSkip" type="button">한 번에 보기</button></div>`);
+  const step=()=>{ if(done) return; const rep=document.getElementById(rid); if(!rep) return lost(); if(k>=lines.length) return finish();
+    rep.append(lineEl(lines[k])); const r=lines[k++]; sfx(r.bad>=3?'sting':r.bad?'hurt':'tick'); tm=setTimeout(step,750) };
+  tm=setTimeout(step,600);
+  setTimeout(()=>{ if(!done&&document.getElementById(rid)) finish() },600+lines.length*750+2500);
+  $('repSkip').onclick=finish;
+  $('repOk').onclick=()=>{ rt.modalLock=false; closeModal(); render() };
+};
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
