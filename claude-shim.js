@@ -12,35 +12,47 @@
     const s = document.createElement('script'); s.textContent = src.textContent; document.body.appendChild(s);
   }
   const KO = m => /Invalid login/i.test(m) ? '이메일 또는 비밀번호가 맞지 않아요.' : /already registered|already been registered/i.test(m) ? '이미 가입된 이메일이에요. 로그인해 주세요.' : /Password should be/i.test(m) ? '비밀번호는 6자 이상이어야 해요.' : /Email not confirmed/i.test(m) ? '메일함의 인증 링크를 먼저 눌러 주세요.' : /rate limit/i.test(m) ? '잠시 뒤에 다시 시도해 주세요.' : /valid email|invalid format/i.test(m) ? '이메일 형식을 확인해 주세요.' : m;
-  function gate(sb) {
+  function gate(sb, offline) {
     return new Promise(done => {
-      const css = `#fhAuth{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:#0f1211;color:#e8e4da;font:15px/1.5 "IBM Plex Sans KR",system-ui,sans-serif;padding:16px}
-#fhAuth .bx{width:min(380px,100%);display:flex;flex-direction:column;gap:12px}#fhAuth h1{font:400 34px/1 "Italiana",serif;letter-spacing:.18em;margin:0 0 4px}#fhAuth .sub{color:#9aa0a3;font-size:13px;margin:0 0 8px}
-#fhAuth .tabs{display:flex;gap:6px}#fhAuth .tabs button{flex:1;background:none;border:1px solid #3a403e;color:#9aa0a3;padding:8px;font:inherit;cursor:pointer}#fhAuth .tabs button.on{border-color:#2fa597;color:#e8e4da}
+      const css = `#fhAuth{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:#0f1211;color:#e8e4da;font:15px/1.5 "IBM Plex Sans KR",system-ui,sans-serif;padding:16px;overflow:auto}
+#fhAuth .bx{width:min(380px,100%);display:flex;flex-direction:column;gap:12px}#fhAuth h1{font:400 34px/1 "Italiana",serif;letter-spacing:.18em;margin:0 0 4px}#fhAuth .sub{color:#9aa0a3;font-size:13px;margin:0 0 10px}
+#fhAuth .big{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:none;border:1px solid #3a403e;color:#e8e4da;padding:14px 16px;font:inherit;cursor:pointer}#fhAuth .big b{font-size:17px}#fhAuth .big small{color:#9aa0a3;font-size:12px}#fhAuth .big:hover,#fhAuth .big.pri{border-color:#2fa597}#fhAuth .big.pri{background:#15302c}
 #fhAuth label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#9aa0a3}#fhAuth input{font:inherit;color:#e8e4da;background:#171b1a;border:1px solid #3a403e;padding:10px 12px}
-#fhAuth .go{background:#1f8f83;color:#fff;border:0;padding:12px;font:inherit;font-weight:600;cursor:pointer}#fhAuth .go:disabled{opacity:.6}#fhAuth .msg{min-height:20px;font-size:13px;color:#e0a43a}#fhAuth .lnk{background:none;border:0;color:#9aa0a3;text-decoration:underline;cursor:pointer;font:inherit;font-size:12px;align-self:flex-start;padding:0}`;
-      const el = document.createElement('div'); el.id = 'fhAuth';
-      el.innerHTML = `<style>${css}</style><form class="bx" novalidate><h1>FALLEN HOUSE</h1><p class="sub">테스트 서버 · 계정으로 들어오면 어느 기기에서든 같은 생존자로 이어져요.</p>
-        <div class="tabs"><button type="button" data-m="in" class="on">로그인</button><button type="button" data-m="up">가입</button></div>
-        <label>이메일<input type="email" name="em" autocomplete="email" required></label><label>비밀번호 (6자 이상)<input type="password" name="pw" autocomplete="current-password" minlength="6" required></label>
-        <button class="go" type="submit">로그인</button><p class="msg" role="status"></p><button type="button" class="lnk" data-reset>비밀번호를 잊었어요</button></form>`;
-      document.body.appendChild(el);
-      const f = el.querySelector('form'), msg = el.querySelector('.msg'), go = el.querySelector('.go'); let mode = 'in';
-      el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { mode = b.dataset.m; el.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b)); go.textContent = mode === 'in' ? '로그인' : '가입하고 시작'; f.pw.autocomplete = mode === 'in' ? 'current-password' : 'new-password'; msg.textContent = ''; });
-      el.querySelector('[data-reset]').onclick = async () => { const em = f.em.value.trim(); if (!em) { msg.textContent = '이메일을 먼저 적어 주세요.'; return; } const r = await sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin + location.pathname }); msg.textContent = r.error ? KO(r.error.message) : '비밀번호 재설정 메일을 보냈어요.'; };
-      f.onsubmit = async e => { e.preventDefault(); const em = f.em.value.trim(), pw = f.pw.value; if (!em || pw.length < 6) { msg.textContent = '이메일과 6자 이상 비밀번호를 적어 주세요.'; return; }
-        go.disabled = true; msg.textContent = '';
-        try {
-          const r = mode === 'in' ? await sb.auth.signInWithPassword({ email: em, password: pw }) : await sb.auth.signUp({ email: em, password: pw, options: { emailRedirectTo: location.origin + location.pathname } });
-          if (r.error) { msg.textContent = KO(r.error.message); return; }
-          if (!r.data.session) { msg.textContent = '메일함에서 인증 링크를 누른 뒤 로그인해 주세요.'; mode = 'in'; el.querySelector('[data-m=in]').click(); return; }
-          el.remove(); done(r.data.session);
-        } catch (err) { msg.textContent = '연결에 실패했어요. 잠시 뒤 다시 시도해 주세요.'; } finally { go.disabled = false; }
+#fhAuth .go{background:#1f8f83;color:#fff;border:0;padding:12px;font:inherit;font-weight:600;cursor:pointer}#fhAuth .go:disabled{opacity:.6}#fhAuth .msg{min-height:20px;font-size:13px;color:#e0a43a;margin:0}#fhAuth .lnk{background:none;border:0;color:#9aa0a3;text-decoration:underline;cursor:pointer;font:inherit;font-size:12px;align-self:flex-start;padding:0}#fhAuth h2{font-size:18px;margin:0}`;
+      const el = document.createElement('div'); el.id = 'fhAuth'; document.body.appendChild(el);
+      const home = () => {
+        el.innerHTML = `<style>${css}</style><div class="bx"><h1>FALLEN HOUSE</h1><p class="sub">좀비 아포칼립스 생존 · 테스트 서버</p>
+          ${offline ? `<p class="msg">서버 설정(config.js)이 비어 있거나 서버에 연결하지 못했어요. 계정 없이 이 기기에서만 해 볼 수 있어요.</p><button class="big pri" data-go="solo"><b>이 기기에서만 해 보기</b><small>진행은 이 브라우저에만 저장돼요</small></button>`
+          : `<button class="big pri" data-go="up"><b>처음 시작하기</b><small>이메일로 계정을 만들고 새 생존자로 시작해요</small></button><button class="big" data-go="in"><b>로그인</b><small>이미 계정이 있어요 · 폰·컴퓨터 어디서든 같은 생존자</small></button>`}</div>`;
+        el.querySelectorAll('[data-go]').forEach(b => b.onclick = () => b.dataset.go === 'solo' ? (el.remove(), done(null)) : form(b.dataset.go));
       };
+      const form = mode => {
+        const up = mode === 'up';
+        el.innerHTML = `<style>${css}</style><form class="bx" novalidate><h1>FALLEN HOUSE</h1><h2>${up ? '처음 시작하기' : '로그인'}</h2>
+          <label>이메일<input type="email" name="em" autocomplete="email" required></label><label>비밀번호 (6자 이상)<input type="password" name="pw" autocomplete="${up ? 'new-password' : 'current-password'}" minlength="6" required></label>
+          ${up ? '<label>비밀번호 확인<input type="password" name="pw2" autocomplete="new-password" minlength="6" required></label>' : ''}
+          <button class="go" type="submit">${up ? '계정 만들고 시작' : '로그인'}</button><p class="msg" role="status"></p>
+          ${up ? '' : '<button type="button" class="lnk" data-reset>비밀번호를 잊었어요</button>'}<button type="button" class="lnk" data-back>← 처음 화면으로</button></form>`;
+        const f = el.querySelector('form'), msg = el.querySelector('.msg'), go = el.querySelector('.go'); f.em.focus();
+        el.querySelector('[data-back]').onclick = home;
+        const rs = el.querySelector('[data-reset]'); if (rs) rs.onclick = async () => { const em = f.em.value.trim(); if (!em) { msg.textContent = '이메일을 먼저 적어 주세요.'; return; } const r = await sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin + location.pathname }); msg.textContent = r.error ? KO(r.error.message) : '비밀번호 재설정 메일을 보냈어요.'; };
+        f.onsubmit = async e => { e.preventDefault(); const em = f.em.value.trim(), pw = f.pw.value;
+          if (!em || pw.length < 6) { msg.textContent = '이메일과 6자 이상 비밀번호를 적어 주세요.'; return; }
+          if (up && pw !== f.pw2.value) { msg.textContent = '비밀번호 확인이 달라요.'; return; }
+          go.disabled = true; msg.textContent = '';
+          try {
+            const r = up ? await sb.auth.signUp({ email: em, password: pw, options: { emailRedirectTo: location.origin + location.pathname } }) : await sb.auth.signInWithPassword({ email: em, password: pw });
+            if (r.error) { msg.textContent = KO(r.error.message); return; }
+            if (!r.data.session) { form('in'); el.querySelector('.msg').textContent = '메일함에서 인증 링크를 누른 뒤 로그인해 주세요.'; return; }
+            el.remove(); done(r.data.session);
+          } catch (err) { msg.textContent = '연결에 실패했어요. 잠시 뒤 다시 시도해 주세요.'; } finally { go.disabled = false; }
+        };
+      };
+      home();
     });
   }
   const ready = (async () => {
-    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY || !window.supabase) { runGame(null); return null; }
+    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY || !window.supabase) { await gate(null, true); runGame(null); return null; }
     try {
       const sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
       sb.auth.onAuthStateChange(async ev => { if (ev !== 'PASSWORD_RECOVERY') return; const pw = prompt('새 비밀번호 (6자 이상)'); if (pw && pw.length >= 6) { const r = await sb.auth.updateUser({ password: pw }); alert(r.error ? '바꾸지 못했어요: ' + r.error.message : '비밀번호를 바꿨어요.'); } });
@@ -50,7 +62,7 @@
       window.FH_AUTH = Object.freeze({ email: session.user.email || '', signOut: async () => { await sb.auth.signOut(); LS('qz7-camp', null); location.reload(); } });
       runGame(session.user.id);
       return { sb, uid: session.user.id };
-    } catch (e) { console.warn('[FH] Supabase 연결 실패, 혼자 하는 모드로 진행합니다.', e); runGame(null); return null; }
+    } catch (e) { console.warn('[FH] Supabase 연결 실패', e); await gate(null, true); runGame(null); return null; }
   })();
 
   const clone = v => v == null ? v : JSON.parse(JSON.stringify(v));

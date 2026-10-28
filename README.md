@@ -54,7 +54,7 @@ window.FH_CONFIG = {
 
 관리자도 처음엔 다른 사람과 똑같이 가입하고, 그다음 Supabase에서 한 줄로 관리자 표시를 붙입니다.
 
-1. 배포된 주소에서 **가입** 탭 → 내 이메일과 비밀번호로 가입 → 캐릭터 만들기
+1. 배포된 주소 첫 화면에서 **처음 시작하기** → 내 이메일과 비밀번호로 계정 만들기 → 캐릭터 만들기
 2. Supabase **SQL Editor**에서 아래 한 줄을 이메일만 바꿔서 실행:
    ```sql
    insert into public.fh_admins (uid) select id from auth.users where email = '내-이메일@example.com' on conflict do nothing;
@@ -64,10 +64,14 @@ window.FH_CONFIG = {
 
 관리자에서 빼려면: `delete from public.fh_admins where uid = (select id from auth.users where email = '그-이메일');`
 
+## 첫 화면이 안 뜨고 바로 게임이 나올 때
+
+`config.js`에 주소나 anon 키가 비어 있으면 계정 없이 '이 기기에서만 해 보기'만 나와요. 키를 넣고 GitHub에 `config.js`를 다시 올려 주세요.
+
 ## 업데이트할 때
 
 GitHub 저장소에서 `index.html`(바뀐 파일만)을 **Add file → Upload files**로 다시 올리면 Vercel이 자동으로 다시 배포해요.
 
 - 플레이어 저장(레벨·아이템·대원)과 관리자가 만든 이벤트는 **Supabase에 있어서 업데이트해도 그대로**예요.
-- 이메일 계정으로 들어오니 **어느 기기·브라우저에서 로그인해도 같은 생존자**예요. 로그아웃은 설정 맨 아래에 있어요.
+- 이메일 계정으로 들어오니 **어느 기기·브라우저에서 로그인해도 같은 생존자**예요. 로그아웃은 화면 위 설정(톱니바퀴) 옆 문 모양 버튼이에요.
 - `supabase.sql`이 바뀐 경우에만 SQL Editor에서 다시 Run 하세요. 여러 번 실행해도 안전해요.
