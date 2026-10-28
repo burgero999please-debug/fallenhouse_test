@@ -908,6 +908,14 @@ details.cat2>summary h2{display:inline;margin:0}details.cat2>.grid,details.cat2>
 .pcm{display:flex;align-items:center;gap:4px}.mini .msg:not(.sys),.mini .msg.mine{justify-content:flex-start;align-items:center}.mini .msg .bub{border:0;background:none;padding:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mini .msg .mb{flex-direction:row;gap:6px;min-width:0}
 .pl{grid-template-columns:28px 10px minmax(0,1.4fr) repeat(5,minmax(0,.7fr))}.pl-a{grid-column:1/-1;justify-content:flex-end;flex-wrap:wrap;min-width:0}.pl-a:empty{display:none}.pl-a .btn{white-space:nowrap}
 @media (max-width:1180px){.pl{grid-template-columns:24px 10px minmax(0,1fr) auto auto}.pl-a{grid-column:1/-1}}
+.pt-mapw{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ptm .pmate .pdot{fill:#2e6fb7;stroke:#fff;stroke-width:1.5;vector-effect:non-scaling-stroke}.ptm .pmate.inf .pdot{fill:#8a2f45}.ptm .pmate text{fill:#fff;text-anchor:middle;font-weight:700;pointer-events:none}
+.ptm .pmate,.ptm #pdMe{transition:transform .15s linear}
+.pt-chat .chatlog{max-height:180px;min-height:90px;overflow:auto;padding:8px;border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+#party.mini .pt-chat .chatlog{max-height:120px}
+.pt-log li .num{color:var(--muted);font-size:10px;margin-right:4px}.pt-log li.amb{color:var(--muted);font-style:italic}
+.pt-mem li{display:flex;align-items:center;gap:6px}.pt-mem li .av{margin:0}
+.pt-h b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -5927,6 +5935,70 @@ function setNick(v){ const n=String(v||'').replace(/[<>]/g,'').replace(/\s+/g,' 
   for(const [id,p] of rt.players) if(id!==rt.myId&&p&&typeof p.nick==='string'&&p.nick.trim().toLowerCase()===n.toLowerCase()) return toast('이미 다른 생존자가 쓰는 이름이에요.');
   const old=S.nick; S.nick=n; S.named=true; feed(`${old}님이 무전 이름을 ${n}(으)로 바꿨습니다`); saveLocal(); markSave(); try{ flushPub() }catch(e){} try{ setPresence() }catch(e){}
   const sn=$('sideNick'); if(sn) sn.textContent=n; if(!$('modal').hidden) closeModal(); toast(`이제 무전 이름은 ${n}입니다.`); render() }
+/* ================= 임시 동행 v3: 합류 확인 · 이동 투표 · 1분 주변 묘사 · 5분 이벤트 ================= */
+rt.ptc={amb:60000,ev1:[90000,270000],evGap:300000,vote:20000};
+const PAMB=['바람에 찢어진 현수막이 펄럭인다.','멀리서 개 짖는 소리가 뚝 끊겼다.','하늘 위로 헬기 소리가 지나간다. 멈추지 않는다.','어딘가에서 유리가 깨지는 소리가 났다.','썩은 냄새가 바람을 타고 밀려온다.','골목 끝에서 무언가 비틀거리며 지나간다.','빗방울이 떨어지기 시작했다.','무전기에서 잡음 섞인 숫자가 흘러나온다.','버려진 차 경보가 짧게 울렸다가 꺼졌다.','발밑에서 탄피가 굴러간다. 누군가 여기서 싸웠다.','창문마다 커튼이 쳐져 있다. 하나가 살짝 움직였다.','먼 곳에서 총성이 세 번. 그리고 조용하다.','까마귀 떼가 한꺼번에 날아올랐다.','도로 위에 끌린 핏자국이 길게 이어진다.','어디선가 아기 울음소리 같은 게 들렸다. 아니길 바란다.'];
+function ambText(P){ const n=MAP[P.at]||MAP[ZDEF[P.d][0][0]], pool=PAMB.concat(DFLAV[P.d]||[]); return `${n.n} 주변 · ${stPick(pool)}` }
+const _partyStart1=partyStart; partyStart=function(){ const P=rt.party, was=P&&P.on; _partyStart1(); if(P&&!was){ P.nextEv=P.start+ri(rt.ptc.ev1[0],rt.ptc.ev1[1]); P.nextAmb=P.start+20000; if(amLeader()){ const to=MAP[S.pos]&&MAP[S.pos].d===P.d&&!MAP[S.pos].home?S.pos:ZDEF[P.d].map(z=>z[0]).find(k=>!MAP[k].home)||ZDEF[P.d][0][0]; setTimeout(()=>{ if(rt.party===P) P.R.emit('pev',{type:'move',to}) },800) } } };
+const _leaderResolve0=leaderResolve; leaderResolve=function(){ _leaderResolve0(); const P=rt.party; if(P) P.nextEv=Date.now()+rt.ptc.evGap };
+const _onInfMsg0=onInfMsg; onInfMsg=function(d){ _onInfMsg0(d); const P=rt.party; if(P&&d.ph==='end') P.nextEv=Date.now()+rt.ptc.evGap };
+const _leaderEvent0=leaderEvent; leaderEvent=function(){ _leaderEvent0(); const P=rt.party; if(P&&!P.ev&&!P.inf) P.nextEv=Date.now()+rt.ptc.evGap };
+setInterval(()=>{ try{ const P=rt.party; if(!P||!P.on||!amLeader()) return; const now=Date.now();
+  if(now>=(P.nextAmb||0)){ P.nextAmb=now+rt.ptc.amb; P.R.emit('pev',{type:'amb',t:ambText(P)}) }
+  if(P.prop&&now>=P.prop.dl) propResolve() }catch(e){} },1000);
+/* 합류 알림 */
+const _onHb1=onHb; onHb=function(m){ const P=rt.party, isNew=P&&m.by&&!P.mem[m.by]&&m.by!==rt.myId; _onHb1(m); if(isNew&&rt.party===P&&P.mem[m.by]){ if(amLeader()&&P.at) setTimeout(()=>{ if(rt.party===P) P.R.emit('pev',{type:'move',to:P.at}) },600); msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>동행 합류</b></div><p>${esc(nameOf(m.by))}님이 동행에 들어왔습니다.</p>`,'ok',5000); partyRender() } };
+/* 이동은 모두의 동의로 */
+ACT.pMove=el=>{ const P=rt.party, k=el.dataset.n; if(!P||!P.on||!MAP[k]||MAP[k].d!==P.d) return; if(P.prop) return toast('이미 이동 투표 중입니다.'); if(P.at===k) return toast('이미 여기 있습니다.');
+  P.R.emit('pact',{kind:'prop',to:k}); toast(`${MAP[k].n}(으)로 이동을 제안했습니다.`); sfx('send') };
+ACT.pMv=el=>{ const P=rt.party; if(!P||!P.prop||P.prop.my!=null) return; P.prop.my=el.dataset.ok==='1'; P.R.emit('pact',{kind:'mv',id:P.prop.id,ok:P.prop.my}); sfx('click'); partyRender() };
+function propResolve(){ const P=rt.party, pr=P&&P.prop; if(!pr||!amLeader()) return; const ids=aliveIds(), yes=ids.filter(id=>pr.v[id]===true).length, ok=yes*2>ids.length;
+  P.R.emit('pev',{type:'propx',id:pr.id,ok,to:pr.to,yes,n:ids.length}); if(ok) P.R.emit('pev',{type:'move',to:pr.to}) }
+const _onPact2=onPact; onPact=function(m){ const P=rt.party, d=m.data||{}; if(!P||!m.by) return;
+  if(d.kind==='prop'&&amLeader()&&!P.prop&&MAP[d.to]&&MAP[d.to].d===P.d){ P.R.emit('pev',{type:'prop',id:Date.now().toString(36),to:d.to,by:m.by,dl:Date.now()+rt.ptc.vote}); return }
+  if(d.kind==='mv'&&P.prop&&d.id===P.prop.id){ P.prop.v[m.by]=!!d.ok; if(m.by!==rt.myId) plog(`${nameOf(m.by)}: ${d.ok?'찬성':'반대'}`,'v'); if(amLeader()&&aliveIds().every(id=>P.prop.v[id]!=null)) propResolve(); partyRender(); return }
+  return _onPact2(m) };
+const _onPev2=onPev; onPev=function(m){ const P=rt.party, d=m.data||{}; if(!P) return; const fromLeader=m.by===P.leader;
+  if(d.type==='amb'&&fromLeader){ plog(String(d.t||'').slice(0,160),'amb'); return }
+  if(d.type==='prop'&&fromLeader&&MAP[d.to]){ P.prop={id:String(d.id),to:d.to,by:d.by,dl:+d.dl||Date.now()+rt.ptc.vote,v:{},my:null}; if(d.by===rt.myId){ P.prop.my=true; P.prop.v[rt.myId]=true; P.R.emit('pact',{kind:'mv',id:P.prop.id,ok:true}) } plog(`${nameOf(d.by)}님이 ${MAP[d.to].n}(으)로 가자고 합니다.`,'ev'); if(d.by!==rt.myId){ sfx('msg'); vib([40]) } partyRender(); return }
+  if(d.type==='propx'&&fromLeader){ if(P.prop&&P.prop.id===String(d.id)) P.prop=null; plog(d.ok?`이동 찬성 ${d.yes}/${d.n} · 함께 이동합니다.`:`이동 반대 · 그대로 머뭅니다 (찬성 ${d.yes}/${d.n}).`,d.ok?'res':'v'); partyRender(); return }
+  if(d.type==='start'&&fromLeader&&!P.on){ _onPev2(m); const mem=Object.keys(P.mem).filter(id=>id!==rt.myId).map(nameOf); msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>동행 시작</b></div><p>대장 ${esc(nameOf(P.leader))}${mem.length?` · 함께: ${esc(mem.join(', '))}`:''}. 20분 동안 함께 움직입니다.</p>`,'ok',6000); partyRender(); return }
+  return _onPev2(m) };
+/* 채팅은 무전실과 같은 모양 */
+pChatHtml=function(){ const P=rt.party; if(!P.chat.length) return '<div class="msg sys"><span class="t">--:--</span>이 채팅은 동행이 끝나면 사라집니다.</div>';
+  return P.chat.map(c=>{ const me=c.me, p=me?{av:S.avatar,cos:S.cos}:(rt.players.get(c.by)||{}), nm=me?S.nick:nameOf(c.by), col=nameCol(p.cos), t=`<span class="t">${hhmm(c.t)}</span>`;
+    return me?`<div class="msg mine">${t}<span class="bub">${esc(c.x)}</span>${avHtml(p.av,p.cos,nm,24)}</div>`:`<div class="msg">${avHtml(p.av,p.cos,nm,24)}<span class="mb"><span class="n"${col?` style="color:${col}"`:''}>${esc(nm)}</span><span class="bub">${esc(c.x)}</span></span>${t}</div>` }).join('') };
+/* 동행 화면: 탐험 지도와 같은 모양 */
+partyRender=function(){ const P=rt.party, el=$('party'); if(!P||!el) return; const D=DOF[P.d], [x0,y0,x1,y1]=D.b, w=Math.max(x1-x0,y1-y0)+10, cx=(x0+x1)/2, cy=(y0+y1)/2, ld=amLeader();
+  const px=Math.max(260,Math.min((el.querySelector('.pt-map')?.clientWidth)||420,700)), u=w/px, sm=px<420?.86:1;
+  const mem=peersIn(), pend=Object.keys(P.pending).filter(id=>!mem.some(p=>p.by===id)), pr=P.prop;
+  const nodes=ZDEF[P.d].map(([k])=>{ const n=MAP[k], col=POI_COL[n.t]||'#888', ev=P.ev&&P.ev.at===k, tg=pr&&pr.to===k, here=P.at===k, r=9*sm*u;
+    return `<g class="poi t-${n.t}${here?' sel':''}" ${P.on?`data-act="pMove" data-n="${k}" role="button" tabindex="0"`:''} aria-label="${esc(n.n)}">${ev||tg?`<circle cx="${n.x}" cy="${n.y}" r="${r*1.8}" class="selring" style="stroke:${ev?'#c0392b':'#d4a017'}"/>`:''}<circle cx="${n.x}" cy="${n.y}" r="${r}" style="fill:${col}" class="pin"/><use href="#pi-${n.t}" x="${n.x-r*.62}" y="${n.y-r*.62}" width="${r*1.24}" height="${r*1.24}" class="pic"/><text x="${n.x+r+3*u}" y="${n.y+4*u}" style="font-size:${11*sm*u}px">${esc(n.n)}</text></g>` }).join('');
+  const dots=mem.filter(p=>!p.isMe).map(p=>{ const nm=nameOf(p.by); return `<g id="pd_${esc(p.by)}" class="pmate${p.presence.inf?' inf':''}" transform="translate(${p.presence.x} ${p.presence.y})"><circle r="${7*u}" class="pdot"/><text y="${3.5*u}" style="font-size:${9*u}px">${esc(nm.charAt(0))}</text></g>` }).join('');
+  const ev=P.ev?PEV.find(e=>e.k===P.ev.k):null, s=P.infS; let panel='';
+  if(pr) panel=`<div class="pev"><b>이동 투표 · ${esc(MAP[pr.to].n)}</b><p>${esc(nameOf(pr.by))}님이 가자고 합니다. 과반이 찬성하면 함께 이동해요. <span class="num" id="pPrT">${Math.max(0,Math.ceil((pr.dl-Date.now())/1000))}</span>초</p>${pr.my!=null?`<p class="muted">${pr.my?'찬성':'반대'}했습니다. 다른 사람을 기다리는 중…</p>`:`<div class="row"><button class="btn pri" data-act="pMv" data-ok="1">찬성</button><button class="btn" data-act="pMv" data-ok="0">반대</button></div>`}</div>`;
+  if(s){ const tg=P.inf, me=tg===rt.myId;
+    if(s.ph==='plea'||s.ph==='wait') panel+=me?`<div class="pev inf"><b>☣ 물렸다. 동료들이 나를 보고 있다.</b><p>무엇이라 말할까? <span class="num" id="pInfT"></span>초</p>${s.sent?'<p class="muted">말을 전했다. 동료들의 결정을 기다린다.</p>':`<textarea id="pPleaTx" maxlength="160" rows="2" placeholder="애원할 말을 적으세요 (선택)"></textarea><div class="row"><button class="btn pri" data-act="pPlea" data-m="beg">살려 달라고 빈다</button><button class="btn" data-act="pPlea" data-m="kill">죽여 달라고 한다</button></div>`}</div>`
+      :`<div class="pev inf"><b>☣ ${esc(nameOf(tg))}이(가) 감염됐다 · ${s.r}/3</b><p>그가 무슨 말을 할지 기다린다… <span class="num" id="pInfT"></span>초</p></div>`;
+    else if(s.ph==='vote') panel+=me?`<div class="pev inf"><b>동료들이 결정하고 있다</b><p>${s.plea?.m==='kill'?'죽여 달라고 했다.':'살려 달라고 빌었다.'} <span class="num" id="pInfT"></span>초</p></div>`
+      :`<div class="pev inf"><b>☣ ${esc(nameOf(tg))}을(를) 어떻게 할까 · ${s.r}/3</b><p class="plea">${s.plea?.m==='kill'?'"죽여 줘. 변하기 전에."':'"제발… 살려 줘."'}${s.plea?.x?`<br>「${esc(s.plea.x)}」`:''}</p><p class="muted">들고 있는 무기: ${esc(curWeapon().n)} · <span class="num" id="pInfT"></span>초</p>${s.my!=null?`<p>${s.my?'죽이기로 했다.':'죽이지 않기로 했다.'} 다른 사람을 기다린다.</p>`:`<div class="row"><button class="btn warn" data-act="pKill" data-k="1">죽인다</button><button class="btn" data-act="pKill" data-k="0">죽이지 않는다</button></div>`}</div>` }
+  else if(ev) panel+=`<div class="pev"><b>${esc(ev.n)}</b><p>${esc(ev.d)}</p><p class="muted">${ev.mode==='major'?'다수결로 정합니다.':'각자 고른 대로 결과가 납니다.'} · <span class="num" id="pEvT"></span>초</p><div class="row">${ev.o.map((o,i)=>`<button class="btn${P.ev.my===i?' pri':''}" data-act="pVote" data-i="${i}" ${P.ev.my!=null||P.dead[rt.myId]?'disabled':''}>${esc(o)}</button>`).join('')}</div></div>`;
+  if(!panel) panel=`<div class="pev idle"><p class="muted">${P.on?`지도에서 지점을 누르면 이동을 제안해요. 과반이 찬성하면 함께 움직여요. 다음 사건까지 <span class="num" id="pNextEv">${mmss(Math.max(0,(P.nextEv||0)-Date.now()))}</span>`:(ld?'수락을 기다리는 중… 상대가 수락하면 바로 시작돼요.':'대장과 연결하는 중…')}</p></div>`;
+  const dists=ld&&P.on?DIST.filter(x=>x.lv<=pMaxLv()):[];
+  const keepChat=$('pChatIn')?.value||'', focused=document.activeElement&&document.activeElement.id, pleaKeep=$('pPleaTx')?.value||'';
+  el.innerHTML=`<div class="pt-h"><span class="tagx ok">임시 동행</span><b>${esc(D.n)}</b><span class="note">${mem.length}/${P_SIZE}명</span><span class="pt-tm num" id="pTimer">${P.on?mmss(Math.max(0,P.start+P_MAX-Date.now())):'대기'}</span><button class="btn sm ghost" data-act="pHide">${el.classList.contains('mini')?'펼치기':'접기'}</button><button class="btn sm warn" data-act="pLeave">${ld?'동행 끝내기':'나가기'}</button></div>
+    <div class="pt-b"><div class="pt-mapw">${dists.length>1?`<div class="row pt-dist">${dists.map(x=>`<button class="chipb${x.k===P.d?' on':''}" data-act="pDist" data-d="${x.k}" type="button">${esc(x.n)}</button>`).join('')}</div>`:''}<div class="pt-map"><svg viewBox="${cx-w/2} ${cy-w/2} ${w} ${w}" class="citymap nav ptm" preserveAspectRatio="xMidYMid meet">${mapBase()}${nodes}${dots}<g id="pdMe" class="pmate me${P.inf===rt.myId?' inf':''}" transform="translate(${P.me.x} ${P.me.y})"><circle r="${16*u}" class="me-halo"/><circle r="${6.5*u}" class="me-dot"/></g></svg></div></div>
+    <div class="pt-side"><ul class="pt-mem">${mem.map(p=>`<li class="${p.presence.inf?'inf':''}${P.dead[p.by]?' dead':''}"><span class="dot on"></span>${avHtml((p.isMe?{av:S.avatar}:(rt.players.get(p.by)||{})).av,p.isMe?S.cos:(rt.players.get(p.by)||{}).cos,p.isMe?S.nick:nameOf(p.by),20)}<b>${esc(p.isMe?S.nick:nameOf(p.by))}${p.by===P.leader?' <em>대장</em>':''}${p.isMe?' <em>나</em>':''}</b><span class="num">${clamp(+p.presence.hp||0,0,100)}%</span></li>`).join('')}${pend.map(id=>`<li class="pend"><span class="dot"></span><b>${esc(nameOf(id))}</b><span>응답 대기</span></li>`).join('')}</ul>
+    ${panel}<ol class="pt-log" aria-live="polite">${P.log.slice(-10).reverse().map(l=>`<li class="${l.cls||''}"><span class="num">${hhmm(l.t)}</span> ${esc(l.x)}</li>`).join('')}</ol></div></div>
+    <div class="pt-chat"><div class="chatlog pt-cl" id="pChat">${pChatHtml()}</div><form class="chatform" id="pChatF"><input id="pChatIn" maxlength="200" placeholder="동행에게만 보이는 채팅" autocomplete="off"><button class="btn pri" type="submit">송신</button></form></div>`;
+  const pf=$('pChatF'); if(pf) pf.onsubmit=e=>{ e.preventDefault(); ACT.pSend() }; const ci=$('pChatIn'); if(ci){ ci.value=keepChat; if(focused==='pChatIn') ci.focus() } const pt=$('pPleaTx'); if(pt){ pt.value=pleaKeep; if(focused==='pPleaTx') pt.focus() } const cb=$('pChat'); if(cb) cb.scrollTop=cb.scrollHeight };
+/* 지도 위 내 위치·동료 위치를 부드럽게 */
+pTick=(f=>function(){ f(); const P=rt.party; if(!P) return; const me=$('pdMe'); if(me) me.setAttribute('transform',`translate(${P.me.x} ${P.me.y})`);
+  for(const p of peersIn()){ if(p.isMe) continue; const g=document.getElementById('pd_'+p.by); if(g) g.setAttribute('transform',`translate(${p.presence.x} ${p.presence.y})`) }
+  const a=$('pPrT'); if(a&&P.prop) a.textContent=Math.max(0,Math.ceil((P.prop.dl-Date.now())/1000)); const b=$('pNextEv'); if(b) b.textContent=mmss(Math.max(0,(P.nextEv||0)-Date.now())) })(pTick);
+const _onPev3=onPev; onPev=function(m){ _onPev3(m); const P=rt.party, d=m.data||{}; if(P&&d.type==='move'&&MAP[d.to]&&m.by===P.leader){ P.at=d.to; partyRender() } };
+
+const _onAnswer2=onAnswer; onAnswer=function(m){ _onAnswer2(m); const P=rt.party, d=m.data||{}; if(P&&d.ok&&d.pid===P.id&&d.to===rt.myId&&amLeader()) setTimeout(()=>{ if(rt.party===P&&P.at) P.R.emit('pev',{type:'move',to:P.at}) },1500) };
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
