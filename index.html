@@ -544,6 +544,9 @@ body.intro-on .shell,body.intro-on .deco,body.intro-on .tabbar,body.intro-on .sh
 .ph-mh span:first-child{flex:1;font-weight:600}
 .ph-ai{width:16px;height:16px;border-radius:4px;background:#d23a2f;color:#fff;display:grid;place-items:center;font-weight:800;font-size:11px}
 .ph-n.msg b{margin-right:6px}
+.ph-n.msg{display:block!important;text-align:left!important;max-width:none!important}.ph-n.msg>*{max-width:none}
+.phone{aspect-ratio:auto!important}.ph-screen{height:auto!important;min-height:570px}.ph-notes{overflow:visible!important}
+@media (max-width:760px){.ph-screen{min-height:430px}.ph-n{padding:7px 9px;font-size:11px}.ph-img{aspect-ratio:16/9;margin-top:4px}}
 .ph-img{display:block;width:100%;margin-top:6px;border-radius:8px;aspect-ratio:3/2;object-fit:cover}
 .in-fig{margin:0 0 6px;border:1px solid var(--line2);max-width:520px;background:var(--panel)}
 .in-fig img{display:block;width:100%;height:auto;filter:saturate(.85) contrast(1.05)}
@@ -1581,7 +1584,7 @@ void main(){
   function draw(now){gl.uniform1f(U.uT,now/1000);gl.uniform1f(U.uPulse,pulse);gl.uniform2f(U.uM,mx,my);gl.drawArrays(gl.TRIANGLES,0,3)}
   function frame(now){
     raf=requestAnimationFrame(frame);
-    if(document.hidden||!$('def').hidden) return;
+    if(document.hidden||window.__noBg||!$('def').hidden) return;
     const dt=now-last; if(low&&dt<32) return; last=now;
     if(!low&&dt<200){ema=ema*.94+dt*.06; if(ema>24&&scale>.5){scale=Math.max(.5,scale*.85);resize();ema=16}}
     pulse*=Math.pow(.12,Math.min(dt,100)/1000); mx+=(tx-mx)*.04; my+=(ty-my)*.04;
@@ -1823,7 +1826,7 @@ const Cube=(()=>{
     c.globalAlpha=1; c.fillStyle=fg; for(const pnt of [[1,-1,1],[-1,1,-1],[1,0,-1]]){const q=pr(...pnt); c.fillRect(q[0]-3,q[1]-3,6,6)}
   }
   function loop(now){ raf=requestAnimationFrame(loop); if(!cv||!document.contains(cv)){cancelAnimationFrame(raf);raf=0;return}
-    if(document.hidden||!$('def').hidden||now-last<33) return; last=now; draw(now) }
+    if(document.hidden||window.__noBg||!$('def').hidden||now-last<33) return; last=now; draw(now) }
   new MutationObserver(()=>draw(performance.now())).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
   matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>draw(performance.now()));
   addEventListener('resize',()=>draw(performance.now()));
@@ -8582,6 +8585,20 @@ const VFD={scooter:'이동 시간 -35%. 이동마다 연료 1.',pickup:'이동 �
 for(const k in VEH){ if(VFUEL[k]!=null) VEH[k].fuel=VFUEL[k]; if(VFD[k]) VEH[k].d=VFD[k]; if(VEH[k].fuel) VEH[k].d=VEH[k].d.replace(/\s*$/,' 구역을 넘어가면 2배.') }
 function fuelNeed(v,to){ if(!v||!v.fuel) return 0; const a=MAP[S.pos], b=to&&MAP[to]; return v.fuel*(a&&b&&a.d!==b.d?2:1) }
 curVeh=function(to){ const k=S.car; if(!k||!S.cars?.[k]) return null; const v=VEH[k]; if(v.fuel&&(S.res.fuel||0)<fuelNeed(v,to)) return S.cars.bike?VEH.bike:S.cars.cargo?VEH.cargo:null; return v };
+/* ================= p38: 연출 설정 묶음 · 인트로 휴대폰 알림 정리 ================= */
+const fxOn=k=>SND.set[k]!==false;
+function fxApply(){ window.__noBg=!fxOn('bgAnim'); document.body.classList.toggle('nomove',!fxOn('fxMove')); try{ if(window.__noBg) FX.pulse() }catch(e){} }
+(()=>{ const st=document.createElement('style'); st.textContent=`body.nomove .view.ink-in,body.nomove #mbox.ch-in,body.nomove .rline,body.nomove .pk-res,body.nomove .toast,body.nomove .blog .new,body.nomove .pturn li{animation:none!important}body.nomove .view{filter:none!important}
+.fxgrp{border:1px solid var(--line2);padding:10px 12px;display:flex;flex-direction:column;gap:2px}.fxgrp>b{font-size:13px}.fxgrp>small{color:var(--muted);font-size:11.5px;margin-bottom:4px}.fxgrp .setrow{border:0;padding:6px 0}`; document.head.append(st); fxApply() })();
+const _inkTr38=inkTransition; inkTransition=function(){ if(!fxOn('fxMove')){ const v=$('view'); if(v){ v.classList.remove('ink-in'); v.style.filter='' } return } return _inkTr38() };
+const _settings38=ACT.settings; ACT.settings=function(){ _settings38.apply(this,arguments); const L=$('mbox').querySelector('.setlist'); if(!L) return;
+  const hr=L.querySelector('[data-set=horror]'), hrow=hr&&hr.closest('.setrow'), wx=$('setWx'), wrow=wx&&wx.closest('.setrow');
+  const sw=(k,n,d)=>`<label class="setrow"><span><b>${n}</b><small>${d}</small></span><input type="checkbox" data-fx="${k}" ${fxOn(k)?'checked':''}></label>`;
+  const html=`<div class="fxgrp"><b>연출</b><small>화면이 버벅이면 꺼 보세요. 끈 항목은 게임 진행에 영향이 없어요.</small>${sw('fxMove','화면 이동 애니메이션','메뉴를 옮길 때 화면이 번지며 들어오는 효과와 창이 열리는 움직임')}${sw('horror','이벤트 배경 연출','사건 때 번쩍임·화면 흔들림·암전·노이즈·긴장음')}${sw('wx','날씨 배경 연출','한파의 얼음·눈, 산성비, 안개, 붉은 달 같은 화면 효과')}${sw('bgAnim','움직이는 배경','뒤에서 일렁이는 점무늬 배경과 본부의 회전 큐브. 가장 무거워요')}</div>`;
+  if(hrow){ hrow.insertAdjacentHTML('beforebegin',html); hrow.remove() } else L.insertAdjacentHTML('afterbegin',html); if(wrow) wrow.remove();
+  L.querySelectorAll('[data-fx]').forEach(i=>i.onchange=()=>{ SND.set[i.dataset.fx]=i.checked; SND.save(); SND.apply&&SND.apply(); fxApply(); if(i.dataset.fx==='wx'){ WX.set(''); WX.tick() } if(i.checked) sfx('toast') }) };
+/* 인트로 휴대폰: 알림이 많아지면 가장 오래된 것부터 정리 (반쯤 잘린 채로 남지 않게) */
+setInterval(()=>{ const box=document.getElementById('phNotes'); if(!box||!box.offsetParent) return; const max=innerWidth<=760?4:5; while(box.children.length>max) box.lastElementChild.remove() },250);
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
