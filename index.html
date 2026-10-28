@@ -2502,7 +2502,7 @@ const UNLOCKS=[
   [8,'소방 도끼 발견 가능'],
   [10,'주차 빌딩 합류: 일꾼·시설·탐험대 · 9mm 권총 · 검문소 선별 · 차량 직결'],
 ]
-const maxHp=()=>100+(S.route==='solo'?20:0)+((S.stats?.end||3)-3)*8+gearV('hp');
+const maxHp=()=>100+(S.route==='solo'?20:0)+(effSt(S.stats?.end||3)-3)*8+gearV('hp');
 const weaponOf=k=>MELEE.find(w=>w.k===k)||MELEE[0];
 const curWeapon=()=>weaponOf(S.weapon);
 function slog(x){ rt.slog=(rt.slog||[]).concat({t:Date.now(),x:josa(x)}).slice(-8) }
@@ -3437,16 +3437,16 @@ const STATS=[
   {k:'luk',n:'운',d:'치명타, 희귀품 발견, 공중 보급 특수품'},
 ];
 const ST=k=>Math.max(1,((S.stats||{})[k]||3)+trSt(k)+stPen(k));
-const SPECIAL=()=>{ const s=ST;
+const SPECIAL=()=>{ const B=statBonus, pc=x=>+(x*100).toFixed(1);
   return [
-    {n:'채집 확률',v:Math.round((s('per')-3)*4+ (S.route==='solo'?100:0)),u:'%',d:'탐색·식량 구하기 획득량 보너스'},
-    {n:'희귀품 발견',v:+(2+s('luk')*1.5+s('per')*.5).toFixed(1),u:'%',d:'탐색 중 연료·약품·특수품'},
-    {n:'인간 발견 확률',v:+(5+s('cha')*1.5+s('per')*.5).toFixed(1),u:'%',d:'탐사·파견에서 사람을 만날 확률'},
-    {n:'이벤트 등장 확률',v:Math.round((1+(s('per')-3)*.04)*100),u:'%',d:'돌발 사건 발생 배율'},
-    {n:'치명타 확률',v:+(5+s('luk')*1.5+s('agi')*.5).toFixed(1),u:'%',d:'전투 피해 2배'},
-    {n:'회피율',v:+(3+s('agi')*1.8).toFixed(1),u:'%',d:'감염자 공격 회피'},
-    {n:'도망 성공률',v:Math.round(Math.min(95,(.55+s('agi')*.02+(S.route==='solo'?.15:0)+(S.route==='duo'?.08:0))*100)),u:'%',d:'전투에서 이탈'},
-    {n:'상점 할인',v:Math.min(25,Math.max(0,(s('cha')-3)*2)),u:'%',d:'구매 가격 할인'},
+    {n:'채집 확률',v:Math.round((effSt(ST('per'))-3)*4+ (S.route==='solo'?100:0)),u:'%',d:'탐색·식량 구하기 획득량 보너스'},
+    {n:'희귀품 발견',v:pc(B.rare()),u:'%',d:'탐색 중 연료·약품·특수품'},
+    {n:'인간 발견 확률',v:pc(B.human()),u:'%',d:'탐사·파견에서 사람을 만날 확률'},
+    {n:'이벤트 등장 확률',v:Math.round(B.event()*100),u:'%',d:'돌발 사건 발생 배율'},
+    {n:'치명타 확률',v:pc(B.crit()),u:'%',d:'전투 피해 2배'},
+    {n:'회피율',v:pc(B.dodge()),u:'%',d:'감염자 공격 회피'},
+    {n:'도망 성공률',v:Math.round(B.flee()*100),u:'%',d:'전투에서 이탈'},
+    {n:'상점 할인',v:Math.round(B.discount()*100),u:'%',d:'구매 가격 할인'},
   ];
 };
 const statBonus={
@@ -3626,7 +3626,7 @@ TITLES.push(
 function itemCodex(){ S.itemSeen=S.itemSeen||{}; for(const k in S.inv) if(S.inv[k]>0) S.itemSeen[k]=1; const ks=Object.keys(ITEMS);
   return `<div class="sec"><div class="sec-head"><h2>아이템 도감</h2><p class="num">${ks.filter(k=>S.itemSeen[k]).length}/${ks.length}</p></div><div class="codex">${ks.map(k=>cxItem(S.itemSeen[k],esc(ITEMS[k].n),esc(ITEMS[k].d),S.inv[k]>0?`<p class="note">보유 ${S.inv[k]}</p>`:'')).join('')}</div></div>
   <div class="sec"><div class="sec-head"><h2>음식</h2><p class="num">${Object.keys(S.foodSeen||{}).length}/${Object.keys(FOODS).length}</p></div><div class="codex">${Object.entries(FOODS).map(([k,f])=>cxItem(S.foodSeen?.[k],esc(f.n),esc(f.d)+` · 체력 +${f.hp}${f.rg?` (+${f.dur}초 천천히)`:''}`)).join('')}</div></div>
-  <div class="sec"><div class="sec-head"><h2>장비</h2><p class="num">${Object.keys(S.gear||{}).length}/${Object.keys(GEAR).length}</p></div><div class="codex">${Object.entries(GEAR).map(([k,g])=>cxItem(S.gear?.[k],esc(g.n)+` <span class="tag">${SLOTS[g.slot]}</span>`,esc(g.d),S.gear?.[k]?'':`<p class="note">${g.p?'상점':'조사·특수 조사에서 발견'}</p>`)).join('')}</div></div>
+  <div class="sec"><div class="sec-head"><h2>장비</h2><p class="num">${Object.keys(S.gear||{}).length}/${Object.keys(GEAR).length}</p></div><div class="codex">${Object.entries(GEAR).map(([k,g])=>cxItem(S.gear?.[k],esc(g.n)+` <span class="tag">${SLOTS[g.slot]}</span>`,esc(g.d),S.gear?.[k]?'':`<p class="note">${g.rw?'Lv.'+g.rw+' 레벨 보상':g.p?'상점':'조사·특수 조사에서 발견'}</p>`)).join('')}</div></div>
   <div class="sec"><div class="sec-head"><h2>탈것</h2><p class="num">${Object.keys(S.cars||{}).length}/${Object.keys(VEH).length}</p></div><div class="codex">${Object.entries(VEH).map(([k,v])=>cxItem(S.cars?.[k],esc(v.n),esc(v.d))).join('')}</div></div>` }
 
 /* ================= 임시 동행 (최대 5분 · 여럿 가능) =================
@@ -3679,7 +3679,7 @@ function aliveIds(){ const P=rt.party; return peersIn().map(p=>p.by).filter(id=>
 ACT.pMove=el=>{ const P=rt.party; if(!P||!amLeader()) return; const k=el.dataset.n; if(!MAP[k]||MAP[k].d!==P.d) return; P.R.emit('pev',{type:'move',to:k}).catch(()=>{}) };
 function pTick(){ const P=rt.party; if(!P) return; const me=P.me, dx=me.tx-me.x, dy=me.ty-me.y, d=Math.hypot(dx,dy); if(d>.05){ const s=Math.min(d,.45); me.x+=dx/d*s; me.y+=dy/d*s; pres(); const dot=document.getElementById('pdMe'); if(dot){ dot.setAttribute('cx',me.x); dot.setAttribute('cy',me.y) } }
   for(const p of peersIn()){ if(p.isMe) continue; const el=document.getElementById('pd_'+p.peer); if(el&&p.presence){ el.setAttribute('cx',+p.presence.x||0); el.setAttribute('cy',+p.presence.y||0) } }
-  if(P.on){ const left=P.start+P_MAX-Date.now(); const t=$('pTimer'); if(t) t.textContent=mmss(Math.max(0,left)); if(left<=0) return amLeader()?partyEndAll('5분이 지났습니다.'):null;
+  if(P.on){ const left=P.start+P_MAX-Date.now(); const t=$('pTimer'); const hold=pInfHold(P); if(t) t.textContent=left<=0&&hold?'연장':mmss(Math.max(0,left)); if(left<=0&&!hold) return amLeader()?partyEndAll('5분이 지났습니다.'):null;
     if(amLeader()&&!P.ev&&!P.inf&&Date.now()>=P.nextEv&&aliveIds().length>=2) leaderEvent();
     if(amLeader()&&P.ev&&Date.now()>=P.ev.dl) leaderResolve();
     if(amLeader()&&P.inf&&P.infS&&Date.now()>=P.infS.dl) infAdvance();
@@ -6438,7 +6438,7 @@ const _onAnswer5=onAnswer; onAnswer=function(m){ const d=m.data||{}, P=rt.party;
 const _partyCard5=partyCard; partyCard=function(){ let h=_partyCard5(); const L=Object.values(rt.missInv).filter(I=>Date.now()<I.until); if(!L.length||rt.party) return h;
   return h.replace(/<\/div>$/,`<div class="pmiss"><b>놓친 동행 제안</b>${L.map(I=>`<div class="row spread"><span>${esc(I.nick)} · 남은 <span class="num" data-miss="${esc(I.pid)}">${mmss(Math.max(0,I.until-Date.now()))}</span></span><span class="row"><button class="btn sm pri" data-act="pLateJoin" data-pid="${esc(I.pid)}">중간 합류</button><button class="btn sm ghost" data-act="pMissDrop" data-pid="${esc(I.pid)}">닫기</button></span></div>`).join('')}</div></div>`) };
 /* 무작위로 줍는 장비에서 명품·미끼는 뺀다 */
-const _gainGear5=gainGear; gainGear=function(k,src){ if(!k){ const lv=lvlOf(S.xp), pool=Object.keys(GEAR).filter(x=>!(S.gear||{})[x]&&!GEAR[x].lux&&!['bait','bloodbag'].includes(x)&&(GEAR[x].find||GEAR[x].lv||1)<=lv+1); if(!pool.length) return null; k=stPick(pool) } return _gainGear5(k,src) };
+const _gainGear5=gainGear; gainGear=function(k,src){ if(!k){ const lv=lvlOf(S.xp), pool=Object.keys(GEAR).filter(x=>!(S.gear||{})[x]&&!GEAR[x].lux&&!GEAR[x].rw&&!['bait','bloodbag'].includes(x)&&(GEAR[x].find||GEAR[x].lv||1)<=lv+1); if(!pool.length) return null; k=stPick(pool) } return _gainGear5(k,src) };
 
 /* ================= 상태 이상: 스탯이 실제로 깎이고 행동에 제약 ================= */
 Object.assign(STS,{
@@ -9116,6 +9116,122 @@ function admTry(p){ try{ const d=dKey(), P=(rt.cev||[]).filter(e=>cevOk(e)&&e.tr
 const _openStoryChain47=openStoryChain; openStoryChain=function(){ if(admTry(.5)) return; return _openStoryChain47() };
 const _openStory47=openStory; openStory=function(src){ if(Array.isArray(src)&&src.length>1&&admTry(.4)) return; return _openStory47(src) };
 const _maybeStory47=maybeStory; maybeStory=function(ch){ if(canStory()&&admTry(Math.min(.5,(ch||.1)*2.2))) return true; return _maybeStory47(ch) };
+/* ================= p48: 레벨에 따른 스탯 최대치 · 고레벨 보상 ================= */
+/* 스탯 최대치: Lv.1 8 → 2레벨마다 +1 → Lv.100 58 */
+function statCap(l){ return 8+Math.floor((l==null?lvlOf(S.xp):l)/2) }
+/* 20을 넘는 스탯은 효과가 절반씩만 붙는다 (확률이 100%를 넘지 않도록) */
+function effSt(v){ v=+v||0; return v<=20?v:20+(v-20)*.5 }
+function EST(k){ return effSt(ST(k)) }
+(()=>{ const B=statBonus, o={...B}, cl=(v,a)=>Math.min(a,v);
+  B.dodge=()=>cl(o.dodge()-(ST('agi')-EST('agi'))*.018,.55);
+  B.crit=()=>cl(o.crit()-(ST('luk')-EST('luk'))*.015-(ST('agi')-EST('agi'))*.005,.7);
+  B.rare=()=>cl(o.rare()-(ST('luk')-EST('luk'))*.015-(ST('per')-EST('per'))*.005,.45);
+  B.human=()=>cl(o.human()-(ST('cha')-EST('cha'))*.015-(ST('per')-EST('per'))*.005,.6);
+  B.event=()=>cl(o.event()*(1+(EST('per')-3)*.04)/Math.max(.2,1+(ST('per')-3)*.04),2.2);
+  B.gather=()=>o.gather()*(1+(EST('per')-3)*.04)/Math.max(.2,1+(ST('per')-3)*.04);
+  B.melee=()=>Math.floor((EST('str')-3)/2);
+})();
+wStat=function(w){ const c=WCLS[w.c]||WCLS.blunt; let v=0; for(const k in c.s) v+=(EST(k)-3)*c.s[k]; return Math.round(v) };
+
+/* 스탯 올리기: 최대치에서 멈춤 */
+const _statUp48=ACT.statUp; ACT.statUp=el=>{ const k=el.dataset.k, cap=statCap(); if(((S.stats||{})[k]||3)>=cap) return toast(`지금 레벨에서는 ${cap}까지 올릴 수 있어요. 레벨이 오르면 최대치도 올라가요.`); _statUp48(el) };
+
+/* ---------- 고레벨 보상 ---------- */
+MELEE.push(
+  {k:'waraxe',n:'군용 전투도끼',dmg:17,c:'blade',d:'특수부대 보급 상자에서 나온 전술 도끼. 균형이 완벽하다.',how:'Lv.50 레벨 보상'},
+  {k:'amr',n:'대물 저격소총',dmg:20,c:'gun',d:'장갑차 엔진도 뚫는 .50 구경. 한 발이면 거구도 눕는다.',how:'Lv.70 레벨 보상'},
+  {k:'thermo',n:'열압 화염방사기',dmg:23,c:'fire',d:'군용 연료 탱크를 등에 멘다. 둥지 하나가 통째로 사라진다.',how:'Lv.90 레벨 보상'},
+);
+Object.assign(GEAR,{
+  cmbsuit:{n:'강화 전투복',slot:'body',fx:{def:.22,hp:30},d:'받는 피해 -22%, 최대 체력 +30',rw:40},
+  nvg:{n:'군용 야간투시경',slot:'head',fx:{dodge:5,rare:4,event:.1},d:'회피 +5%p, 희귀품 +4%p, 돌발 사건 +10%',rw:55},
+  harness:{n:'전술 하네스',slot:'bag',fx:{gather:.3,hp:15},d:'획득량 +30%, 최대 체력 +15',rw:65},
+  comphelm:{n:'복합소재 헬멧',slot:'head',fx:{def:.18,hp:20},d:'받는 피해 -18%, 최대 체력 +20',rw:75},
+  charm:{n:'생존자의 부적',slot:'acc',fx:{crit:8,rare:5},d:'치명타 +8%p, 희귀품 +5%p',rw:85},
+  insignia:{n:'최후의 생존자 휘장',slot:'acc',fx:{hp:40,crit:6,dodge:4,def:.05},d:'최대 체력 +40, 치명타 +6%p, 회피 +4%p, 받는 피해 -5%',rw:100},
+});
+const LVR=[
+  {l:30,$:1500,it:{tonic:2},t:'베테랑 생존자'},
+  {l:35,$:2000,r:{scrap:120,elec:8,fuel:10}},
+  {l:40,$:2500,g:'cmbsuit',t:'백전노장'},
+  {l:45,$:3000,it:{tonic:3}},
+  {l:50,$:3500,w:'waraxe',t:'폐허의 지배자'},
+  {l:55,$:4000,g:'nvg'},
+  {l:60,$:5000,it:{tonic:3},t:'살아 있는 전설'},
+  {l:65,$:5500,g:'harness'},
+  {l:70,$:6000,w:'amr'},
+  {l:75,$:7000,g:'comphelm',t:'종말의 증인'},
+  {l:80,$:8000,it:{tonic:4},r:{elec:15,fuel:20,med:10}},
+  {l:85,$:9000,g:'charm'},
+  {l:90,$:10000,w:'thermo'},
+  {l:95,$:12000,it:{tonic:5}},
+  {l:100,$:20000,g:'insignia',t:'최후의 인간'},
+];
+LVR.filter(r=>r.t).forEach(r=>TITLES.push({k:'lv'+r.l,n:r.t,d:`Lv.${r.l} 달성`,c:()=>lvlOf(S.xp)>=r.l}));
+const lvrDesc=r=>[r.$?'$'+fmt(r.$):'',...Object.entries(r.it||{}).map(([k,n])=>`${ITEMS[k]?ITEMS[k].n:k} ×${n}`),...Object.entries(r.r||{}).map(([k,n])=>`${RES[k].n} ${n}`),r.w?'무기 「'+weaponOf(r.w).n+'」':'',r.g?'장비 「'+GEAR[r.g].n+'」':'',r.t?'칭호 「'+r.t+'」':''].filter(Boolean).join(' · ');
+const lvrReady=()=>{ const l=lvlOf(S.xp), g=S.lvRw||{}; return LVR.filter(r=>r.l<=l&&!g[r.l]) };
+ACT.lvRw=el=>{ const l=+el.dataset.l, r=LVR.find(x=>x.l===l); if(!r||lvlOf(S.xp)<l) return; S.lvRw=S.lvRw||{}; if(S.lvRw[l]) return; S.lvRw[l]=1;
+  if(r.$) S.money=(S.money||0)+r.$;
+  for(const [k,n] of Object.entries(r.it||{})) S.inv[k]=(S.inv[k]||0)+n;
+  S.res=S.res||{}; for(const [k,n] of Object.entries(r.r||{})) S.res[k]=(S.res[k]||0)+n;
+  if(r.w){ S.weapons[r.w]=1 }
+  if(r.g){ S.gear=S.gear||{}; if(!S.gear[r.g]) gainGear(r.g) }
+  try{ sfx('level'); FXL.flash('rgba(212,175,55,.35)',500) }catch(e){}
+  toast(`Lv.${l} 보상: ${lvrDesc(r)}`,true); if(l>=50) feed(`${S.nick}님이 Lv.${l} 보상을 받았습니다`);
+  try{ checkTitles() }catch(e){} markSave(); schedulePub(2000); render() };
+ACT.lvRwAll=()=>{ for(const r of lvrReady()) ACT.lvRw({dataset:{l:r.l}}) };
+
+/* 레벨업 알림 */
+const _onLevel48=onLevel; onLevel=function(l){ const res=_onLevel48.apply(this,arguments);
+  if(l%2===0) setTimeout(()=>toast(`스탯 최대치가 ${statCap(l)}(으)로 올랐어요.`),1600);
+  if(LVR.some(r=>r.l===l)) setTimeout(()=>toast(`Lv.${l} 레벨 보상이 도착했어요 · 내 캐릭터에서 받으세요`,true),2300);
+  if(l===100) setTimeout(()=>{ feed(`${S.nick}님이 만렙 Lv.100에 도달했습니다`); try{ FXL.flash('rgba(212,175,55,.5)',900) }catch(e){} },2600);
+  return res };
+const _badges48=badges; badges=function(){ const b=_badges48.apply(this,arguments), n=lvrReady().length; if(n){ const c=b.char?(+b.char[0]||0):0; b.char=[c+n,'hot'] } return b };
+
+/* 내 캐릭터 화면: 최대치 표시 + 레벨 보상 카드 */
+function lvRwHtml(){ const l=lvlOf(S.xp), got=S.lvRw||{}, ready=lvrReady(), next=LVR.find(r=>r.l>l), cap=statCap(l), ncl=l>=100?0:(l%2===0?l+2:l+1);
+  return `<section class="pcard lvrw"><div class="pc-h">${icon('radar')}<h3>레벨 보상</h3><span class="tagx ${ready.length?'red':''}">${ready.length?`받을 보상 ${ready.length}`:l>=100?'만렙 달성':`다음 Lv.${next.l}`}</span></div>
+    <p class="muted">Lv.30부터 5레벨마다 보상이 있어요 (만렙 Lv.100). 스탯 최대치는 지금 <b>${cap}</b>${ncl?`, Lv.${ncl}에서 ${statCap(ncl)}`:''}.</p>
+    ${ready.map(r=>`<div class="lvr on"><b class="num">Lv.${r.l}</b><span>${esc(lvrDesc(r))}</span><button class="btn sm pri" data-act="lvRw" data-l="${r.l}">받기</button></div>`).join('')}
+    ${ready.length>1?`<div class="row"><button class="btn sm" data-act="lvRwAll">한꺼번에 받기</button></div>`:''}
+    ${!ready.length&&next?`<div class="lvr"><b class="num">Lv.${next.l}</b><span>${esc(lvrDesc(next))}</span><em>${fmt(Math.max(0,Math.ceil(xpFor(next.l)-S.xp)))} XP 남음</em></div>`:''}
+    <details class="fold lvrall"><summary>전체 보상 목록</summary>${LVR.map(r=>`<div class="lvr${got[r.l]?' done':r.l<=l?' on':''}"><b class="num">Lv.${r.l}</b><span>${esc(lvrDesc(r))}</span><em>${got[r.l]?'받음':r.l<=l?'받기 가능':'잠김'}</em></div>`).join('')}</details></section>` }
+const _viewChar48=viewChar; viewChar=function(){ let h=_viewChar48.apply(this,arguments); const cap=statCap();
+  h=h.replace(/<span>(\d+)<\/span><button data-act="statUp" data-k="(\w+)"([^>]*)>\+<\/button><\/div><div class="statbar"><i style="width:[\d.]+%"><\/i>/g,(m,v,k,at)=>{ v=+v; const full=v>=cap;
+    return `<span>${v}<small class="stcap${v>cap?' over':''}">/${cap}</small></span><button data-act="statUp" data-k="${k}"${full?' disabled title="최대치"':at}>+</button></div><div class="statbar${full?' full':''}"><i style="width:${Math.min(100,v/cap*100).toFixed(1)}%"></i>` });
+  h=h.replace('레벨이 오를 때마다 3포인트를 받아요.',`레벨이 오를 때마다 3포인트를 받아요. 스탯 하나는 지금 레벨에서 최대 ${cap}까지 올릴 수 있고, 2레벨마다 최대치가 1씩 올라가요. 20을 넘는 부분은 효과가 절반만 붙어요.`);
+  const i=h.indexOf('<div class="cols"><section class="pcard"><div class="pc-h">'); const card=lvRwHtml();
+  return i>=0?h.slice(0,i)+card+h.slice(i):h+card };
+(()=>{ const st=document.createElement('style'); st.textContent=`
+.lvrw .lvr{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.lvrw .lvr span{font-size:13px;color:var(--fg2);line-height:1.45}.lvrw .lvr em{font-style:normal;font-size:12px;color:var(--muted);white-space:nowrap}
+.lvrw .lvr.on b{color:#d4af37}.lvrw .lvr.on em{color:#d4af37}.lvrw .lvr.done{opacity:.5}.lvrw .lvrall{margin-top:8px}.lvrw .lvrall summary{cursor:pointer;color:var(--muted);font-size:13px;padding:6px 0}
+.stcap{font-size:11px;color:var(--muted);margin-left:1px}.stcap.over{color:var(--warn)}.statbar.full i{background:#d4af37}
+@media(max-width:520px){.lvrw .lvr{grid-template-columns:52px 1fr;}.lvrw .lvr button,.lvrw .lvr em{grid-column:2;justify-self:start}}`; document.head.append(st) })();
+
+/* ================= p49: 동행 감염 — 끝날 때까지 시간 연장 · 동률이면 대장 결정 ================= */
+function pInfHold(P){ return !!(P&&(P.inf||P.infS||(P.infEndT&&Date.now()-P.infEndT<7000))) }
+const _onInfMsg49=onInfMsg; onInfMsg=function(d){ const P=rt.party; const was=P&&P.inf; _onInfMsg49(d); const Q=rt.party;
+  if(Q&&d.ph==='start'&&Q.start&&Date.now()>Q.start+P_MAX-60000) plog('감염이 끝날 때까지 동행 시간이 연장됩니다.','me');
+  if(Q&&d.ph==='end'){ Q.infEndT=Date.now(); if(Date.now()>=Q.start+P_MAX) plog('동행 시간이 끝났습니다. 잠시 후 해산합니다.','me') } };
+infAdvance=function(){ const P=rt.party, s=P.infS, tg=P.inf; if(!s) return;
+  if(s.ph==='plea'){ P.R.emit('pev',{type:'inf',ph:'plea',tg,m:'beg',x:'',dl:Date.now()+20000}).catch(()=>{}); s.ph='wait'; s.dl=Date.now()+25000; return }
+  if(s.ph==='wait'||s.ph==='sent') return; s.ph='sent';
+  const voters=aliveIds().filter(id=>id!==tg); voters.forEach(id=>{ if(!s.kv[id]) s.kv[id]={k:false,w:'blunt'} });
+  const killers=voters.filter(id=>s.kv[id].k), nm=nameOf(tg), r=s.r; let kill, note='';
+  if(killers.length*2>voters.length) kill=true;
+  else if(killers.length*2<voters.length) kill=false;
+  else { const ld=P.leader; if(ld!==tg&&s.kv[ld]&&voters.includes(ld)){ kill=!!s.kv[ld].k; note=`의견이 반으로 갈렸다. 대장 ${nameOf(ld)}의 결정을 따른다. ` } else { kill=killers.length>0; note='의견이 반으로 갈렸다. ' } }
+  if(kill){ const kid=killers.includes(P.leader)&&note?P.leader:stPick(killers), w=s.kv[kid].w, L=(KILL[w]||KILL.blunt)[Math.min(2,r-1)];
+    const t=`${note}${nameOf(kid)}이(가) ${L[0]} ${L[1]}`;
+    if(r>=3) return P.R.emit('pev',{type:'inf',ph:'end',tg,out:'dead',killer:kid,t:`${t} ${nm}의 동행은 여기서 끝났다.`}).catch(()=>{});
+    return P.R.emit('pev',{type:'inf',ph:'round',tg,r,hit:1,t,next:1,dl:Date.now()+25000}).catch(()=>{}) }
+  if(r>=3){ const turned=Math.random()<.5; return P.R.emit('pev',{type:'inf',ph:'end',tg,out:turned?'turned':'fever',t:note+(turned?`아무도 끝내지 못했다. ${nm}의 눈이 하얗게 뒤집혔다. 모두가 비명을 지르며 흩어졌다.`:`밤새 열이 오르내렸다. 새벽, ${nm}이(가) 눈을 떴다. 눈동자는 아직 사람의 것이었다. 깊은 상처가 아니었던 모양이다.`)}).catch(()=>{}) }
+  P.R.emit('pev',{type:'inf',ph:'round',tg,r,hit:0,t:note+(killers.length?`결국 아무도 손을 대지 않았다. ${nm}의 숨소리가 점점 거칠어진다.`:`아무도 손을 들지 않았다. ${nm}의 숨소리가 점점 거칠어진다.`),next:1,dl:Date.now()+25000}).catch(()=>{}) };
+/* 투표 화면에 규칙 안내 */
+const _partyRender49=partyRender; partyRender=function(){ const r=_partyRender49.apply(this,arguments); const P=rt.party, el=$('party'); if(P&&P.infS&&P.infS.ph==='vote'&&el){ const b=el.querySelector('.pev.inf [data-act=pKill]'); if(b&&!el.querySelector('.infRule')){ const n=document.createElement('p'); n.className='muted infRule'; n.textContent='과반이 정한 대로 됩니다. 찬반이 같으면 대장의 선택을 따릅니다.'; b.parentElement.before(n) } } return r };
+
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
