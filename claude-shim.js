@@ -4,14 +4,53 @@
    설정이 비어 있거나 연결에 실패하면 null 을 돌려줘서 게임은 혼자 하는 모드로 돌아갑니다. */
 (function(){
   const cfg = window.FH_CONFIG || {};
+  const LS = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } };
+  /* 게임 스크립트는 로그인한 뒤에 실행합니다. 다른 계정으로 바뀌면 이 기기에 남은 이전 캐릭터 임시 저장을 지웁니다. */
+  function runGame(uid) {
+    if (uid && LS('fh-uid') !== uid) { LS('qz7-camp', null); LS('fh-uid', uid); }
+    const src = document.getElementById('fhGame'); if (!src || src.dataset.ran) return; src.dataset.ran = '1';
+    const s = document.createElement('script'); s.textContent = src.textContent; document.body.appendChild(s);
+  }
+  const KO = m => /Invalid login/i.test(m) ? '이메일 또는 비밀번호가 맞지 않아요.' : /already registered|already been registered/i.test(m) ? '이미 가입된 이메일이에요. 로그인해 주세요.' : /Password should be/i.test(m) ? '비밀번호는 6자 이상이어야 해요.' : /Email not confirmed/i.test(m) ? '메일함의 인증 링크를 먼저 눌러 주세요.' : /rate limit/i.test(m) ? '잠시 뒤에 다시 시도해 주세요.' : /valid email|invalid format/i.test(m) ? '이메일 형식을 확인해 주세요.' : m;
+  function gate(sb) {
+    return new Promise(done => {
+      const css = `#fhAuth{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:#0f1211;color:#e8e4da;font:15px/1.5 "IBM Plex Sans KR",system-ui,sans-serif;padding:16px}
+#fhAuth .bx{width:min(380px,100%);display:flex;flex-direction:column;gap:12px}#fhAuth h1{font:400 34px/1 "Italiana",serif;letter-spacing:.18em;margin:0 0 4px}#fhAuth .sub{color:#9aa0a3;font-size:13px;margin:0 0 8px}
+#fhAuth .tabs{display:flex;gap:6px}#fhAuth .tabs button{flex:1;background:none;border:1px solid #3a403e;color:#9aa0a3;padding:8px;font:inherit;cursor:pointer}#fhAuth .tabs button.on{border-color:#2fa597;color:#e8e4da}
+#fhAuth label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#9aa0a3}#fhAuth input{font:inherit;color:#e8e4da;background:#171b1a;border:1px solid #3a403e;padding:10px 12px}
+#fhAuth .go{background:#1f8f83;color:#fff;border:0;padding:12px;font:inherit;font-weight:600;cursor:pointer}#fhAuth .go:disabled{opacity:.6}#fhAuth .msg{min-height:20px;font-size:13px;color:#e0a43a}#fhAuth .lnk{background:none;border:0;color:#9aa0a3;text-decoration:underline;cursor:pointer;font:inherit;font-size:12px;align-self:flex-start;padding:0}`;
+      const el = document.createElement('div'); el.id = 'fhAuth';
+      el.innerHTML = `<style>${css}</style><form class="bx" novalidate><h1>FALLEN HOUSE</h1><p class="sub">테스트 서버 · 계정으로 들어오면 어느 기기에서든 같은 생존자로 이어져요.</p>
+        <div class="tabs"><button type="button" data-m="in" class="on">로그인</button><button type="button" data-m="up">가입</button></div>
+        <label>이메일<input type="email" name="em" autocomplete="email" required></label><label>비밀번호 (6자 이상)<input type="password" name="pw" autocomplete="current-password" minlength="6" required></label>
+        <button class="go" type="submit">로그인</button><p class="msg" role="status"></p><button type="button" class="lnk" data-reset>비밀번호를 잊었어요</button></form>`;
+      document.body.appendChild(el);
+      const f = el.querySelector('form'), msg = el.querySelector('.msg'), go = el.querySelector('.go'); let mode = 'in';
+      el.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { mode = b.dataset.m; el.querySelectorAll('[data-m]').forEach(x => x.classList.toggle('on', x === b)); go.textContent = mode === 'in' ? '로그인' : '가입하고 시작'; f.pw.autocomplete = mode === 'in' ? 'current-password' : 'new-password'; msg.textContent = ''; });
+      el.querySelector('[data-reset]').onclick = async () => { const em = f.em.value.trim(); if (!em) { msg.textContent = '이메일을 먼저 적어 주세요.'; return; } const r = await sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin + location.pathname }); msg.textContent = r.error ? KO(r.error.message) : '비밀번호 재설정 메일을 보냈어요.'; };
+      f.onsubmit = async e => { e.preventDefault(); const em = f.em.value.trim(), pw = f.pw.value; if (!em || pw.length < 6) { msg.textContent = '이메일과 6자 이상 비밀번호를 적어 주세요.'; return; }
+        go.disabled = true; msg.textContent = '';
+        try {
+          const r = mode === 'in' ? await sb.auth.signInWithPassword({ email: em, password: pw }) : await sb.auth.signUp({ email: em, password: pw, options: { emailRedirectTo: location.origin + location.pathname } });
+          if (r.error) { msg.textContent = KO(r.error.message); return; }
+          if (!r.data.session) { msg.textContent = '메일함에서 인증 링크를 누른 뒤 로그인해 주세요.'; mode = 'in'; el.querySelector('[data-m=in]').click(); return; }
+          el.remove(); done(r.data.session);
+        } catch (err) { msg.textContent = '연결에 실패했어요. 잠시 뒤 다시 시도해 주세요.'; } finally { go.disabled = false; }
+      };
+    });
+  }
   const ready = (async () => {
-    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY || !window.supabase) return null;
+    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY || !window.supabase) { runGame(null); return null; }
     try {
-      const sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+      const sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+      sb.auth.onAuthStateChange(async ev => { if (ev !== 'PASSWORD_RECOVERY') return; const pw = prompt('새 비밀번호 (6자 이상)'); if (pw && pw.length >= 6) { const r = await sb.auth.updateUser({ password: pw }); alert(r.error ? '바꾸지 못했어요: ' + r.error.message : '비밀번호를 바꿨어요.'); } });
       let { data: { session } } = await sb.auth.getSession();
-      if (!session) { const r = await sb.auth.signInAnonymously(); if (r.error) throw r.error; session = r.data.session; }
+      if (session && session.user.is_anonymous) { await sb.auth.signOut(); session = null; }
+      if (!session) session = await gate(sb);
+      window.FH_AUTH = Object.freeze({ email: session.user.email || '', signOut: async () => { await sb.auth.signOut(); LS('qz7-camp', null); location.reload(); } });
+      runGame(session.user.id);
       return { sb, uid: session.user.id };
-    } catch (e) { console.warn('[FH] Supabase 연결 실패, 혼자 하는 모드로 진행합니다.', e); return null; }
+    } catch (e) { console.warn('[FH] Supabase 연결 실패, 혼자 하는 모드로 진행합니다.', e); runGame(null); return null; }
   })();
 
   const clone = v => v == null ? v : JSON.parse(JSON.stringify(v));

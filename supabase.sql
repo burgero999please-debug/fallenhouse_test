@@ -60,5 +60,5 @@ do $$ begin
   alter publication supabase_realtime add table public.fh_docs;
 exception when duplicate_object then null; end $$;
 
--- 관리자 등록: 게임 설정 맨 아래 '내 계정 ID'를 복사해서 아래 따옴표 안에 넣고, 이 한 줄만 따로 Run
--- insert into public.fh_admins (uid) values ('여기에-계정-ID') on conflict do nothing;
+-- 관리자 등록: 게임에 이메일로 가입한 뒤, 아래 줄의 이메일을 내 것으로 바꿔서 이 한 줄만 따로 Run
+-- insert into public.fh_admins (uid) select id from auth.users where email = '내-이메일@example.com' on conflict do nothing;

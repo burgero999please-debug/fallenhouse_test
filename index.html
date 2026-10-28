@@ -5,7 +5,6 @@
 <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0}</style>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="claude-shim.js"></script>
 </head><body>
 <title>Fallen House</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -958,7 +957,7 @@ details.cat2>summary h2{display:inline;margin:0}details.cat2>.grid,details.cat2>
   <div class="dbtns"><button class="btn" id="dReload" type="button">재장전</button><button class="btn" id="dSwap" type="button">무기 교체</button></div>
 </div>
 
-<script>
+<script type="text/x-fh" id="fhGame">
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
@@ -5726,7 +5725,8 @@ setInterval(()=>{ try{ cevWatch() }catch(e){} },1500);
   if(!rt.db) return; try{ rt.db.collection('cevents').onSnapshot(sn=>{ const L=[]; for(const d of sn.docs){ const e=cevClean(d.id,d.data()); if(e) L.push(e) } L.sort((a,b)=>b.at-a.at); if(S) cevSync(L) },()=>{}) }catch(e){} })();
 
 /* --- 편집기 화면 (관리자만) --- */
-const _settings2=ACT.settings; ACT.settings=()=>{ _settings2(); { const L0=$('mbox').querySelector('.setlist'); if(L0&&rt.myId){ L0.insertAdjacentHTML('beforeend',`<div class="setrow"><span><b>내 계정 ID</b><small>관리자 등록할 때만 필요해요.</small></span><button class="btn sm ghost" id="myIdBtn" type="button">복사</button></div>`); $('myIdBtn').onclick=()=>{ try{ navigator.clipboard.writeText(rt.myId); toast('계정 ID를 복사했습니다.') }catch(e){ prompt('계정 ID',rt.myId) } } } } if(!rt.isAdmin) return; const L=$('mbox').querySelector('.setlist'); if(!L) return;
+const _settings2=ACT.settings; ACT.settings=()=>{ _settings2(); { const L0=$('mbox').querySelector('.setlist'); if(L0&&rt.myId){ L0.insertAdjacentHTML('beforeend',`<div class="setrow"><span><b>내 계정 ID</b><small>관리자 등록할 때만 필요해요.</small></span><button class="btn sm ghost" id="myIdBtn" type="button">복사</button></div>`); $('myIdBtn').onclick=()=>{ try{ navigator.clipboard.writeText(rt.myId); toast('계정 ID를 복사했습니다.') }catch(e){ prompt('계정 ID',rt.myId) } } }
+  if(L0&&window.FH_AUTH){ L0.insertAdjacentHTML('beforeend',`<div class="setrow"><span><b>계정</b><small>${esc(window.FH_AUTH.email||'')}</small></span><button class="btn sm ghost" id="fhOut" type="button">로그아웃</button></div>`); $('fhOut').onclick=()=>{ rt.saveDirty=true; flushSave(); setTimeout(()=>window.FH_AUTH.signOut(),700) } } } if(!rt.isAdmin) return; const L=$('mbox').querySelector('.setlist'); if(!L) return;
   L.insertAdjacentHTML('afterbegin',`<div class="setrow"><span><b>이벤트 편집기 <span class="tag">관리자</span></b><small>직접 쓴 사건을 서버에 넣고, 언제 어떻게 터질지 정해요. 관리자에게만 보여요.</small></span><button class="btn sm pri" id="cevOpen" type="button">열기</button></div>`);
   $('cevOpen').onclick=()=>cevOpen() };
 const optHtml=(map,cur)=>Object.entries(map).map(([k,v])=>`<option value="${esc(k)}" ${String(k)===String(cur)?'selected':''}>${esc(v)}</option>`).join('');
@@ -5798,4 +5798,5 @@ addEventListener('pagehide',()=>{S.t=Date.now();saveLocal()});
 })();
 </script>
 
+<script src="claude-shim.js"></script>
 </body></html>
