@@ -9117,8 +9117,8 @@ const _openStoryChain47=openStoryChain; openStoryChain=function(){ if(admTry(.5)
 const _openStory47=openStory; openStory=function(src){ if(Array.isArray(src)&&src.length>1&&admTry(.4)) return; return _openStory47(src) };
 const _maybeStory47=maybeStory; maybeStory=function(ch){ if(canStory()&&admTry(Math.min(.5,(ch||.1)*2.2))) return true; return _maybeStory47(ch) };
 /* ================= p48: 레벨에 따른 스탯 최대치 · 고레벨 보상 ================= */
-/* 스탯 최대치: Lv.1 8 → 2레벨마다 +1 → Lv.100 58 */
-function statCap(l){ return 8+Math.floor((l==null?lvlOf(S.xp):l)/2) }
+/* 스탯 최대치: 기본 20 → 2레벨마다 +1 → Lv.100 70 */
+function statCap(l){ return 20+Math.floor((l==null?lvlOf(S.xp):l)/2) }
 /* 20을 넘는 스탯은 효과가 절반씩만 붙는다 (확률이 100%를 넘지 않도록) */
 function effSt(v){ v=+v||0; return v<=20?v:20+(v-20)*.5 }
 function EST(k){ return effSt(ST(k)) }
