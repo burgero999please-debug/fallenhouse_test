@@ -5884,7 +5884,7 @@ function cevChain(e){ const ch={k:'cev_'+e.id,n:Array.isArray(e.pos)&&e.pos.leng
   return ch }
 function cevRun(e){ S.cevDone=S.cevDone||{}; if(e.once&&S.cevDone[e.id]) return false; S.cevDone[e.id]=Date.now(); markSave(); runChain(cevChain(e)); return true }
 function cevSync(list){ rt.cev=list; for(let i=ALL_CH.length-1;i>=0;i--) if(String(ALL_CH[i].k).startsWith('cev_')) ALL_CH.splice(i,1); list.forEach(e=>ALL_CH.push(cevChain(e)));
-  S.cevFire=S.cevFire||{}; for(const e of list) if(e.on&&e.fire&&e.fire>(S.cevFire[e.id]||0)&&Date.now()-e.fire<30*60000){ S.cevFire[e.id]=e.fire; markSave(); whenFree(()=>{ if(S.hp>0&&!rt.enc) runChain(cevChain(e)) }) }
+  S.cevFire=S.cevFire||{}; for(const e of list) if(e.on&&e.fire&&e.fire>(S.cevFire[e.id]||0)&&Date.now()-e.fire<30*60000){ S.cevFire[e.id]=e.fire; markSave(); if(Array.isArray(e.pos)&&e.pos.length&&!e.pos.includes(S.tmb)) continue; whenFree(()=>{ if(S.hp>0&&!rt.enc) runChain(cevChain(e)) }) }
   if($('cevList')) cevListDraw() }
 const cevOk=e=>e.on&&lvlOf(S.xp)>=e.lv&&!(e.once&&(S.cevDone||{})[e.id])&&(!e.pos.length||e.pos.includes(S.tmb));
 /* 무작위 발생 */
@@ -9111,6 +9111,11 @@ crewSwapNext=function(){ const Q=rt.crewQ||[]; const it=Q.shift(); if(!it) retur
   $('mbox').querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{ const o=crewById(b.dataset.sw); if(!o) return; const away=o.state==='away', on=crewNm(o); crewKick(o); const r=_addCrew44(it.origin,null,nc);
     toast(r?`${on}을(를) ${away?'파견지에서 해고하고':'내보내고'} ${nc.name}을(를) 받았어요.${away?' 원한을 품었을지도 몰라요.':''}`:'받지 못했어요.',true); if(away) setTimeout(()=>{ try{ FXL.pre('threat') }catch(e){} },200); markSave(); schedulePub(2000); done() });
   $('swNo').onclick=()=>{ toast(`${nc.name}은(는) 다른 길로 떠났다.`); done() } };
+/* ================= p47: 관리자가 만든 무작위 이벤트를 먼저 고려 ================= */
+function admTry(p){ try{ const d=dKey(), P=(rt.cev||[]).filter(e=>cevOk(e)&&e.trig&&e.trig.k==='random'&&(!e.d||e.d===d)); if(!P.length) return false; const W=P.reduce((a,e)=>a+(e.trig.w||1),0); if(Math.random()>=Math.min(.75,p*(.7+W*.15))) return false; let r=Math.random()*W; for(const e of P){ r-=(e.trig.w||1); if(r<=0) return cevRun(e) } }catch(e){} return false }
+const _openStoryChain47=openStoryChain; openStoryChain=function(){ if(admTry(.5)) return; return _openStoryChain47() };
+const _openStory47=openStory; openStory=function(src){ if(Array.isArray(src)&&src.length>1&&admTry(.4)) return; return _openStory47(src) };
+const _maybeStory47=maybeStory; maybeStory=function(ch){ if(canStory()&&admTry(Math.min(.5,(ch||.1)*2.2))) return true; return _maybeStory47(ch) };
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
