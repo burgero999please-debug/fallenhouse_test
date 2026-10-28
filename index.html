@@ -8993,6 +8993,68 @@ ACT.cevText=()=>cevTextModal();
 const _cevOpen43=cevOpen; cevOpen=function(){ _cevOpen43(); const box=$('mbox'); if(!box||!rt.isAdmin) return; const mv=box.querySelector('[data-act=cevMove]'); if(mv&&!box.querySelector('[data-act=cevText]')) mv.insertAdjacentHTML('afterend',`<button class="btn pri" data-act="cevText" type="button">📝 글로 이벤트 넣기 (메모장 양식)</button>`) };
 (()=>{ const st=document.createElement('style'); st.textContent=`#ctTx{font-family:var(--f-mono,monospace);font-size:12.5px;line-height:1.55;width:100%}.cterr{margin:6px 0 0;padding-left:18px;color:var(--blood)}.okc{color:var(--accent);font-weight:600;margin:0 0 4px}`; document.head.append(st) })();
 window.__CEV={cevParse,cevToText,CEV_TEMPLATE};
+/* ================= p44: 펫 양도 · 아이 대원 놀아 주기 · 대원 선물 · 자리 없을 때 교체 · 애정 연출 ================= */
+/* ---------- 펫 양도 ---------- */
+function petGiveModal(k){ if(!S.pets?.[k]||!PETS[k]) return; if(rt.solo) return toast('공유 서버에 연결되어 있어야 해요.'); const T=giftTargets(); if(!T.length) return toast('양도할 생존자가 없어요.');
+  openModal(`<div class="eyebrow">PET <span class="dash"></span> 양도</div><h2>${petE(k)} ${esc(petLabel(k))} 양도하기</h2><p class="ch-p">다른 생존자에게 이 펫을 보내요. 받는 사람이 우편함에서 받으면 그쪽 펫이 돼요. <b>보내면 되돌릴 수 없어요.</b></p>
+    <form id="pgF" style="display:flex;flex-direction:column;gap:10px"><label class="note">받을 사람<select id="pgTo">${T.map(([id,n,on])=>`<option value="${esc(id)}">${esc(n)}${on?' · 접속 중':''}</option>`).join('')}</select></label><textarea id="pgM" rows="2" maxlength="120" placeholder="함께 보낼 말 (선택)"></textarea>
+    <div class="row"><button class="btn warn" type="submit">양도하기</button><button class="btn" type="button" data-act="closeModal">취소</button></div></form>`);
+  $('pgF').onsubmit=e=>{ e.preventDefault(); const to=$('pgTo').value, m=($('pgM').value||'').trim().slice(0,120); if(!S.pets?.[k]) return closeModal();
+    const G={id:'g'+Date.now().toString(36)+ri(100,999),to,t:Date.now(),p:k,pn:String((S.petName||{})[k]||'').slice(0,12)}; if(m) G.m=m;
+    delete S.pets[k]; if(S.pet===k) S.pet=''; if(S.petName) delete S.petName[k]; if(S.petFrom) delete S.petFrom[k]; if(S.petAff) delete S.petAff[k];
+    S.gifts.push(G); S.gifts=S.gifts.slice(-15); toast(`${nameOf(to)}님에게 ${PETS[k].n}을(를) 보냈어요.`,true); feed(`${S.nick}님이 ${nameOf(to)}님에게 펫을 양도했습니다`); sfx('send'); markSave(); flushPub(); closeModal(); render() } }
+ACT.petGive=el=>petGiveModal(el.dataset.k);
+const _petsHtml44=petsHtml; petsHtml=function(){ let h=_petsHtml44(); for(const k of Object.keys(S.pets||{})) h=h.replace(`data-act="petName" data-k="${k}">이름</button>`,`data-act="petName" data-k="${k}">이름</button><button class="btn sm ghost" data-act="petGive" data-k="${k}">양도</button>`); return h };
+const _petCard44=petCard; petCard=function(){ const h=_petCard44(); if(!h||!S.pet) return h; return h.replace('<button class="btn sm ghost petshow"',`<button class="btn sm ghost" data-act="petGive" data-k="${S.pet}" type="button">양도</button><button class="btn sm ghost petshow"`) };
+const _claimGift44=ACT.claimGift; ACT.claimGift=el=>{ const g=findGift(el.dataset.id); S.giftsClaimed=S.giftsClaimed||[]; if(g&&g.p&&PETS[g.p]&&!S.giftsClaimed.includes(g.id)){ const k=g.p; S.pets=S.pets||{};
+    const had=!!S.pets[k]; S.pets[k]=1; if(!S.pet) S.pet=k; S.petName=S.petName||{}; if(g.pn&&!(had&&S.petName[k])) S.petName[k]=String(g.pn).slice(0,12); S.petFrom=S.petFrom||{}; if(!had) S.petFrom[k]=nameOf(g.from).slice(0,14);
+    S.giftsClaimed.push(g.id); S.giftsClaimed=S.giftsClaimed.slice(-120); toast(had?`${PETS[k].n}이(가) 이미 있어서 두 마리가 한 무리가 됐어요.`:`${petE(k)} ${petLabel(k)}이(가) 내 펫이 됐어요.`,true); if(typeof g.m==='string'&&g.m) toast(`「${g.m.slice(0,120)}」`,true); sfx('coin'); SGFX('blush'); markSave(); schedulePub(2000); render(); return }
+  return _claimGift44(el) };
+const _viewMail44=viewMail; viewMail=function(){ let h=_viewMail44(); for(const g of myGifts()){ if(g.p&&PETS[g.p]) h=h.replace('알 수 없는 물건',esc(`펫 ${petE(g.p)} ${g.pn||PETS[g.p].n}`)) } for(const g of S.gifts.slice().reverse()){ if(g.p&&PETS[g.p]) h=h.replace('? undefined',esc(`펫 ${g.pn||PETS[g.p].n}`)) } return h };
+
+/* ---------- 아이·청소년 대원: 애정 주기 대신 놀아 주기 ---------- */
+const isKid=c=>{ const a=crewInfo(c).age; return a==='어린이'||a==='청소년' };
+const PLAY_OK=['숨바꼭질을 했다. 일부러 늦게 찾아 줬다.','공기놀이를 가르쳐 줬다. 금방 나보다 잘했다.','낡은 그림책을 읽어 줬다. 끝까지 들었다.','종이비행기를 접어 날렸다. 누가 더 멀리 가나.','고장 난 무전기로 둘만의 암호를 만들었다.'];
+const PLAY_NO=['놀이 도중에 경보가 울렸다. 아이가 겁에 질렸다.','규칙을 잘못 알려 줘서 토라졌다.','피곤해서 금방 그만뒀다. 아이가 시무룩해졌다.'];
+const loveFx=ok=>setTimeout(()=>{ if(ok) SGFX('blush'); else { try{ FXL.pre('horror') }catch(e){} } },350);
+const _crewCard44=crewCard; crewCard=function(c,sel){ let h=_crewCard44(c,sel); if(!c||c.state==='dead') return h; const away=c.state==='away', left=3-loveCnt();
+  if(isKid(c)){ h=h.replace(/<button class="btn sm" data-act="crewLove"[^>]*>[\s\S]*?<\/button>/,''); if(!away) h=h.replace(/(<button class="btn sm ghost" data-act="dismissCrew")/,`<button class="btn sm" data-act="crewPlay" data-id="${c.id}" ${left<=0||Date.now()<(c.loveT||0)?'disabled':''}>놀아 주기 <small class="num">${Math.max(0,left)}/3</small></button>$1`) }
+  if(!away) h=h.replace(/(<button class="btn sm ghost" data-act="dismissCrew")/,`<button class="btn sm" data-act="crewGift" data-id="${c.id}">선물</button>$1`);
+  return h };
+const _crewLove44=ACT.crewLove; ACT.crewLove=el=>{ const c=crewById(el.dataset.id); if(!c) return; if(isKid(c)) return ACT.crewPlay(el); crewInfo2(c); const b=c.loy; _crewLove44(el); if(c.loy!==b) loveFx(c.loy>b) };
+const _crewAsk44=crewAsk; crewAsk=function(c){ if(isKid(c)) return; return _crewAsk44(c) };
+ACT.crewPlay=el=>{ const c=crewById(el.dataset.id); if(!c||c.state==='dead'||c.state==='away') return; crewInfo2(c); if(loveCnt()>=3) return toast('놀아 주기·애정 주기는 하루 세 번까지예요.'); if(Date.now()<(c.loveT||0)) return;
+  c.loveT=Date.now()+3*60000; S.loveDay.n++; const p=clamp(.62+(ST('cha')-3)*.04+c.aff/500,.25,.93), ok=Math.random()<p, fx=[];
+  if(ok){ const a=ri(2,5), b=ri(2,4); cAdd(c,'loy',a); cAdd(c,'aff',b); mindAdd(3); fx.push(`충성도 +${a}`,`친밀도 +${b}`,'정신 +3') } else { const a=ri(1,3); cAdd(c,'loy',-a); fx.push(`충성도 -${a}`) }
+  markSave(); outcome({n:crewNm(c)},ok?`${crewNm(c)}이(가) 신났다`:`${crewNm(c)}이(가) 시무룩해졌다`,`${ok?stPick(PLAY_OK):stPick(PLAY_NO)}\n"${crewSay(c,ok?'ok':'bad')}"`,fx,ok); loveFx(ok) };
+
+/* ---------- 대원에게 아이템 선물 ---------- */
+const itemVal=k=>{ const s=SHOP_BUY.find(x=>x.k===k); return s?s.p:(ITEMS[k]&&ITEMS[k].p)||25 };
+ACT.crewGift=el=>{ const c=crewById(el.dataset.id); if(!c||c.state==='dead') return; crewInfo2(c);
+  const its=Object.keys(S.inv||{}).filter(k=>S.inv[k]>0&&ITEMS[k]), fd=Object.keys(S.foods||{}).filter(k=>S.foods[k]>0&&FOODS[k]);
+  if(!its.length&&!fd.length) return toast('줄 수 있는 물건이 없어요.');
+  openModal(`<div class="eyebrow">CREW <span class="dash"></span> 선물</div><h2>${esc(crewNm(c))}에게 선물</h2><p class="ch-p">물건 하나를 줘요. 비싼 물건일수록 마음이 더 움직여요.${isKid(c)?' 아이는 먹을 것을 특히 좋아해요.':''}</p>
+    <div class="invlist">${its.map(k=>`<div class="invrow"><div><b>${esc(ITEMS[k].n)}</b> <span class="num">×${S.inv[k]}</span><small>${esc(String(ITEMS[k].d||'').slice(0,60))}</small></div><button class="btn sm" data-cg="i:${k}">주기</button></div>`).join('')}${fd.map(k=>`<div class="invrow"><div><b>${esc(FOODS[k].n)}</b> <span class="num">×${S.foods[k]}</span><small>음식</small></div><button class="btn sm" data-cg="f:${k}">주기</button></div>`).join('')}</div><button class="btn" data-act="closeModal">닫기</button>`);
+  $('mbox').querySelectorAll('[data-cg]').forEach(b=>b.onclick=()=>{ const [t,k]=b.dataset.cg.split(':'); if(t==='i'){ if(!(S.inv[k]>0)) return; S.inv[k]-- } else { if(!(S.foods?.[k]>0)) return; S.foods[k]-- }
+    const v=t==='i'?itemVal(k):20, kid=isKid(c), boost=(t==='f'&&kid)?2:0, a=ri(2,4)+Math.min(6,Math.round(v/30))+boost, f=ri(1,3)+Math.min(4,Math.round(v/50))+boost, nm=t==='i'?ITEMS[k].n:FOODS[k].n;
+    cAdd(c,'loy',a); cAdd(c,'aff',f); if(t==='i'&&['bandage','medkit','painkiller','suture'].includes(k)) c.hp=Math.min(100,c.hp+25); markSave(); closeModal();
+    whenFree(()=>outcome({n:crewNm(c)},`${crewNm(c)}이(가) 선물을 받았다`,`${nm}을(를) 건넸다.\n"${crewSay(c,'ok')}"`,[`충성도 +${a}`,`친밀도 +${f}`],true)); loveFx(true); render() }) };
+
+/* ---------- 자리가 없을 때: 기존 대원을 내보내고 받거나, 받지 않기 ---------- */
+const _addCrew44=addCrew; addCrew=function(origin,bias,c){ S.crew=S.crew||[]; if(crewAlive().length<CREW_MAX()) return _addCrew44(origin,bias,c);
+  const nc=c||makeCrew(origin,bias); crewInfo(nc); (rt.crewQ=rt.crewQ||[]).push({nc,origin}); whenFree(crewSwapNext); return null };
+function crewSwapNext(){ const Q=rt.crewQ||[]; const it=Q.shift(); if(!it) return; const nc=it.nc, idle=crewAlive().filter(x=>x.state!=='away').map(crewInfo2), K=['str','agi','end','per','cha'], sum=x=>K.reduce((a,k)=>a+(x.st[k]||0),0);
+  const cell=(v,o)=>`<td class="num${o==null?'':v>o?' up':v<o?' dn':''}">${v}</td>`;
+  rt.modalLock=true;
+  openModal(`<div class="eyebrow">CREW <span class="dash"></span> 자리가 가득 찼어요</div><h2>새 사람: ${esc(nc.name)}</h2><p class="ch-p">${esc(crewDesc(nc))}${nc.per&&PERS[nc.per]?' · '+esc(PERS[nc.per].n):''} · ${esc(it.origin||'')}<br>탐험대가 가득 찼어요 (최대 ${CREW_MAX()}명). 지금 있는 대원 한 명을 내보내고 받을까요?</p>
+    <div class="cmpwrap"><table class="cmp"><thead><tr><th></th>${K.map(k=>`<th>${STN[k]}</th>`).join('')}<th>합</th><th></th></tr></thead><tbody>
+      <tr class="new"><th>${esc(nc.name)} <em>새로</em></th>${K.map(k=>cell(nc.st[k])).join('')}<td class="num"><b>${sum(nc)}</b></td><td></td></tr>
+      ${idle.map(o=>`<tr><th>${esc(crewNm(o))}<small>${esc(crewDesc(o))} · 충성 ${o.loy}</small></th>${K.map(k=>cell(o.st[k],nc.st[k])).join('')}<td class="num${sum(o)>sum(nc)?' up':sum(o)<sum(nc)?' dn':''}">${sum(o)}</td><td><button class="btn sm warn" data-sw="${o.id}">이 대원과 교체</button></td></tr>`).join('')}
+    </tbody></table></div><p class="note">초록 = 새 사람보다 높음 · 빨강 = 낮음. 파견 나간 대원은 고를 수 없어요.</p><div class="row"><button class="btn" id="swNo">영입하지 않기</button></div>`);
+  $('mbox').classList.add('invbox'); const done=()=>{ rt.modalLock=false; $('mbox').classList.remove('invbox'); closeModal(); render(); if((rt.crewQ||[]).length) setTimeout(()=>whenFree(crewSwapNext),300) };
+  $('mbox').querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{ const o=crewById(b.dataset.sw); if(!o||o.state==='away') return; S.crew=S.crew.filter(x=>x!==o); const r=_addCrew44(it.origin,null,nc); toast(r?`${crewNm(o)}을(를) 내보내고 ${nc.name}을(를) 받았어요.`:'받지 못했어요.',true); markSave(); schedulePub(2000); done() });
+  $('swNo').onclick=()=>{ toast(`${nc.name}은(는) 다른 길로 떠났다.`); done() } }
+(()=>{ const st=document.createElement('style'); st.textContent=`.cmpwrap{overflow-x:auto;margin:6px 0}.cmp{width:100%;border-collapse:collapse;font-size:12.5px}.cmp th,.cmp td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}.cmp tbody th{text-align:left;font-weight:600}.cmp th small{display:block;font-weight:400;color:var(--muted);font-size:10.5px}.cmp th em{font-style:normal;font-size:10px;color:var(--accent);margin-left:4px}.cmp tr.new{background:var(--accent-soft,transparent)}.cmp td.up{color:var(--ok,#2e8b57);font-weight:700}.cmp td.dn{color:var(--blood);font-weight:700}`; document.head.append(st) })();
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
