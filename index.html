@@ -1011,6 +1011,25 @@ details.cat2>summary h2{display:inline;margin:0}details.cat2>.grid,details.cat2>
 .subbar{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:10px 12px;border-radius:10px;margin:0 0 12px;font-size:13px}.subbar.sub{border:1px solid var(--blood);background:rgba(163,36,36,.1);color:var(--blood)}.subbar.lord{border:1px solid var(--accent-line);background:var(--accent-soft)}.subbar .row{gap:6px;flex-wrap:wrap;width:100%}
 .cbtx{width:100%;font:12px/1.4 var(--f-mono,monospace);padding:8px;border:1px solid var(--line2);border-radius:8px;background:var(--field,var(--panel));color:var(--fg);margin:8px 0}
 .msgc.subc{border-color:var(--blood)}.nxev{border-style:dashed}
+
+/* p29 */
+.shopw[data-tab=heal] .shopsec:not([data-sk=heal]),.shopw[data-tab=tool] .shopsec:not([data-sk=tool]){display:none}
+.shoptabs2{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.shopbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:6px;margin-top:auto;padding-top:8px}.shopbtns .btn{width:100%;justify-content:center}
+.shopw .card{display:flex;flex-direction:column}
+.msg .mhead{display:flex;align-items:baseline;gap:5px;white-space:nowrap;min-width:0;font-size:12px}.msg .mhead .ttl{display:inline;margin:0}.msg .mhead .n{font-weight:700}.msg .mbme .mhead{justify-content:flex-end}
+.msg .brow{display:flex;align-items:flex-end;gap:6px;min-width:0}.msg .mbme .brow{justify-content:flex-end}.msg .brow .rebtn{flex:none;align-self:center}.msg.mine{align-items:flex-start}
+.mini .msg .mhead{display:none}
+.movebar{flex-wrap:wrap}.movebar .btn{margin-left:auto}.cols.surv.one{grid-template-columns:1fr}
+.chartop{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;margin-bottom:14px}.ct-lv{display:grid;justify-items:center;padding:6px 14px;border-right:1px solid var(--line)}.ct-lv b{font-size:44px;line-height:1;font-weight:800;color:var(--accent)}
+.ct-bars{display:grid;gap:7px;min-width:0}.ct-row{display:grid;grid-template-columns:44px 1fr 108px;gap:8px;align-items:center;font-size:13px}.ct-row b{text-align:right;font-size:12.5px}.ct-row .bar{height:10px}.bar.xp i{background:#c9a227}.bar.mind i{background:#6b5fb5}.bar.hg i{background:#c27c2c}
+@media (max-width:520px){.chartop{grid-template-columns:1fr}.ct-lv{border-right:0;border-bottom:1px solid var(--line);grid-auto-flow:column;gap:10px;justify-content:start;align-items:baseline}.ct-row{grid-template-columns:40px 1fr 92px}}
+#sideLvl{font-size:13.5px;font-weight:600}
+.crel{display:grid;gap:4px;margin:6px 0}.crel>div{display:grid;grid-template-columns:30px 1fr 64px;gap:6px;align-items:center;font-size:11.5px}.crel b{font-weight:600;text-align:right;font-size:11px}.crel .bar{height:6px}.bar.loy i{background:#2e6fb7}.bar.aff i{background:#d0475f}
+.nickb{font-size:11px;margin-left:4px;vertical-align:middle}
+details[data-col=weapons] .grid .card,.gearlist .gearb{display:flex;flex-direction:column}details[data-col=weapons] .grid .card>.btn:last-child,details[data-col=weapons] .grid .card>[data-act=equip],details[data-col=weapons] .grid .card>[data-act=craftW]{margin-top:auto}
+.gearlist{align-items:stretch}.gearb em{margin-top:auto}
+h2.num.big{font-size:40px;letter-spacing:.15em}
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -6285,7 +6304,7 @@ ACT.pendSkipGo=el=>{ const all=el.dataset.all==='1', P=S.pend||[]; closeModal();
   sfx('hurt'); FXL.post({hp:-20}); outcome(MAP[S.pos]||{n:''},'외면했다','돌아보지 않았다. 대신 무언가를 두고 와야 했다.',fx,false) };
 const _pendNext5=ACT.pendNext; ACT.pendNext=()=>{ const p=(S.pend||[])[0]; if(!p||p.k!=='hunt') return _pendNext5(); if(rt.enc) return toast('지금 전투 중입니다.'); if(!$('modal').hidden) return;
   if(resting()||S.hp<=0) return toast('지금 몸으로는 싸울 수 없다. 휴식이 끝난 뒤 처리하세요.'); S.pend.shift(); const n=MAP[p.z]||MAP[S.pos], pool=(n.zp||['walker']).filter(k=>!(ZOMBIES[k]||{}).human&&!ZPOOL_EXCL.includes(k)), q=[]; for(let i=0;i<2+Math.min(3,n.dg);i++) q.push(stPick(pool.length?pool:['walker']));
-  const lv=lvlOf(S.xp), mul=(1+gearV('hunt'))*(p.lure?1.1:1); rt.folWin={$:Math.round((30+lv*6)*n.dg*mul),scrap:Math.round(ri(6,12)*n.dg),food:Math.round(ri(4,8)*n.dg)}; toast(`${n.n}: 감염자 ${q.length}마리가 몰려온다!`,true); markSave(); startEnc({z:q[0],queue:q.slice(1),src:'fol'}) };
+  const lv=lvlOf(S.xp), mul=(1+gearV('hunt'))*(p.lure?1.1:1); rt.folWin={$:Math.round((15+lv*3)*n.dg*mul),scrap:Math.round(ri(6,12)*n.dg),food:Math.round(ri(4,8)*n.dg)}; toast(`${n.n}: 감염자 ${q.length}마리가 몰려온다!`,true); markSave(); startEnc({z:q[0],queue:q.slice(1),src:'fol'}) };
 
 /* ================= 감염자 퇴치 의뢰: 몇 분마다 무전으로 들어온다 ================= */
 const HUNT={first:[90000,200000],gap:[300000,540000],ttl:12*60000};
@@ -6293,7 +6312,7 @@ const huntGap=()=>Math.round(rand(HUNT.gap[0],HUNT.gap[1])/(1+Math.max(0,gearV('
 function huntSpawn(){ const D=zoneD(S.pos), lv=lvlOf(S.xp); let ks=ZDEF[D.k].map(z=>z[0]).filter(k=>!MAP[k].home); const pref=ks.filter(k=>['horde','nest','ruin','food','gang'].includes(MAP[k].t)&&k!==S.pos); if(pref.length) ks=pref; if(!ks.length) return;
   const k=stPick(ks), n=MAP[k], pool=n.zp.filter(z=>!(ZOMBIES[z]||{}).human&&!ZPOOL_EXCL.includes(z)), q=[]; const cnt=3+Math.min(3,Math.floor(n.dg/1.5)); for(let i=0;i<cnt;i++) q.push(stPick(pool.length?pool:['walker']));
   const it=stPick(['bandage','molotov','ammo','adrenaline'].filter(x=>ITEMS[x])), mul=1+gearV('hunt');
-  S.hunt={id:'h'+Date.now().toString(36),z:k,q,rw:{$:Math.round((50+lv*9)*n.dg*mul),xp:Math.round((30+lv*5)*mul),it},until:Date.now()+HUNT.ttl,t:Date.now()};
+  S.hunt={id:'h'+Date.now().toString(36),z:k,q,rw:{$:Math.round((20+lv*4)*n.dg*mul),xp:Math.round((30+lv*5)*mul),it},until:Date.now()+HUNT.ttl,t:Date.now()};
   sfx('radio'); markSave(); const c=msgCard(`<div class="mc-h"><span class="mc-ic">${icon('signal')}</span><b>감염자 퇴치 의뢰</b></div><p>"${esc(n.n)}에 놈들이 ${q.length}마리 몰려 있다. 치워 주면 사례하지." · $${S.hunt.rw.$} + ${ITEMS[it]?esc(ITEMS[it].n):''}</p><div class="row"><button class="btn sm pri" data-hg="1">퇴치하러 가기</button><button class="btn sm" data-hg="0">나중에</button></div>`,'inv huntmsg',30000);
   if(c) c.querySelectorAll('[data-hg]').forEach(b=>b.onclick=()=>{ c.remove(); if(b.dataset.hg==='1') ACT.huntGo() });
   if(!inputFocused()&&$('modal').hidden&&['map','survive','home'].includes(rt.tab)) render() }
@@ -6453,7 +6472,7 @@ ACT.raidPick=el=>{ const id=el.dataset.id, p=rt.players.get(id), list=(p&&Array.
 /* ================= 파견: 돌아오지 않은 대원의 결말 ================= */
 const _resolveMission6=resolveMission; resolveMission=function(m){ const lost=(S.lostCrew||[]).filter(x=>x.mid===m.id), ids=m.crew.slice(); let lines=_resolveMission6(m); if(!Array.isArray(lines)) lines=[];
   const team=ids.map(crewById).filter(Boolean);
-  for(const c of team){ if(c.state!=='idle'||Math.random()>.05+(c.risk?.08:0)) continue; S.crew=S.crew.filter(x=>x!==c); c.state='gone'; const st=folLose(.08); lines.push({k:'betray',t:`${c.name}은(는) 돌아오는 길에 무리를 이탈했다. 창고 열쇠도 함께 사라졌다.`,fx:['배신',...st],bad:3}); c.betray=1 }
+  for(const c of team){ if(c.state!=='idle'||Math.random()>(.05+(c.risk?.08:0))*(1.4-(c.loy==null?30:c.loy)/100)) continue; S.crew=S.crew.filter(x=>x!==c); c.state='gone'; const st=folLose(.08); lines.push({k:'betray',t:`${c.name}은(는) 돌아오는 길에 무리를 이탈했다. 창고 열쇠도 함께 사라졌다.`,fx:['배신',...st],bad:3}); c.betray=1 }
   for(const x of lost) lines.push({k:'taken',t:`${x.name}은(는) 돌아오지 않았다. 마지막 무전: ${x.by}님 무리에게 ${x.why==='charm'?'넘어갔다 (배신).':'붙잡혀 끌려갔다.'}`,fx:[x.why==='charm'?'배신':'납치'],bad:3});
   S.lostCrew=(S.lostCrew||[]).filter(x=>x.mid!==m.id);
   const sum=[]; for(const c of team){ if(c.state==='dead') sum.push(`${c.name} · 사망`); else if(c.state==='infected') sum.push(`${c.name} · 감염 (10분 안에 치료 필요)`); else if(c.betray) sum.push(`${c.name} · 배신`) } for(const x of lost) sum.push(`${x.name} · ${x.why==='charm'?'배신':'납치'} (${x.by})`);
@@ -6663,7 +6682,7 @@ function onPRaid(d){ const P=rt.party; if(!P||P.raid&&P.raid.id===d.id) return; 
   plog(`☠ 공동 레이드: ${P.raid.n} (Lv.${P.raid.L})`,'ev'); FXL.pre('horror'); sfx('growl'); FXL.shake(8,400); partyRender() }
 function onPRhp(d){ const R=rt.party&&rt.party.raid; if(!R||R.id!==d.id) return; R.hp=Math.max(0,+d.hp); if(d.dmg&&typeof d.dmg==='object') R.dmg=d.dmg; prDraw() }
 function onPRend(d){ const P=rt.party, R=P&&P.raid; if(!R||R.id!==d.id) return; P.raid=null; pqx('raid'); const tot=Object.values(d.dmg||{}).reduce((a,b)=>a+(+b||0),0)||1, share=((d.dmg||{})[rt.myId]||0)/tot, fx=[];
-  if(d.win){ const m=Math.round((90+R.L*12)*(.5+share)), xp=Math.round(40+R.L*6); addMoney(m); addXp(xp); fx.push(`$${m}`,`XP +${xp}`); if(Math.random()<.5){ const it=stPick(['suture','medkit','ammo','adrenaline'].filter(x=>ITEMS[x])); S.inv[it]=(S.inv[it]||0)+1; fx.push(ITEMS[it].n) } if(Math.random()<.2){ const g=gainGear(null,'공동 레이드'); if(g) fx.push(GEAR[g].n) } sfx('win'); plog(`레이드 승리! ${fx.join(', ')} (기여 ${Math.round(share*100)}%)`,'res') }
+  if(d.win){ const m=Math.round((40+R.L*5)*(.5+share)), xp=Math.round(40+R.L*6); addMoney(m); addXp(xp); fx.push(`$${m}`,`XP +${xp}`); if(Math.random()<.5){ const it=stPick(['suture','medkit','ammo','adrenaline'].filter(x=>ITEMS[x])); S.inv[it]=(S.inv[it]||0)+1; fx.push(ITEMS[it].n) } if(Math.random()<.2){ const g=gainGear(null,'공동 레이드'); if(g) fx.push(GEAR[g].n) } sfx('win'); plog(`레이드 승리! ${fx.join(', ')} (기여 ${Math.round(share*100)}%)`,'res') }
   else { fx.push(...folLose(.1)); const h=Math.round(maxHp()*.15); S.hp=Math.max(1,S.hp-h); fx.push(`체력 -${h}`); sfx('sting'); plog(`레이드 실패… ${fx.join(', ')}`,'res') }
   markSave(); msgCard(`<div class="mc-h"><span class="mc-ic">${icon('bolt')}</span><b>${d.win?'공동 레이드 승리':'공동 레이드 실패'}</b></div><p>${esc(fx.join(' · '))}</p>`,d.win?'ok':'',8000); partyRender() }
 const pDownMe=()=>{ const P=rt.party; return P&&P.down&&(P.down[rt.myId]||0)>Date.now() };
@@ -6707,7 +6726,7 @@ function hx(k,n){ S.hx=S.hx||{}; S.hx[k]=(S.hx[k]||0)+(n==null?1:n); return S.hx
 const hv=k=>((S.hx||{})[k]||0);
 
 /* ================= 달러: 더 쉽게 (하루 종일 하면 3주 안에 명품 하나) ================= */
-const _addMoney7=addMoney; addMoney=function(n,why){ if(n>0){ n=Math.round(n*1.7); hx('earn',n) } return _addMoney7(n,why) };
+const _addMoney7=addMoney; addMoney=function(n,why){ if(n>0){ hx('earn',n) } return _addMoney7(n,why) };
 
 /* ================= 명품: 브랜드를 살짝 비튼 이름 · 장신구 외 부위도 ================= */
 Object.assign(GEAR.lux_watch,{n:'로렉쑤 서브마리나'}); Object.assign(GEAR.lux_ring,{n:'티파늬 3캐럿 반지'}); Object.assign(GEAR.lux_bag,{n:'에르메쓰 버낀 클러치'});
@@ -7248,6 +7267,186 @@ function subBar(){ if(subOn()) return `<div class="subbar sub"><b>굴복 상태<
 const _renderBody9=renderBody; renderBody=function(){ _renderBody9(); const h=subBar(); if(h){ const v=$('view'), ph=v&&v.querySelector('.phead'); if(ph) ph.insertAdjacentHTML('afterend',h) } };
 /* 명단에 결투 버튼 */
 const _viewRoster9=viewRoster0; viewRoster0=function(){ return _viewRoster9().replace(/<button class="btn sm" data-act="cheer" data-id="([^"]+)">/g,(m,id)=>{ const ok=rt.online.has(id)&&duelAllowed(id)&&!rt.solo, p=rt.players.get(id), sb=p&&p.sub?`<em class="pl-st bad">${esc(nameOf(p.sub).slice(0,10))}의 수하</em>`:''; return (ok?`<button class="btn sm warn" data-act="duelReq" data-id="${id}" title="1:1 결투 (상대 동의 필요)">결투</button>`:'')+sb+m }) };
+
+/* ================= 경제 다시 맞추기: 달러는 귀하게 ================= */
+/* (돈 1.7배 배수는 아래 패치로 제거) */
+HID_RW.splice(0,HID_RW.length,100,150,200,300,400,500,700,900,1200,1500);
+const VEH_P={bike:220,cart:160,scooter:650,cargo:750,dirt:1900,pickup:1700,tow:2900,ice:3600,humvee:4800,rv:6200,bus:9500};
+for(const k in VEH_P) if(VEH[k]) VEH[k].p=VEH_P[k];
+const SHOP_P={medkit:80,antibio:150,ampoule:190,tonic:240,adrenaline:90,parts:170,suppress:320,grenade:90,steroid:70,petserum:1100};
+SHOP_BUY.forEach(i=>{ if(i.k&&SHOP_P[i.k]) i.p=SHOP_P[i.k] });
+/* 레벨이 오를수록 더 자주 마주친다 */
+const _evM9=evM; evM=function(k){ const v=_evM9(k); return k==='enc'?v*(1+Math.min(.5,lvlOf(S.xp)/80)):v };
+
+/* ================= 야간 방어전: 삭제 (차량 직결만 남김) ================= */
+const _renderDefense9=renderDefense; renderDefense=function(){ const h=_renderDefense9(), i=h.indexOf('<div class="sec"><div class="sec-head"><h2>버려진 차 직결'); return i>0?h.slice(i):h };
+const _viewOps9=viewOps; viewOps=function(){ return _viewOps9().replace(/<div class="sec"><div class="sec-head"><h2>야간 방어전[\s\S]*?(?=<div class="sec"><div class="sec-head"><h2>버려진 차 직결)/,'') };
+ACT.defense=()=>toast('야간 방어전은 없어졌어요.');
+HID[0][2][9]=['사냥 대장','퇴치 의뢰 40번',()=>(S.huntWins||0)>=40];
+
+/* ================= 알바: 하루 두 번 · 일당 낮춤 · 특수 행동 · 더 많이 ================= */
+const today=()=>{ const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}` };
+function jobCnt(k){ if(!S.jobDay||S.jobDay.d!==today()) S.jobDay={d:today(),n:{}}; return S.jobDay.n[k]||0 }
+function jobInc(k){ jobCnt(k); S.jobDay.n[k]=(S.jobDay.n[k]||0)+1 }
+const JOB_DAILY=2;
+const PAY9={kitchen:22,store:20,ware:16,watch:18,deliver:32,debt:40,bluff:36,guardvip:55,lovetest:38,lonely:34,con:38,negot:48,tout:30};
+PJOBS.forEach(j=>{ if(PAY9[j.k]) j.pay=PAY9[j.k]; if(j.pos){ j.sp=1; delete j.pos } });
+PJOBS.push(
+ {k:'sort',n:'고철 분류장',d:'컨베이어로 흘러오는 잡동사니를 알맞은 통에 던져 넣어라.',pay:18,game:'sort'},
+ {k:'appraise',n:'물물교환 감정사',d:'둘 중 지금 세상에서 더 값진 걸 골라라. 여섯 번.',pay:24,lv:4,game:'price'},
+ {k:'relay',n:'무전 중계',d:'들려준 숫자를 잠깐 외웠다가 그대로 다시 송신하라.',pay:20,lv:2,game:'num'},
+ {k:'babysit',n:'아이 돌보기',sp:1,lv:2,d:'피난민 캠프 엄마가 반나절 아이를 맡긴다. "울면 노래 불러 주세요."',pay:26,game:'dlg',dlg:[
+   {t:'아이 셋이 동시에 운다. 하나는 배고프고, 하나는 무섭고, 하나는 그냥 운다.',o:[{n:'노래를 부른다',st:'cha',b:.5,ok:'둘이 울음을 그쳤다. 하나는 따라 불렀다.',no:'음이 이탈했다. 셋 다 더 크게 운다.'},{n:'과자부터 나눠 준다',st:'per',b:.55,ok:'입이 바빠지자 조용해졌다.',no:'과자를 두고 싸움이 났다.'}]},
+   {t:'막내가 바깥에서 나는 소리에 겁을 먹었다.',o:[{n:'창을 막고 괜찮다고 안아 준다',st:'end',b:.5,ok:'아이가 품에서 잠들었다.',no:'아이가 손을 뿌리치고 숨어 버렸다.'},{n:'그림자 놀이로 관심을 돌린다',st:'agi',b:.5,ok:'벽에 토끼가 뛰자 웃음이 터졌다.',no:'그림자가 괴물처럼 보였다. 비명.'}]},
+   {t:'해 질 녘, 엄마가 늦는다. 큰애가 묻는다. "엄마 안 오면 어떡해요?"',o:[{n:'"올 거야. 같이 기다리자."',st:'cha',b:.55,ok:'문이 열리고 엄마가 뛰어 들어왔다.',no:'엄마는 한참 뒤에야 왔다. 큰애는 그동안 한마디도 안 했다.'},{n:'저녁을 먼저 차려 준다',st:'per',b:.5,ok:'다 먹을 때쯤 엄마가 왔다.',no:'아이들은 숟가락을 들지 않았다.'}]}],good:'엄마가 고개를 숙이며 품삯을 쥐여 줬다.',bad:'엄마는 지친 얼굴로 반만 줬다.'},
+ {k:'corpse',n:'시신 수습',sp:1,lv:5,d:'마을 공동묘지 관리인이 일손을 구한다. 묻을 사람이 너무 많다.',pay:34,game:'dlg',dlg:[
+   {t:'트럭 짐칸에 덮개가 덮여 있다. 냄새가 먼저 닿는다.',o:[{n:'숨을 참고 옮긴다',st:'end',b:.5,ok:'하나씩, 천천히 내렸다.',no:'구역질이 올라와 주저앉았다.'},{n:'관리인과 순서를 정한다',st:'per',b:.55,ok:'이름표가 있는 사람부터 묻기로 했다.',no:'순서를 두고 언성이 높아졌다.'}]},
+   {t:'덮개 하나가 꿈틀거린다.',o:[{n:'삽으로 끝을 낸다',st:'str',b:.55,ok:'조용해졌다. 관리인이 성호를 그었다.',no:'빗나갔다. 손목을 물릴 뻔했다.'},{n:'관리인을 뒤로 물린다',st:'agi',b:.5,ok:'관리인을 끌어내고 덮개를 다시 묶었다.',no:'관리인이 넘어졌다.'}]},
+   {t:'마지막 무덤. 관리인이 묻는다. "기도할 줄 알아요?"',o:[{n:'짧게 기도한다',st:'cha',b:.6,ok:'관리인이 처음으로 울었다.',no:'말이 나오지 않았다.'},{n:'묵묵히 흙을 덮는다',st:'end',b:.6,ok:'해가 지기 전에 끝냈다.',no:'손이 다 터졌다.'}]}],good:'관리인이 품삯과 함께 보리차를 건넸다.',bad:'관리인은 말없이 반만 줬다.'},
+ {k:'medic',n:'의무실 보조',sp:1,lv:6,d:'캠프 의무실에 부상자가 밀려든다. 손이 하나라도 더 필요하다.',pay:36,game:'dlg',dlg:[
+   {t:'다리에 철근이 박힌 남자가 비명을 지른다.',o:[{n:'붙잡고 버틴다',st:'str',b:.5,ok:'의사가 철근을 뽑는 동안 놓치지 않았다.',no:'남자가 몸부림쳐 붕대가 쏟아졌다.'},{n:'말을 걸어 진정시킨다',st:'cha',b:.5,ok:'비명이 신음으로 바뀌었다.',no:'남자가 침을 뱉었다.'}]},
+   {t:'약이 하나 남았다. 환자는 둘이다.',o:[{n:'아이에게 준다',st:'per',b:.5,ok:'아이의 열이 내렸다. 다른 환자도 기적처럼 버텼다.',no:'다른 환자가 밤새 앓았다.'},{n:'의사에게 판단을 맡긴다',st:'cha',b:.55,ok:'의사가 고개를 끄덕였다. 옳은 선택이었다.',no:'의사도 답을 몰랐다.'}]},
+   {t:'물린 자국을 숨긴 환자를 발견했다.',o:[{n:'조용히 의사에게 알린다',st:'per',b:.55,ok:'격리가 제때 끝났다.',no:'환자가 눈치채고 소란을 피웠다.'},{n:'직접 격리실로 데려간다',st:'str',b:.5,ok:'그는 순순히 따라왔다.',no:'그가 팔을 할퀴었다.'}]}],good:'의사가 붕대 한 묶음과 품삯을 챙겨 줬다.',bad:'의사는 고맙다고만 했다. 품삯은 반이었다.'},
+ {k:'smuggle',n:'밀수품 운반',sp:1,lv:9,d:'상자 안을 묻지 말 것. 검문소 셋을 지나 배달할 것.',pay:50,game:'dlg',dlg:[
+   {t:'첫 검문소. 경비병이 상자를 툭툭 친다.',o:[{n:'"약이에요. 아픈 애가 있어서요."',st:'cha',b:.5,ok:'경비병이 손을 내저었다.',no:'"열어 봐."'},{n:'담배 한 갑을 슬쩍 건넨다',st:'per',b:.55,ok:'경비병이 모른 척했다.',no:'"뇌물? 이거 수상한데."'}]},
+   {t:'두 번째 검문소 앞. 개가 냄새를 맡는다.',o:[{n:'옆 골목으로 돌아간다',st:'agi',b:.5,ok:'개가 다른 쪽을 향해 짖었다.',no:'개가 따라왔다.'},{n:'당당하게 지나간다',st:'cha',b:.45,ok:'개조차 고개를 돌렸다.',no:'개가 상자에 코를 박았다.'}]},
+   {t:'목적지 직전, 상자 안에서 무언가 움직인다.',o:[{n:'모른 척 배달한다',st:'end',b:.6,ok:'받는 사람이 고개만 끄덕였다. 묻지 않기로 했다.',no:'상자가 덜컹거려 놓칠 뻔했다.'},{n:'몰래 들여다본다',st:'per',b:.45,ok:'살아 있는 닭 두 마리였다. 웃음이 나왔다.',no:'뚜껑이 열렸다. 의뢰인이 노려본다.'}]}],good:'의뢰인이 약속대로 돈을 세어 줬다.',bad:'배달은 했지만 의뢰인이 반을 깎았다.'},
+ {k:'search',n:'실종자 수색',sp:1,lv:12,d:'아들을 찾는 노인. "사흘 전 병원 쪽으로 갔어요."',pay:58,game:'dlg',dlg:[
+   {t:'병원 뒷골목. 젖은 발자국이 둘로 갈라진다.',o:[{n:'작은 발자국을 따라간다',st:'per',b:.5,ok:'창고 문틈에 낡은 운동화가 끼어 있다.',no:'발자국이 빗물에 지워졌다.'},{n:'소리를 질러 이름을 부른다',st:'cha',b:.4,ok:'멀리서 대답이 들렸다.',no:'대답 대신 놈들이 고개를 들었다.'}]},
+   {t:'창고 안. 바리케이드 너머에서 숨소리.',o:[{n:'바리케이드를 밀어낸다',st:'str',b:.5,ok:'청년이 탈수 상태로 웅크리고 있었다.',no:'바리케이드가 무너지며 소리가 났다.'},{n:'틈으로 물병을 넣어 준다',st:'per',b:.55,ok:'안에서 손이 나와 물병을 잡았다.',no:'물병이 굴러가 버렸다.'}]},
+   {t:'돌아오는 길, 청년이 걷지 못한다.',o:[{n:'업고 간다',st:'end',b:.5,ok:'노인이 문 앞에서 달려 나왔다.',no:'중간에 둘 다 넘어졌다. 겨우 도착했다.'},{n:'수레를 구해 온다',st:'agi',b:.5,ok:'덜컹거리는 수레가 노인의 집 앞에 멈췄다.',no:'수레 바퀴가 빠졌다.'}]}],good:'노인이 아들을 끌어안고 한참을 울었다. 그리고 모아 둔 돈을 다 내밀었다.',bad:'아들은 찾았지만 많이 다쳤다. 노인은 고맙다며 조금만 줬다.'},
+);
+const SORT_IT=[['찌그러진 프라이팬','금속'],['깨진 휴대폰','전자'],['곰팡이 핀 빵','쓰레기'],['녹슨 렌치','금속'],['리모컨','전자'],['찢어진 신발','쓰레기'],['구리 냄비','금속'],['전자레인지 기판','전자'],['빈 우유팩','쓰레기'],['자전거 체인','금속'],['노트북 배터리','전자'],['썩은 사과','쓰레기'],['철제 경첩','금속'],['라디오 스피커','전자']];
+function gSort(J){ const L=shuf(SORT_IT).slice(0,8); let i=0, ok=0; const bins=['금속','전자','쓰레기'];
+  const draw=()=>{ if(i>=L.length) return jobEnd(J,ok>=8?1.3:ok/8,`${ok}/8개를 맞는 통에 넣었다.`,[],ok>=5);
+    $('mbox').innerHTML=`<div class="eyebrow">PART-TIME <span class="dash"></span> ${esc(J.n)} · ${i+1}/8</div><h2>${esc(L[i][0])}</h2><p class="ch-p">어느 통에 넣을까?</p><div class="story-opts">${bins.map(b=>`<button class="btn opt" data-sb2="${b}">${b}</button>`).join('')}</div><p class="note num">맞힘 ${ok}</p>`;
+    $('mbox').querySelectorAll('[data-sb2]').forEach(b=>b.onclick=()=>{ if(b.dataset.sb2===L[i][1]){ ok++; sfx('tick') } else sfx('hurt'); i++; draw() }) };
+  jobOpen('<div></div>'); draw() }
+const APPR=[['깨끗한 물 2리터',9],['금목걸이',3],['항생제 한 통',10],['명품 시계',2],['성냥 한 갑',6],['지폐 뭉치',1],['통조림 열 개',8],['다이아 반지',2],['라이터 기름',5],['스마트폰',1],['붕대 꾸러미',7],['그림 한 점',1],['건전지 한 상자',6],['정수 알약',8],['소금 한 포대',7],['고급 와인',3]];
+function gPrice(J){ let i=0, ok=0; const draw=()=>{ if(i>=6) return jobEnd(J,ok>=6?1.3:ok/6,`${ok}/6번 맞게 감정했다.`,[],ok>=4); const [a,b]=shuf(APPR.filter(x=>x[1]!==0)).slice(0,2); if(a[1]===b[1]){ return draw() }
+    $('mbox').innerHTML=`<div class="eyebrow">PART-TIME <span class="dash"></span> ${esc(J.n)} · ${i+1}/6</div><h2>어느 쪽이 더 값질까?</h2><p class="ch-p">세상이 끝난 지금 기준으로.</p><div class="story-opts"><button class="btn opt" data-ap="0">${esc(a[0])}</button><button class="btn opt" data-ap="1">${esc(b[0])}</button></div><p class="note num">맞힘 ${ok}</p>`;
+    $('mbox').querySelectorAll('[data-ap]').forEach(x=>x.onclick=()=>{ const pick=x.dataset.ap==='0'?a:b, oth=pick===a?b:a; if(pick[1]>oth[1]){ ok++; sfx('tick') } else sfx('hurt'); i++; draw() }) };
+  jobOpen('<div></div>'); draw() }
+function gNum(J){ let r=0, ok=0; const len=[4,5,6]; const round=()=>{ if(r>=3) return jobEnd(J,[.15,.5,1,1.3][ok],`${ok}/3번 정확히 중계했다.`,[],ok>=2); const n=Array.from({length:len[r]},()=>ri(0,9)).join('');
+    $('mbox').innerHTML=`<div class="eyebrow">PART-TIME <span class="dash"></span> ${esc(J.n)} · ${r+1}/3</div><h2 class="num big">${n}</h2><p class="ch-p">잡음 속에서 숫자가 들린다. 외워 두세요.</p><p class="note num" id="nmT">3</p>`;
+    let t=3; const iv=setInterval(()=>{ t--; const e=$('nmT'); if(e) e.textContent=t; if(t<=0){ clearInterval(iv);
+      $('mbox').innerHTML=`<div class="eyebrow">PART-TIME <span class="dash"></span> ${esc(J.n)} · ${r+1}/3</div><h2>송신</h2><form class="row" id="nmF"><input id="nmIn" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="들은 숫자"><button class="btn pri" type="submit">송신</button></form>`;
+      const i2=$('nmIn'); if(i2) i2.focus(); $('nmF').onsubmit=e=>{ e.preventDefault(); if($('nmIn').value.trim()===n){ ok++; sfx('tick') } else sfx('static'); r++; round() } } },1000) };
+  jobOpen('<div></div>'); round() }
+JOB_G.sort=gSort; JOB_G.price=gPrice; JOB_G.num=gNum;
+/* 특수 행동: 실패해도 포지션 대가 대신 몸이 상한다 */
+JOB_G.dlg=function(J){ let i=0, pts=0, log=[];
+  const draw=()=>{ const st=J.dlg[i]; if(!st){ const okk=pts>=2, fx=[]; if(!okk){ const h=ri(5,10); S.hp=Math.max(1,S.hp-h); mindAdd(-5); fx.push(`체력 -${h}`,'정신 -5') } return jobEnd(J,okk?(pts===3?1.3:1):.3,`${log.join(' ')}\n${okk?J.good:J.bad}`,fx,okk) }
+    $('mbox').innerHTML=`<div class="eyebrow">SPECIAL JOB <span class="dash"></span> ${esc(J.n)} · ${i+1}/${J.dlg.length}</div><h2>${esc(J.n)}</h2>${log.length?`<p class="note">${esc(log[log.length-1])}</p>`:''}<p class="ch-p">${esc(st.t)}</p><div class="story-opts">${st.o.map((o,k)=>`<button class="btn opt" data-dg="${k}">${esc(o.n)} <small class="optlv">${TR_STAT[o.st]||''}</small></button>`).join('')}</div>`;
+    $('mbox').querySelectorAll('[data-dg]').forEach(b=>b.onclick=()=>{ const o=st.o[+b.dataset.dg], r2=Math.random()<clamp(o.b+(ST(o.st)-3)*.06,.1,.9); if(r2) pts++; log.push(r2?o.ok:o.no); sfx(r2?'tick':'hurt'); i++; draw() }) };
+  jobOpen('<div></div>'); draw() };
+const jobPay9=J=>Math.max(1,Math.round(J.pay*(1+lvlOf(S.xp)*.06)));
+const _jobEnd29=jobEnd; jobEnd=function(J,f,t,fx,ok){ const m0=S.money||0, by=rt.subJob; rt.subJob=null; fx=fx||[];
+  if(f>0){ const m=Math.round(jobPay9(J)*f); addMoney(m); fx.unshift(`$${(S.money||0)-m0}`); addXp(8+Math.round(J.pay/3)) } S.jobT=Date.now()+60000; hx('job'); if(f>=1.2) hx('jobPerfect'); if(J.mind&&ok){ mindAdd(J.mind); fx.push(`정신 +${J.mind}`) }
+  if(by){ const got=Math.max(0,(S.money||0)-m0); if(got){ S.money-=got; dSend({dl:'give',id:'j'+Date.now().toString(36),to:by,res:{},items:{},money:got,why:'cmd'}); fx.push(`${nameOf(by)}님에게 $${got} 바침`) } }
+  markSave(); rt.modalLock=false; outcome({n:J.n},ok?'일 끝':'일이 꼬였다',t,fx,ok) };
+ACT.jobGo=el=>{ const J=jobFor(el.dataset.k); if(!J) return; if(subOn()&&!rt.subExec) return toast('굴복 상태에서는 지시받은 알바만 할 수 있어요.'); if(Date.now()<(S.jobT||0)) return toast(`숨 좀 돌리고 · ${mmss(S.jobT-Date.now())}`); if(jobCnt(J.k)>=JOB_DAILY) return toast('이 알바는 오늘 두 번 다 했어요. 내일 다시 오세요.'); if(J.lv&&lvlOf(S.xp)<J.lv) return toast(`Lv.${J.lv}부터 할 수 있어요.`); if(rt.enc) return toast('전투 중이에요.'); if(!$('modal').hidden) return; jobInc(J.k); markSave(); JOB_G[J.game](J) };
+/* 관리자 알바: 보상 · 행동 조건 */
+const JN_STAT={'':'없음',str:'힘',agi:'민첩',end:'체력',per:'감각',cha:'매력',luk:'운'};
+function jobClean(j){ j=j&&typeof j==='object'?j:{}; const n=(v,a,b)=>clamp(Math.round(+v||0),a,b); return {pay:n(j.pay,0,100000),xp:n(j.xp,0,5000),it:ITEMS[j.it]?j.it:'',iq:n(j.iq||1,1,99),st:JN_STAT[j.st]!=null?j.st:'',sv:n(j.sv||0,0,20),need:ITEMS[j.need]?j.need:'',nq:n(j.nq||1,1,99),cost:n(j.cost,0,100000),hp:n(j.hp,0,90),daily:n(j.daily||2,1,20)} }
+const _cevClean9=cevClean; cevClean=function(id,d){ const c=_cevClean9(id,d); if(c&&c.trig&&c.trig.k==='job') c.job=jobClean(d&&d.job); return c };
+const itemOpts=sel=>`<option value="">없음</option>${Object.entries(ITEMS).map(([k,x])=>`<option value="${k}" ${k===sel?'selected':''}>${esc(x.n)}</option>`).join('')}`;
+new MutationObserver(()=>{ const F=$('cevF'); if(!F||!rt.cevE) return; const sel=F.querySelector('[data-f="trig.k"]'); const isJob=sel&&sel.value==='job'; const ex=$('cevJob');
+  if(!isJob){ if(ex) ex.remove(); return } if(ex) return; rt.cevE.job=jobClean(rt.cevE.job); const J=rt.cevE.job, fs=sel.closest('fieldset');
+  fs.insertAdjacentHTML('afterend',`<fieldset class="cev-r" id="cevJob"><legend>알바 보상과 조건</legend><div class="cev-g">
+    <label>일당 ($)<input type="number" data-f="job.pay" value="${J.pay}" min="0"></label><label>경험치<input type="number" data-f="job.xp" value="${J.xp}" min="0"></label>
+    <label>보상 물품<select data-f="job.it">${itemOpts(J.it)}</select></label><label>개수<input type="number" data-f="job.iq" value="${J.iq}" min="1" max="99"></label>
+    <label>필요 스탯<select data-f="job.st">${optHtml(JN_STAT,J.st)}</select></label><label>최소 수치<input type="number" data-f="job.sv" value="${J.sv}" min="0" max="20"></label>
+    <label>필요 물품 (소모)<select data-f="job.need">${itemOpts(J.need)}</select></label><label>개수<input type="number" data-f="job.nq" value="${J.nq}" min="1" max="99"></label>
+    <label>시작 비용 ($)<input type="number" data-f="job.cost" value="${J.cost}" min="0"></label><label>체력 소모<input type="number" data-f="job.hp" value="${J.hp}" min="0" max="90"></label>
+    <label>하루 횟수<input type="number" data-f="job.daily" value="${J.daily}" min="1" max="20"></label></div><p class="note">일당·경험치·보상 물품은 의뢰의 마지막 단계까지 끝냈을 때 들어가요. 조건이 안 맞으면 알바 탭에서 버튼이 잠겨요.</p></fieldset>`) }).observe(document.body,{childList:true,subtree:true});
+function cevJobBlock(e){ const J=e.job||jobClean({}); if(jobCnt('cev_'+e.id)>=J.daily) return `오늘 ${J.daily}번 다 했어요`; if(J.st&&ST(J.st)<J.sv) return `${JN_STAT[J.st]} ${J.sv} 필요`; if(J.need&&(S.inv[J.need]||0)<J.nq) return `${ITEMS[J.need].n} ${J.nq}개 필요`; if(J.cost&&(S.money||0)<J.cost) return `$${J.cost} 필요`; if(J.hp&&S.hp<=J.hp) return '체력이 부족해요'; return '' }
+ACT.jobCev=el=>{ const e=(rt.cev||[]).find(x=>x.id===el.dataset.id); if(!e) return; if(subOn()&&!rt.subExec) return toast('굴복 상태예요.'); if(Date.now()<(S.jobT||0)) return toast(`숨 좀 돌리고 · ${mmss(S.jobT-Date.now())}`); if(!$('modal').hidden||rt.enc) return; const why=cevJobBlock(e); if(why) return toast(why);
+  const J=e.job||jobClean({}); if(J.need) S.inv[J.need]-=J.nq; if(J.cost) S.money-=J.cost; if(J.hp) S.hp=Math.max(1,S.hp-J.hp); S.jobT=Date.now()+60000; jobInc('cev_'+e.id); hx('job'); rt.jobRun={id:e.id,job:J}; markSave(); S.cevDone=S.cevDone||{}; if(e.once&&S.cevDone[e.id]) return toast('이미 끝낸 의뢰예요.'); runChain(cevChain(e)) };
+const _chainEnd9=chainEnd; chainEnd=function(ch,ctx,r){ const R=rt.jobRun; if(R&&ch&&ch.k==='cev_'+R.id){ rt.jobRun=null; const J=R.job, fx=[]; if(J.pay){ const b=S.money||0; addMoney(J.pay); fx.push(`일당 $${(S.money||0)-b}`) } if(J.xp){ addXp(J.xp); fx.push(`XP +${J.xp}`) } if(J.it){ S.inv[J.it]=(S.inv[J.it]||0)+J.iq; fx.push(`${ITEMS[J.it].n} +${J.iq}`) } r=Object.assign({},r,{fx:(r.fx||[]).concat(fx)}) } return _chainEnd9(ch,ctx,r) };
+viewJobs=function(){ const l=lvlOf(S.xp), cd=Math.max(0,(S.jobT||0)-Date.now()), card=J=>{ const lk=J.lv&&l<J.lv, n=jobCnt(J.k), done=n>=JOB_DAILY;
+    return `<div class="card job${lk?' wlock':''}${J.sp?' posj':''}"><div class="row spread"><h3>${esc(J.n)}</h3><span class="tag num">$${fmt(jobPay9(J))}</span></div>${J.sp?'<span class="eyebrow posl">SPECIAL JOB</span>':''}<p>${esc(J.d)}</p><div class="row spread"><span class="note num">오늘 ${n}/${JOB_DAILY}</span><button class="btn sm${lk||done?'':' pri'}" data-act="jobGo" data-k="${J.k}" ${lk||cd||done?'disabled':''}>${lk?`Lv.${J.lv}+`:done?'오늘 끝':'일하러 가기'}</button></div></div>` };
+  const gen=PJOBS.filter(j=>!j.sp), sp=PJOBS.filter(j=>j.sp), adm=(rt.cev||[]).filter(e=>e.on&&e.trig&&e.trig.k==='job'&&l>=e.lv&&(!e.pos.length||e.pos.includes(S.tmb))&&!(e.once&&(S.cevDone||{})[e.id]));
+  return `<div class="evbar ${cd?'':'ok'}"><span class="tagx ${cd?'':'ok'}">${cd?'숨 돌리는 중':'일할 수 있음'}</span><b class="num" id="jobCd">${cd?mmss(cd):'지금 바로'}</b><span class="muted">알바마다 하루 ${JOB_DAILY}번까지. 일당은 레벨에 따라 조금씩 올라요.</span></div>
+   <div class="sec"><div class="sec-head"><h2>일반 알바</h2><p>짧은 텍스트 미니게임</p></div><div class="grid">${gen.map(card).join('')}</div></div>
+   <div class="sec"><div class="sec-head"><h2>특수 행동 알바</h2><p>선택지마다 스탯 판정이 있어요. 실패하면 몸이 상해요.</p></div><div class="grid">${sp.map(card).join('')}</div></div>
+   ${adm.length?`<div class="sec"><div class="sec-head"><h2>게시판 의뢰</h2><p>운영자가 올린 의뢰</p></div><div class="grid">${adm.map(e=>{ const J=e.job||jobClean({}), why=cevJobBlock(e), conds=[J.st?`${JN_STAT[J.st]} ${J.sv}+`:'',J.need?`${ITEMS[J.need].n} ${J.nq}개 소모`:'',J.cost?`비용 $${J.cost}`:'',J.hp?`체력 -${J.hp}`:''].filter(Boolean);
+     return `<div class="card job posj"><div class="row spread"><h3>${esc(e.t)}</h3><span class="tag num">${J.pay?'$'+fmt(J.pay):''}${J.it?' · '+esc(ITEMS[J.it].n):''}</span></div><span class="eyebrow posl">${esc(e.tag||'REQUEST')}</span><p>${esc((e.steps[0].p||[])[0]||'')}</p>${conds.length?`<p class="note">${conds.map(esc).join(' · ')}</p>`:''}<div class="row spread"><span class="note num">오늘 ${jobCnt('cev_'+e.id)}/${J.daily}</span><button class="btn sm${why?'':' pri'}" data-act="jobCev" data-id="${esc(e.id)}" ${cd||why?'disabled':''}>${why?esc(why):'의뢰 받기'}</button></div></div>` }).join('')}</div></div>`:''}` };
+
+/* ================= 상점: 회복 · 도구 · 장비 · 탈것 · 팔기 / 버튼 통일 / 확률 숨김 ================= */
+const HEAL_K=['bandage','painkiller','ration','vitamin','medkit','antibio','splint','suppress','calm','petserum','tonic','ampoule','adrenaline'];
+const isHealBuy=i=>i&&(i.f||(i.r&&['food','water','med'].includes(i.r))||(i.k&&HEAL_K.includes(i.k)));
+const SHOP_TABS9=[['all','전체'],['heal','회복'],['tool','도구·무기'],['gear','장비'],['veh','탈것'],['sell','팔기']];
+const _viewShop9=viewShop; viewShop=function(){ const h=_viewShop9(), tp=document.createElement('template'); tp.innerHTML=h; const C=tp.content;
+  C.querySelectorAll('[data-act=plunderShop] small,[data-act=plunderGear] small').forEach(e=>e.remove());
+  const tabs=C.querySelector('.shoptabs'); if(tabs) tabs.outerHTML=`<div class="shoptabs2" role="tablist">${SHOP_TABS9.map(([k,n])=>`<button class="btn sm${rt.shopTab===k?' pri':''}" data-act="shopTab" data-k="${k}" role="tab" aria-selected="${rt.shopTab===k}">${n}</button>`).join('')}</div>`;
+  const buy=C.querySelector('.shopsec[data-sk=buy]'); if(buy){ const grid=buy.querySelector('.grid'), tool=buy.cloneNode(true); tool.dataset.sk='tool'; tool.classList.toggle('shut',!!rt.shopShut.tool); tool.querySelector('.shoph').dataset.sk='tool'; tool.querySelector('h2').innerHTML='도구·무기 <span class="chev" aria-hidden="true">▾</span>'; const tg=tool.querySelector('.grid');
+    buy.dataset.sk='heal'; buy.classList.toggle('shut',!!rt.shopShut.heal); buy.querySelector('.shoph').dataset.sk='heal'; buy.querySelector('h2').innerHTML='회복 <span class="chev" aria-hidden="true">▾</span>';
+    [...grid.children].forEach(card=>{ const b=card.querySelector('[data-i]'), i=b&&SHOP_BUY[+b.dataset.i]; if(!isHealBuy(i)) card.remove() }); [...tg.children].forEach(card=>{ const b=card.querySelector('[data-i]'), i=b&&SHOP_BUY[+b.dataset.i]; if(isHealBuy(i)) card.remove() }); buy.after(tool) }
+  C.querySelectorAll('.card').forEach(card=>{ const bs=[...card.querySelectorAll(':scope > .row > button, :scope > button, :scope > .row > .row > button')].filter(b=>/^(buy|buyGear|buyCar|useCar|plunderShop|plunderGear|giftBuy)$/.test(b.dataset.act)); if(!bs.length) return;
+    const row=document.createElement('div'); row.className='shopbtns'; bs.forEach(b=>{ b.className='btn sm'+(b.dataset.act==='useCar'&&/타는 중/.test(b.textContent)?' pri':''); b.removeAttribute('title'); if(b.dataset.act==='plunderShop'||b.dataset.act==='plunderGear') b.textContent='약탈'; row.append(b) });
+    card.querySelectorAll(':scope > .row').forEach(r=>{ if(!r.children.length) r.remove() }); card.append(row) });
+  const w=C.querySelector('.shopw'); if(w) w.dataset.tab=rt.shopTab; return tp.innerHTML };
+
+/* ================= 무전: 칭호 · 이름 한 줄, 답글은 말풍선 옆 · 내 이름도 ================= */
+const _msgEl9=msgEl; msgEl=function(m){ const d=_msgEl9(m); if(m.sys) return d; let mb=d.querySelector('.mb'); const b=d.querySelector('.bub'); if(!b) return d;
+  if(!mb){ mb=document.createElement('span'); mb.className='mb'+(m.me?' mbme':''); b.replaceWith(mb); mb.append(b) }
+  const ttl=mb.querySelector('.ttl'), q=mb.querySelector('.req'), re=d.querySelector('.rebtn'); let n=mb.querySelector('.n'); if(!n){ n=document.createElement('span'); n.className='n'+(m.me?' me':''); n.textContent=m.me?S.nick:m.n }
+  const head=document.createElement('span'); head.className='mhead'; if(ttl) head.append(ttl); head.append(n); const row=document.createElement('span'); row.className='brow'; row.append(b); if(re) row.append(re);
+  mb.replaceChildren(head,...(q?[q]:[]),row); return d };
+
+/* ================= 생존 탭: 움직이기는 바로 · 여백 없이 ================= */
+const _viewSurvive9=viewSurvive; viewSurvive=function(){ let h=_viewSurvive9(); if(rt.enc||S.forage) return h; const n=MAP[S.pos];
+  h=h.replace(/<section class="pcard pick">[\s\S]*?<\/section>/,''); h=h.replace('<div class="cols surv">','<div class="cols surv one">');
+  const bar=`<div class="evbar movebar"><span class="tagx">움직이기</span><b>${esc(n?n.n:'')}</b><span class="muted">주변 탐색·식량 구하기는 지도에서 해요. 지금 위치 주변 장소가 나와요.</span><button class="btn sm pri" data-act="go" data-view="map">지도에서 뒤지기</button></div>`;
+  const i=h.indexOf('<div class="cols surv one">'); return i>=0?h.slice(0,i)+bar+h.slice(i):bar+h };
+
+/* ================= 내 캐릭터: 레벨 · 체력 · 경험치 한눈에 ================= */
+function charTop(){ const l=lvlOf(S.xp), a=xpFor(l), b=xpFor(l+1), p=clamp((S.xp-a)/(b-a),0,1), hp=S.hp/maxHp();
+  return `<section class="pcard chartop"><div class="ct-lv"><span class="label">LEVEL</span><b class="num">${l}</b></div><div class="ct-bars">
+    <div class="ct-row"><span>체력</span><div class="bar${hp<.3?' red':''}"><i style="width:${hp*100}%"></i></div><b class="num">${Math.ceil(S.hp)} / ${maxHp()}</b></div>
+    <div class="ct-row"><span>경험치</span><div class="bar xp"><i style="width:${p*100}%"></i></div><b class="num">${fmt(Math.floor(S.xp-a))} / ${fmt(Math.ceil(b-a))}</b></div>
+    <div class="ct-row"><span>정신</span><div class="bar mind"><i style="width:${clamp(S.mind||0,0,100)}%"></i></div><b class="num">${Math.round(S.mind||0)} / 100</b></div>
+    <div class="ct-row"><span>허기</span><div class="bar hg"><i style="width:${clamp(S.hunger,0,100)}%"></i></div><b class="num">${Math.ceil(S.hunger)} / 100</b></div>
+    <p class="note num">다음 레벨까지 ${fmt(Math.max(0,Math.ceil(b-S.xp)))} XP · 소지금 $${fmt(S.money||0)}</p></div></section>` }
+const _viewChar9=viewChar; viewChar=function(){ const h=_viewChar9(), i=h.indexOf('<section class="pcard trcard">'); return i>=0?h.slice(0,i)+charTop()+h.slice(i):charTop()+h };
+
+/* ================= 대원: 별명은 이름 옆 · 충성도 · 친밀도 · 애정 주기 ================= */
+const LOY_N=['경계','의심','보통','신뢰','맹세','목숨'], AFF_N=['남남','아는 사이','동료','친구','가족','소울메이트'];
+const lvN=(L,v)=>L[Math.min(L.length-1,Math.floor(v/20))];
+function crewInfo2(c){ crewInfo(c); if(c.loy==null) c.loy=30; if(c.aff==null) c.aff=10; return c }
+function cAdd(c,k,v){ c[k]=clamp((c[k]||0)+v,0,100) }
+const _crewCard9=crewCard; crewCard=function(c,sel){ crewInfo2(c); let h=_crewCard9(c,sel);
+  h=h.replace(/<button class="linkbtn inl" data-act="crewNick" data-id="[^"]+">별명<\/button>/,'');
+  h=h.replace(/(<h3>[\s\S]*?)(<\/h3>)/,`$1${c.state!=='dead'?` <button class="linkbtn inl nickb" data-act="crewNick" data-id="${c.id}">별명짓기</button>`:''}$2`);
+  const away=c.state==='away', dead=c.state==='dead';
+  const rel=`<div class="crel"><div><span>충성</span><div class="bar loy"><i style="width:${c.loy}%"></i></div><b>${lvN(LOY_N,c.loy)}</b></div><div><span>친밀</span><div class="bar aff"><i style="width:${c.aff}%"></i></div><b>${lvN(AFF_N,c.aff)}</b></div></div>`;
+  h=h.replace('<div class="bar red">',rel+'<div class="bar red">');
+  if(!dead&&!away) h=h.replace(/(<button class="btn sm ghost" data-act="dismissCrew")/,`<button class="btn sm" data-act="crewLove" data-id="${c.id}" ${Date.now()<(c.loveT||0)?'disabled':''}>애정 주기</button>$1`);
+  return h };
+const LOVE_OK=['어깨를 두드려 줬다. 그가 오랜만에 웃었다.','아껴 둔 초콜릿을 나눠 줬다.','밤새 이야기를 들어 줬다.','다친 손을 다시 감아 줬다.','이름을 불러 줬다. 별명 말고, 진짜 이름으로.'];
+const LOVE_NO=['칭찬이 어색하게 나왔다.','바쁜 척 말을 끊어 버렸다.','선물이 하필 그가 싫어하는 거였다.','"됐어요." 그가 고개를 돌렸다.'];
+ACT.crewLove=el=>{ const c=crewById(el.dataset.id); if(!c||c.state==='dead'||c.state==='away') return; crewInfo2(c); if(Date.now()<(c.loveT||0)) return; c.loveT=Date.now()+3*60000;
+  const p=clamp(.55+(ST('cha')-3)*.05+c.aff/400,.2,.92), fx=[]; let ok2=Math.random()<p;
+  if(ok2){ const a=ri(3,7), b=ri(2,5); cAdd(c,'loy',a); cAdd(c,'aff',b); fx.push(`충성도 +${a}`,`친밀도 +${b}`); hx('love') } else { const a=ri(2,5), h=ri(3,8); cAdd(c,'loy',-a); cAdd(c,'aff',-1); S.hp=Math.max(1,S.hp-h); fx.push(`충성도 -${a}`,'친밀도 -1',`체력 -${h}`) }
+  markSave(); outcome({n:crewNm(c)},ok2?`${crewNm(c)}이(가) 만족했다`:`${crewNm(c)}이(가) 실망했다`,`${ok2?stPick(LOVE_OK):stPick(LOVE_NO)}\n"${crewSay(c,ok2?'ok':'bad')}"`,fx,ok2) };
+/* 친밀도가 높으면 먼저 다가온다 · 선물을 가져온다 · 충성도가 낮으면 떠난다 */
+setInterval(()=>{ try{ if(!S||!S.intro||rt.enc||rt.party||!$('modal').hidden||document.getElementById('intro')||subOn()) return; const now=Date.now(); if(now<(S.crewEvT||0)) return; S.crewEvT=now+ri(4,8)*60000;
+  const idle=crewAlive().filter(c=>c.state==='idle').map(crewInfo2); if(!idle.length) return;
+  const asker=idle.filter(c=>c.aff>=35).sort(()=>Math.random()-.5)[0];
+  if(asker&&Math.random()<.25+asker.aff/250){ return crewAsk(asker) }
+  const giver=idle.filter(c=>c.aff>=50).sort(()=>Math.random()-.5)[0];
+  if(giver&&Math.random()<.35){ const cheap=SHOP_BUY.filter(i=>i.k&&ITEMS[i.k]&&i.p<=60), fx=[]; if(Math.random()<.03){ const g=gainGear(null,crewNm(giver)); if(g) fx.push(GEAR[g].n); else { S.inv.ampoule=(S.inv.ampoule||0)+1; fx.push(ITEMS.ampoule.n) } } else { const it=stPick(cheap); S.inv[it.k]=(S.inv[it.k]||0)+1; fx.push(ITEMS[it.k].n) } markSave(); return whenFree(()=>outcome({n:crewNm(giver)},'선물',`${crewNm(giver)}이(가) 쭈뼛거리며 무언가를 내밀었다.\n"${crewSay(giver,'ok')} …이거, 오다가 주웠어요."`,fx,true)) }
+  const flake=idle.filter(c=>c.loy<15)[0]; if(flake&&Math.random()<.3){ S.crew=S.crew.filter(x=>x!==flake); const lost=folLose(.06); markSave(); hx('crewDead',0); return whenFree(()=>outcome({n:'캠프'},'탈주',`아침에 보니 ${crewNm(flake)}의 자리가 비어 있었다. 창고 문도 열려 있었다.`,['대원 이탈',...lost],false)) } }catch(e){} },20000);
+function crewAsk(c){ rt.modalLock=true; const want=stPick(['같이 밤하늘 좀 봐 줄래요?','오늘 하루만 옆에 있어 주면 안 돼요?','제 얘기 좀 들어 줄 수 있어요?','같이 밥 먹어요. 둘이서.','저 잘하고 있는 거 맞죠? 말해 줘요.']);
+  openModal(`<div class="eyebrow">CREW <span class="dash"></span> ${esc(crewDesc(c))} · ${esc(lvN(AFF_N,c.aff))}</div><h2>${esc(crewNm(c))}이(가) 다가왔다</h2><p style="margin:0;line-height:1.7">"${esc(want)}"</p><div class="story-opts"><button class="btn opt" data-ca="1">응, 그러자</button><button class="btn opt" data-ca="0">지금은 안 돼</button></div>`);
+  $('mbox').querySelectorAll('[data-ca]').forEach(b=>b.onclick=()=>{ const y=b.dataset.ca==='1', fx=[]; if(y){ cAdd(c,'aff',4); cAdd(c,'loy',3); mindAdd(4); fx.push('친밀도 +4','충성도 +3','정신 +4') } else { const a=ri(4,7), l=ri(3,6); cAdd(c,'aff',-a); cAdd(c,'loy',-l); fx.push(`친밀도 -${a}`,`충성도 -${l}`) } markSave();
+    $('mbox').innerHTML=`<div class="eyebrow">CREW</div><h2>${esc(crewNm(c))}</h2><p style="margin:0;line-height:1.7">${y?'둘이서 한참을 앉아 있었다. 그가 고맙다고 했다.':'그가 "…네." 하고 돌아섰다. 어깨가 처져 있었다.'}</p><ul class="ev-eff">${fx.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><button class="btn pri" id="caOk">확인</button>`; $('caOk').onclick=()=>{ rt.modalLock=false; closeModal(); render() } }) }
+/* 충성도가 높으면 대신 막아선다 */
+const _ko9=knockedOut; knockedOut=function(){ const hero=crewAlive().filter(c=>c.state==='idle').map(crewInfo2).filter(c=>c.loy>=70).sort((a,b)=>b.loy-a.loy)[0];
+  if(hero&&Math.random()<.35+(hero.loy-70)/100){ rt.enc=null; S.hp=Math.max(1,Math.round(maxHp()*.25)); const died=Math.random()<.4; if(died){ hero.state='dead'; hero.diedAt=Date.now(); hx('crewDead') } else hero.hp=Math.max(5,hero.hp-60); cAdd(hero,'aff',10); markSave(); render(); sfx('sting');
+    return whenFree(()=>outcome({n:'전투'},`${crewNm(hero)}이(가) 대신 막아섰다`,`쓰러지기 직전, ${crewNm(hero)}이(가) 내 앞을 막았다.\n${died?`"${crewSay(hero,'lost','대장')}"… 그게 마지막 말이었다.`:'피투성이가 됐지만 살아 있다. 그가 웃었다. "빚 갚은 거예요."'}`,[died?`대원 ${crewNm(hero)} 사망`:`${crewNm(hero)} 체력 -60`,'체력 25%로 버팀'],!died)) }
+  return _ko9() };
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
