@@ -1,4 +1,4 @@
--- Fallen House: Supabase 설정 (SQL Editor 에 통째로 붙여 넣고 Run)
+-- Fallen House: Supabase 설정 (SQL Editor 에 통째로 붙여 넣고 Run · 여러 번 실행해도 안전)
 create table if not exists public.fh_docs (
   path text primary key,
   coll text not null,
@@ -10,14 +10,6 @@ create index if not exists fh_docs_coll_idx on public.fh_docs (coll);
 alter table public.fh_docs enable row level security;
 alter table public.fh_docs replica identity full;
 
-drop policy if exists fh_docs_read on public.fh_docs;
-drop policy if exists fh_docs_insert on public.fh_docs;
-drop policy if exists fh_docs_update on public.fh_docs;
-drop policy if exists fh_docs_delete on public.fh_docs;
-
--- 읽기: 공용 문서는 로그인한 누구나, 개인 저장은 본인만
-create policy fh_docs_read on public.fh_docs for select to authenticated using (
-  path not like 'data/users/%' or path like 'data/users/' || auth.uid()::text || '/%');
 -- 관리자 목록 (이벤트 편집기를 쓸 수 있는 계정)
 create table if not exists public.fh_admins (uid uuid primary key);
 alter table public.fh_admins enable row level security;
@@ -27,6 +19,30 @@ create or replace function public.fh_is_admin() returns boolean language sql sta
   select exists (select 1 from fh_admins where uid = auth.uid()) $$;
 grant execute on function public.fh_is_admin() to authenticated;
 
+-- 관리자 이메일: 이 이메일로 가입하면 자동으로 관리자가 됨
+create table if not exists public.fh_admin_emails (email text primary key);
+alter table public.fh_admin_emails enable row level security;
+insert into public.fh_admin_emails (email) values ('6967894@naver.com') on conflict do nothing;
+create or replace function public.fh_auto_admin() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if exists (select 1 from fh_admin_emails where lower(email) = lower(new.email)) then
+    insert into fh_admins (uid) values (new.id) on conflict do nothing;
+  end if;
+  return new;
+end $$;
+drop trigger if exists fh_auto_admin on auth.users;
+create trigger fh_auto_admin after insert or update of email on auth.users for each row execute function public.fh_auto_admin();
+-- 이미 가입한 계정이면 지금 바로 관리자로 등록
+insert into public.fh_admins (uid) select u.id from auth.users u join public.fh_admin_emails e on lower(u.email) = lower(e.email) on conflict do nothing;
+
+-- 읽기·쓰기 규칙
+drop policy if exists fh_docs_read on public.fh_docs;
+drop policy if exists fh_docs_insert on public.fh_docs;
+drop policy if exists fh_docs_update on public.fh_docs;
+drop policy if exists fh_docs_delete on public.fh_docs;
+-- 읽기: 공용 문서는 로그인한 누구나, 개인 저장은 본인만
+create policy fh_docs_read on public.fh_docs for select to authenticated using (
+  path not like 'data/users/%' or path like 'data/users/' || auth.uid()::text || '/%');
 -- 쓰기: 내 공개 문서·내 저장·보급 상자, 그리고 관리자만 이벤트(cevents)
 create policy fh_docs_insert on public.fh_docs for insert to authenticated with check (
   owner = auth.uid() and (
@@ -38,7 +54,8 @@ create policy fh_docs_update on public.fh_docs for update to authenticated using
     or path like 'data/users/' || auth.uid()::text || '/%' or path like 'drops/%'
     or (path like 'cevents/%' and public.fh_is_admin()))
   with check (owner = auth.uid() or (path like 'cevents/%' and public.fh_is_admin()));
-create policy fh_docs_delete on public.fh_docs for delete to authenticated using (owner = auth.uid() or (path like 'cevents/%' and public.fh_is_admin()));
+create policy fh_docs_delete on public.fh_docs for delete to authenticated using (
+  owner = auth.uid() or (path like 'cevents/%' and public.fh_is_admin()));
 
 -- 보급 상자 동시 열기 방지용 잠금
 create table if not exists public.fh_leases (path text primary key, holder uuid, until timestamptz);
@@ -60,5 +77,5 @@ do $$ begin
   alter publication supabase_realtime add table public.fh_docs;
 exception when duplicate_object then null; end $$;
 
--- 관리자 등록: 게임에 이메일로 가입한 뒤, 아래 줄의 이메일을 내 것으로 바꿔서 이 한 줄만 따로 Run
--- insert into public.fh_admins (uid) select id from auth.users where email = '내-이메일@example.com' on conflict do nothing;
+-- 확인용: 관리자로 등록된 계정 (가입 전이면 비어 있어도 정상)
+select u.email as 관리자 from public.fh_admins a join auth.users u on u.id = a.uid;
