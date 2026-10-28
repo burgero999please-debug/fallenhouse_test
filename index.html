@@ -3629,10 +3629,10 @@ function itemCodex(){ S.itemSeen=S.itemSeen||{}; for(const k in S.inv) if(S.inv[
   <div class="sec"><div class="sec-head"><h2>장비</h2><p class="num">${Object.keys(S.gear||{}).length}/${Object.keys(GEAR).length}</p></div><div class="codex">${Object.entries(GEAR).map(([k,g])=>cxItem(S.gear?.[k],esc(g.n)+` <span class="tag">${SLOTS[g.slot]}</span>`,esc(g.d),S.gear?.[k]?'':`<p class="note">${g.p?'상점':'조사·특수 조사에서 발견'}</p>`)).join('')}</div></div>
   <div class="sec"><div class="sec-head"><h2>탈것</h2><p class="num">${Object.keys(S.cars||{}).length}/${Object.keys(VEH).length}</p></div><div class="codex">${Object.entries(VEH).map(([k,v])=>cxItem(S.cars?.[k],esc(v.n),esc(v.d))).join('')}</div></div>` }
 
-/* ================= 임시 동행 (최대 20분 · 여럿 가능) =================
+/* ================= 임시 동행 (최대 5분 · 여럿 가능) =================
    로비 토픽: pinv(초대) pans(응답) · 동행 방 토픽: pev(대장이 보내는 진행) pact(구성원 행동) pchat(동행 채팅)
    presence(동행 방): {nick,x,y,hp,w,inf} */
-const P_MAX=20*60000, P_SIZE=3;
+const P_MAX=5*60000, P_SIZE=3;
 const wcls=()=>curWeapon().c||'blunt';
 rt.party=null; rt.invites=[];
 function pid(){ return 'pt-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6) }
@@ -3652,7 +3652,7 @@ function onInvite(m){ const d=m.data||{}; if(m.isMe||!d||!Array.isArray(d.to)||!
   if(rt.party) return rt.room.emit('pans',{pid:d.pid,to:m.by,ok:false,why:'busy'}).catch(()=>{});
   const nick=String(d.nick||'생존자').slice(0,20), lv=clamp(d.lvl|0,1,999), zn=String(d.zone||'').slice(0,20), key=d.pid;
   sfx('invite'); vib([60,40,60]);
-  const c=msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>임시 동행 제안</b><span class="num mc-t" data-t="30">30</span></div><p><b>${esc(nick)}</b> (Lv.${lv}${zn?' · '+esc(zn):''})님이 함께 움직이자고 합니다. 최대 20분, 함께 겪은 일은 동행이 끝나면 사라집니다.</p><div class="row"><button class="btn sm pri" data-pa="1">수락</button><button class="btn sm" data-pa="0">거절</button></div>`,'inv');
+  const c=msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>임시 동행 제안</b><span class="num mc-t" data-t="30">30</span></div><p><b>${esc(nick)}</b> (Lv.${lv}${zn?' · '+esc(zn):''})님이 함께 움직이자고 합니다. 최대 5분, 함께 겪은 일은 동행이 끝나면 사라집니다.</p><div class="row"><button class="btn sm pri" data-pa="1">수락</button><button class="btn sm" data-pa="0">거절</button></div>`,'inv');
   if(!c) return; let left=30; const t=setInterval(()=>{ left--; const e=c.querySelector('.mc-t'); if(e) e.textContent=left; if(left<=0){ clearInterval(t); ans(false) } },1000);
   const ans=async ok=>{ clearInterval(t); c.remove(); rt.room.emit('pans',{pid:key,to:m.by,ok}).catch(()=>{}); if(ok){ await partyOpen(key,m.by) } };
   c.querySelectorAll('[data-pa]').forEach(b=>b.onclick=()=>ans(b.dataset.pa==='1'));
@@ -3670,7 +3670,7 @@ async function partyOpen(id,leader){
   pres(); partyShow(); if(leader!==rt.myId){ plog('동행 방에 들어왔습니다.') } else plog('동행 방을 열었습니다. 수락을 기다리는 중…');
 }
 function pres(){ const P=rt.party; if(!P) return; const now=Date.now(); if(now-P.lastPres<220) return; P.lastPres=now; P.R.presence({nick:S.nick,x:+P.me.x.toFixed(2),y:+P.me.y.toFixed(2),hp:Math.round(S.hp/maxHp()*100),w:wcls(),inf:P.inf===rt.myId?1:0}).catch(()=>{}) }
-function partyStart(){ const P=rt.party; if(!P||P.on) return; P.on=true; P.start=Date.now(); P.nextEv=Date.now()+20000; tutMaybe('party'); if(P.leader===rt.myId) P.R.emit('pev',{type:'start',start:P.start,d:P.d}).catch(()=>{}); plog('동행 시작. 20분 동안 함께 움직입니다.'); sfx('join') }
+function partyStart(){ const P=rt.party; if(!P||P.on) return; P.on=true; P.start=Date.now(); P.nextEv=Date.now()+20000; tutMaybe('party'); if(P.leader===rt.myId) P.R.emit('pev',{type:'start',start:P.start,d:P.d}).catch(()=>{}); plog('동행 시작. 5분 동안 함께 움직입니다.'); sfx('join') }
 function plog(x,cls){ const P=rt.party; if(!P) return; P.log.push({t:Date.now(),x,cls}); P.log=P.log.slice(-40); partyRender() }
 function amLeader(){ return rt.party&&rt.party.leader===rt.myId }
 function peersIn(){ const P=rt.party; if(!P||!P.peers) return []; const seen=new Set(); return P.peers.filter(p=>p.by&&!seen.has(p.by)&&seen.add(p.by)) }
@@ -3679,7 +3679,7 @@ function aliveIds(){ const P=rt.party; return peersIn().map(p=>p.by).filter(id=>
 ACT.pMove=el=>{ const P=rt.party; if(!P||!amLeader()) return; const k=el.dataset.n; if(!MAP[k]||MAP[k].d!==P.d) return; P.R.emit('pev',{type:'move',to:k}).catch(()=>{}) };
 function pTick(){ const P=rt.party; if(!P) return; const me=P.me, dx=me.tx-me.x, dy=me.ty-me.y, d=Math.hypot(dx,dy); if(d>.05){ const s=Math.min(d,.45); me.x+=dx/d*s; me.y+=dy/d*s; pres(); const dot=document.getElementById('pdMe'); if(dot){ dot.setAttribute('cx',me.x); dot.setAttribute('cy',me.y) } }
   for(const p of peersIn()){ if(p.isMe) continue; const el=document.getElementById('pd_'+p.peer); if(el&&p.presence){ el.setAttribute('cx',+p.presence.x||0); el.setAttribute('cy',+p.presence.y||0) } }
-  if(P.on){ const left=P.start+P_MAX-Date.now(); const t=$('pTimer'); if(t) t.textContent=mmss(Math.max(0,left)); if(left<=0) return amLeader()?partyEndAll('20분이 지났습니다.'):null;
+  if(P.on){ const left=P.start+P_MAX-Date.now(); const t=$('pTimer'); if(t) t.textContent=mmss(Math.max(0,left)); if(left<=0) return amLeader()?partyEndAll('5분이 지났습니다.'):null;
     if(amLeader()&&!P.ev&&!P.inf&&Date.now()>=P.nextEv&&aliveIds().length>=2) leaderEvent();
     if(amLeader()&&P.ev&&Date.now()>=P.ev.dl) leaderResolve();
     if(amLeader()&&P.inf&&P.infS&&Date.now()>=P.infS.dl) infAdvance();
@@ -3702,11 +3702,11 @@ const PEV=[
   {k:'mutant',n:'변이체',d:'눈동자에 이성이 남은 놈이 고개를 갸웃한다. 우리를 세고 있다.',o:['전원 공격','흩어진다'],mode:'major',w:.5,dg:3},
 ];
 function leaderEvent(){ const P=rt.party; const dg=DOF[P.d].dg; const el=Date.now()-P.start;
-  if(el>4*60000&&!P.infDone&&Math.random()<.35){ P.infDone=true; return startInfect() }
+  if(el>90000&&!P.infDone&&Math.random()<.4){ P.infDone=true; return startInfect() }
   const pool=PEV.filter(e=>!e.dg||dg>=e.dg); let x=Math.random()*pool.reduce((a,e)=>a+e.w,0), ev=pool[0]; for(const e of pool){ x-=e.w; if(x<0){ ev=e; break } }
   const at=stPick(ZDEF[P.d])[0]; P.eid++; P.R.emit('pev',{type:'ev',id:P.eid,k:ev.k,at,dl:Date.now()+16000}).catch(()=>{}) }
 function onPev(m){ const P=rt.party, d=m.data||{}; if(!P||m.by!==P.leader) return;
-  if(d.type==='start'){ if(!P.on){ P.on=true; P.start=+d.start||Date.now(); if(DOF[d.d]&&d.d!==P.d){ P.d=d.d; const z=MAP[ZDEF[P.d][0][0]]; P.me.x=P.me.tx=z.x+rand(-1,1); P.me.y=P.me.ty=z.y+rand(-1,1) } plog('동행 시작. 20분 동안 함께 움직입니다.'); sfx('join'); tutMaybe('party') } }
+  if(d.type==='start'){ if(!P.on){ P.on=true; P.start=+d.start||Date.now(); if(DOF[d.d]&&d.d!==P.d){ P.d=d.d; const z=MAP[ZDEF[P.d][0][0]]; P.me.x=P.me.tx=z.x+rand(-1,1); P.me.y=P.me.ty=z.y+rand(-1,1) } plog('동행 시작. 5분 동안 함께 움직입니다.'); sfx('join'); tutMaybe('party') } }
   else if(d.type==='move'&&MAP[d.to]){ const n=MAP[d.to], i=peersIn().findIndex(p=>p.isMe); P.me.tx=n.x+Math.cos(i*1.7)*.9; P.me.ty=n.y+Math.sin(i*1.7)*.9; plog(`${n.n}(으)로 이동`); P.at=d.to }
   else if(d.type==='ev'){ const ev=PEV.find(e=>e.k===d.k); if(!ev) return; P.ev={id:d.id,k:d.k,at:d.at,dl:+d.dl||Date.now()+15000,my:null}; P.votes={}; FXL.pre(FXL.moodOf(ev.n+' '+ev.d)); vib([80]); plog(`⚠ ${ev.n}`,'ev'); partyRender() }
   else if(d.type==='res'){ if(!P.ev||P.ev.id!==d.id) return; const ev=PEV.find(e=>e.k===P.ev.k); P.ev=null; const mine=(d.per||{})[rt.myId];
@@ -3836,7 +3836,7 @@ function partyRender(){ const P=rt.party, el=$('party'); if(!P||!el) return; con
   const pf=$('pChatF'); if(pf) pf.onsubmit=e=>{ e.preventDefault(); ACT.pSend() }; const ci=$('pChatIn'); if(ci){ ci.value=keepChat; if(focused==='pChatIn') ci.focus() } const pt=$('pPleaTx'); if(pt){ pt.value=pleaKeep; if(focused==='pPleaTx') pt.focus() } const cb=$('pChat'); if(cb) cb.scrollTop=cb.scrollHeight }
 function partyCard(){ const on=[...rt.online].filter(id=>id!==rt.myId&&rt.players.has(id));
   if(rt.party) return `<div class="card"><div class="row spread"><h3>임시 동행 중</h3><button class="btn sm pri" data-act="pOpen">동행 화면</button></div></div>`;
-  return `<div class="card"><div class="row spread"><h3>임시 동행</h3><span class="note">최대 ${P_SIZE}명 · 20분</span></div><p class="muted">지금 접속한 생존자에게 함께 움직이자고 제안해요. 함께 다니면 획득량과 이벤트 보상이 1.5배.</p>
+  return `<div class="card"><div class="row spread"><h3>임시 동행</h3><span class="note">최대 ${P_SIZE}명 · 5분</span></div><p class="muted">지금 접속한 생존자에게 함께 움직이자고 제안해요. 함께 다니면 획득량과 이벤트 보상이 1.5배.</p>
     ${on.length?`<div class="row" style="gap:6px">${on.slice(0,20).map(id=>`<button class="chipb${rt.pSel?.[id]?' on':''}" data-act="pSel" data-id="${esc(id)}" aria-pressed="${!!rt.pSel?.[id]}">${esc(nameOf(id))}</button>`).join('')}</div><button class="btn pri" id="pInvBtn" data-act="pInvite" disabled>동행할 사람을 고르세요</button>`:`<p class="note">${rt.solo||!rt.room?'공유 서버에 연결되면 쓸 수 있어요.':'지금 접속한 다른 생존자가 없어요.'}</p>`}</div>` }
 ACT.pOpen=()=>{ const el=$('party'); if(el) el.classList.remove('mini'); else partyShow() };
 
@@ -4184,7 +4184,7 @@ const FXL=(()=>{
     const cand=Object.keys(MAP).filter(k=>k!==S.pos&&!MAP[k].home&&lv>=zoneD(k).lv&&Math.hypot(MAP[k].x-cur.x,MAP[k].y-cur.y)<26); if(!cand.length) return false; const to=stPick(cand);
     blackout(2600,why||'…', ()=>{ S.pos=to; S.visited=S.visited||{}; S.visited[to]=1; markSave(); render(); toast(`정신을 차려 보니 ${MAP[to].n}였다.`,true); slog(`정신을 차려 보니 ${MAP[to].n}였다.`) }); return true }
   /* 평소의 공포 앰비언스 */
-  function ambient(){ if(!on()||!S.intro||!$('modal').hidden||rt.enc||document.hidden) return; if(Math.random()<.35){ const r=Math.random(); if(r<.4){ sfx('distant') } else if(r<.7){ sfx('whisper'); flicker() } else { sfx('knock') } } }
+  function ambient(){ if(!on()||!S.intro||!$('modal').hidden||rt.enc||document.hidden) return; if(Math.random()<.35){ const r=Math.random(); if(r<.4){ sfx('distant') } else if(r<.7){ sfx('whisper') } else { sfx('knock') } } }
   setInterval(ambient,180000);
   return {flash,vig,shake,staticOn,blackout,tension,flicker,moodOf,pre,post,relocate,level:()=>tens};
 })();
@@ -4215,7 +4215,7 @@ const TUT={
   shop:{t:'상점',s:['달러로 물품·탈것·무기를 사고, 남는 자원을 팔아요.','탈것은 이동 시간을 줄여요. 트럭과 험비는 연료를 먹어요.','돈이 없으면 "약탈 시도"도 있어요. 운이 좋으면 공짜, 실패하면 대원을 잃거나 소지품을 빼앗겨요.']},
   ops:{t:'야간 작전',s:['서버 전체가 함께 막는 좀비 습격이 2시간마다 와요. 방어선 전투로 피해를 넣으세요.','2시간 안에 못 막으면 서버의 모든 생존자가 자원 10%와 1시간 획득량 -20%를 잃어요.','검문소 선별: 다섯 명 중 감염자를 가려내 사살하세요. 감염자를 들여보내거나 격리하면 바로 실패예요.']},
   radio:{t:'무전실',s:['같은 주파수(서버)의 생존자들과 채팅해요.','새 메시지가 오면 알림음이 울려요. 설정에서 끌 수 있어요.']},
-  roster:{t:'생존자 명단',s:['격려와 선물로 서로를 도와요.','지금 접속한 사람을 골라 "임시 동행"을 제안할 수 있어요. 여럿이 함께 20분 동안 움직여요.','파견 중인 다른 사람의 대원을 습격해 빼앗을 수도 있어요.']},
+  roster:{t:'생존자 명단',s:['격려와 선물로 서로를 도와요.','지금 접속한 사람을 골라 "임시 동행"을 제안할 수 있어요. 여럿이 함께 5분 동안 움직여요.','파견 중인 다른 사람의 대원을 습격해 빼앗을 수도 있어요.']},
   party:{t:'임시 동행',s:['함께 움직이는 동안 이벤트가 모두에게 동시에 떠요. 다수결이거나 각자 고른 대로 결과가 나요.','누군가 감염되면, 나머지가 처분을 정해요. 감염된 사람은 살려 달라고 빌거나 끝내 달라고 할 수 있어요.','아래 채팅은 동행 중인 사람만 보고, 동행이 끝나면 사라져요.']},
   battle:{t:'첫 전투',s:['공격(1) · 강타(2, 3턴마다) · 방어(3, 돌진 막기) · 물품(4) · 도망(5).','근력 증강제·각성 앰플을 쓰면 힘이 올라 피해가 커져요.','자동 전투 스위치를 켜면 알아서 싸워요.']},
 };
@@ -6119,7 +6119,7 @@ const _onPev2=onPev; onPev=function(m){ const P=rt.party, d=m.data||{}; if(!P) r
   if(d.type==='amb'&&fromLeader){ plog(String(d.t||'').slice(0,160),'amb'); return }
   if(d.type==='prop'&&fromLeader&&MAP[d.to]){ P.prop={id:String(d.id),to:d.to,by:d.by,dl:+d.dl||Date.now()+rt.ptc.vote,v:{},my:null}; if(d.by===rt.myId){ P.prop.my=true; P.prop.v[rt.myId]=true; P.R.emit('pact',{kind:'mv',id:P.prop.id,ok:true}) } plog(`${nameOf(d.by)}님이 ${MAP[d.to].n}(으)로 가자고 합니다.`,'ev'); if(d.by!==rt.myId){ sfx('msg'); vib([40]) } partyRender(); return }
   if(d.type==='propx'&&fromLeader){ if(P.prop&&P.prop.id===String(d.id)) P.prop=null; plog(d.ok?`이동 찬성 ${d.yes}/${d.n} · 함께 이동합니다.`:`이동 반대 · 그대로 머뭅니다 (찬성 ${d.yes}/${d.n}).`,d.ok?'res':'v'); partyRender(); return }
-  if(d.type==='start'&&fromLeader&&!P.on){ _onPev2(m); const mem=Object.keys(P.mem).filter(id=>id!==rt.myId).map(nameOf); msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>동행 시작</b></div><p>대장 ${esc(nameOf(P.leader))}${mem.length?` · 함께: ${esc(mem.join(', '))}`:''}. 20분 동안 함께 움직입니다.</p>`,'ok',6000); partyRender(); return }
+  if(d.type==='start'&&fromLeader&&!P.on){ _onPev2(m); const mem=Object.keys(P.mem).filter(id=>id!==rt.myId).map(nameOf); msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>동행 시작</b></div><p>대장 ${esc(nameOf(P.leader))}${mem.length?` · 함께: ${esc(mem.join(', '))}`:''}. 5분 동안 함께 움직입니다.</p>`,'ok',6000); partyRender(); return }
   return _onPev2(m) };
 /* 채팅은 무전실과 같은 모양 */
 pChatHtml=function(){ const P=rt.party; if(!P.chat.length) return '<div class="msg sys"><span class="t">--:--</span>이 채팅은 동행이 끝나면 사라집니다.</div>';
@@ -6418,7 +6418,7 @@ onInvite=function(m){ const d=m.data||{}; if(m.isMe||!d||!Array.isArray(d.to)||!
   if(rt.party) return rt.room.emit('pans',{pid:d.pid,to:m.by,ok:false,why:'busy'}).catch(()=>{});
   const nick=String(d.nick||'생존자').slice(0,20), lv=clamp(d.lvl|0,1,999), zn=String(d.zone||'').slice(0,20), key=d.pid, by=m.by;
   sfx('invite'); vib([60,40,60]);
-  const c=msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>임시 동행 제안</b><span class="num mc-t">30</span></div><p><b>${esc(nick)}</b> (Lv.${lv}${zn?' · '+esc(zn):''})님이 함께 움직이자고 합니다. 최대 20분, 함께 겪은 일은 동행이 끝나면 사라집니다.</p><div class="row"><button class="btn sm pri" data-pa="1">수락</button><button class="btn sm" data-pa="0">거절</button></div>`,'inv');
+  const c=msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>임시 동행 제안</b><span class="num mc-t">30</span></div><p><b>${esc(nick)}</b> (Lv.${lv}${zn?' · '+esc(zn):''})님이 함께 움직이자고 합니다. 최대 5분, 함께 겪은 일은 동행이 끝나면 사라집니다.</p><div class="row"><button class="btn sm pri" data-pa="1">수락</button><button class="btn sm" data-pa="0">거절</button></div>`,'inv');
   let left=30, done=false; const t=setInterval(()=>{ left--; const e=c&&c.querySelector('.mc-t'); if(e) e.textContent=left; if(left<=0){ clearInterval(t); if(!done){ done=true; if(c) c.remove(); missed() } } },1000);
   const missed=()=>{ rt.room.emit('pans',{pid:key,to:by,ok:false,why:'away'}).catch(()=>{}); rt.missInv[key]={pid:key,by,nick,lvl:lv,zone:zn,t:Date.now(),until:Date.now()+P_MAX-30000}; missCard(key); renderNav(); if(['roster','map','home'].includes(rt.tab)&&$('modal').hidden&&!inputFocused()) render() };
   const ans=async ok=>{ if(done) return; done=true; clearInterval(t); if(c) c.remove(); rt.room.emit('pans',{pid:key,to:by,ok}).catch(()=>{}); if(ok) await partyOpen(key,by) };
@@ -6717,7 +6717,7 @@ const PR_POOL=['brute','mutant','riot','spitter','screamer'];
 function startPRaid(){ const P=rt.party; if(!P||!amLeader()||P.raid) return; const n=Math.max(1,aliveIds().length), L=pMaxLv()+ri(3,8), z=stPick(PR_POOL.filter(k=>ZOMBIES[k])), hp=Math.round((240+L*34)*n), atk=Math.round(9+L*1.7);
   P.raidT=Date.now(); P.R.emit('pev',{type:'raid',id:'r'+Date.now().toString(36),z,n:'우두머리 '+ZOMBIES[z].n,L,hp,atk,dl:Date.now()+180000}) }
 ACT.pRaid=()=>{ const P=rt.party; if(!P||!P.on||!amLeader()) return; if(P.raid) return toast('이미 레이드 중이에요.'); if(Date.now()-(P.raidT||0)<240000) return toast(`다음 레이드까지 ${mmss(240000-(Date.now()-(P.raidT||0)))}`); startPRaid() };
-const _leaderEvent6=leaderEvent; leaderEvent=function(){ const P=rt.party; if(P&&P.on&&!P.raid&&!P.ev&&!P.inf&&Math.random()<.3&&Date.now()-(P.raidT||0)>240000){ startPRaid(); P.nextEv=Date.now()+180000+rt.ptc.evGap; return } return _leaderEvent6() };
+const _leaderEvent6=leaderEvent; leaderEvent=function(){ const P=rt.party; if(P&&P.on&&!P.raid&&!P.ev&&!P.inf&&Math.random()<.2&&Date.now()-(P.raidT||0)>240000&&Date.now()-P.start>90000){ startPRaid(); P.nextEv=Date.now()+180000+rt.ptc.evGap; return } return _leaderEvent6() };
 function onPRaid(d){ const P=rt.party; if(!P||P.raid&&P.raid.id===d.id) return; P.raid={id:String(d.id),z:ZOMBIES[d.z]?d.z:'brute',n:String(d.n||'우두머리').slice(0,30),L:d.L|0,max:+d.hp||500,hp:+d.hp||500,atk:+d.atk||20,dl:+d.dl||Date.now()+180000,dmg:{},cd:{},guardT:0,nextHit:Date.now()+3000,log:[]};
   plog(`☠ 공동 레이드: ${P.raid.n} (Lv.${P.raid.L})`,'ev'); FXL.pre('horror'); sfx('growl'); FXL.shake(8,400); partyRender() }
 function onPRhp(d){ const R=rt.party&&rt.party.raid; if(!R||R.id!==d.id) return; R.hp=Math.max(0,+d.hp); if(d.dmg&&typeof d.dmg==='object') R.dmg=d.dmg; prDraw() }
@@ -8532,7 +8532,7 @@ const WX=(()=>{ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matc
     if(parts.length&&!reduce&&!document.hidden) raf=requestAnimationFrame(frame) }
   function set(k){ mk(); if(!on()) k=''; if(k===cur) return; cur=k; el.className=k?'wx-'+k:''; size(); seed(k); if(raf) cancelAnimationFrame(raf); raf=0; if(parts.length) frame(); else if(cv) cv.getContext('2d').clearRect(0,0,cv.width,cv.height) }
   function tick(){ try{ if(!S||!S.intro) return set(''); const k=curEv().def.k; set(k);
-      if(on()&&!reduce&&$('modal').hidden&&!rt.enc){ if(k==='power'&&Math.random()<.18) FXL.flicker(); if(k==='horde'&&Math.random()<.12&&SND.set.horror!==false) FXL.shake(3,500); if(k==='heli'&&Math.random()<.2){ el.classList.remove('sweep'); void el.offsetWidth; el.classList.add('sweep') } if(k==='screamer'&&Math.random()<.1) FXL.staticOn(300) } }catch(e){} }
+      }catch(e){} }
   addEventListener('resize',()=>{ size(); seed(cur) }); document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&parts.length&&!raf) frame() });
   setInterval(tick,6000); setTimeout(tick,1500);
   return {set,tick,cur:()=>cur} })();
@@ -8642,7 +8642,7 @@ raidHp=function(rid){ if(rid===undefined) rid=raidId(); let lv=0, c=0; for(const
 const PR_IT={bandage:{heal:30},painkiller:{heal:20},medkit:{heal:60},ration:{heal:15},adrenaline:{heal:40},molotov:{dmg:2.2},grenade:{dmg:3.5}};
 const prUp=()=>{ const P=rt.party; return P?peersIn().map(p=>p.by).filter(id=>!P.dead[id]&&!((P.down||{})[id]>Date.now())):[] };
 startPRaid=function(){ const P=rt.party; if(!P||!amLeader()||P.raid) return; const n=Math.max(1,aliveIds().length), L=pMaxLv()+ri(1,2), z=stPick(PR_POOL.filter(k=>ZOMBIES[k])), hp=Math.round((90+L*13)*(.6+n*.4)), atk=Math.round(4+L*.9);
-  P.raidT=Date.now(); P.R.emit('pev',{type:'raid',id:'r'+Date.now().toString(36),z,n:'우두머리 '+ZOMBIES[z].n,L,hp,atk,dl:Date.now()+300000,tb:1}) };
+  P.raidT=Date.now(); P.R.emit('pev',{type:'raid',id:'r'+Date.now().toString(36),z,n:'우두머리 '+ZOMBIES[z].n,L,hp,atk,dl:Date.now()+120000,tb:1}) };
 const _onPRaid42=onPRaid; onPRaid=function(d){ _onPRaid42(d); const P=rt.party, R=P&&P.raid; if(!R||R.id!==String(d.id)) return; if(d.tb){ R.tb=1; R.round=0; R.phase='mob'; R.acts={}; R.my=null; R.powR=-9; R.guardNext=false; if(amLeader()) setTimeout(prNext,1500) } partyRender() };
 function prNext(){ const P=rt.party, R=P&&P.raid; if(!R||!R.tb||!amLeader()||R.over) return; if(Date.now()>R.dl){ R.over=1; P.R.emit('pev',{type:'rend',id:R.id,win:false,dmg:R.dmg}); return }
   const up=prUp(); if(!up.length){ R.over=1; P.R.emit('pev',{type:'rend',id:R.id,win:false,dmg:R.dmg}); return }
@@ -9055,6 +9055,62 @@ function crewSwapNext(){ const Q=rt.crewQ||[]; const it=Q.shift(); if(!it) retur
   $('mbox').querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{ const o=crewById(b.dataset.sw); if(!o||o.state==='away') return; S.crew=S.crew.filter(x=>x!==o); const r=_addCrew44(it.origin,null,nc); toast(r?`${crewNm(o)}을(를) 내보내고 ${nc.name}을(를) 받았어요.`:'받지 못했어요.',true); markSave(); schedulePub(2000); done() });
   $('swNo').onclick=()=>{ toast(`${nc.name}은(는) 다른 길로 떠났다.`); done() } }
 (()=>{ const st=document.createElement('style'); st.textContent=`.cmpwrap{overflow-x:auto;margin:6px 0}.cmp{width:100%;border-collapse:collapse;font-size:12.5px}.cmp th,.cmp td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}.cmp tbody th{text-align:left;font-weight:600}.cmp th small{display:block;font-weight:400;color:var(--muted);font-size:10.5px}.cmp th em{font-style:normal;font-size:10px;color:var(--accent);margin-left:4px}.cmp tr.new{background:var(--accent-soft,transparent)}.cmp td.up{color:var(--ok,#2e8b57);font-weight:700}.cmp td.dn{color:var(--blood);font-weight:700}`; document.head.append(st) })();
+/* ================= p45: 임시 동행 5분 · 사건은 1분마다 (이동과 상관없이) ================= */
+const PEV_GAP=60000;
+function pSlot(){ const P=rt.party; if(!P||!P.start) return Date.now()+PEV_GAP; return P.start+(Math.floor((Date.now()-P.start)/PEV_GAP)+1)*PEV_GAP }
+const _partyStart45=partyStart; partyStart=function(){ const P=rt.party, was=P&&P.on; _partyStart45(); if(P&&!was&&P.on) P.nextEv=P.start+PEV_GAP };
+const _leaderResolve45=leaderResolve; leaderResolve=function(){ _leaderResolve45(); const P=rt.party; if(P) P.nextEv=pSlot() };
+const _onInfMsg45=onInfMsg; onInfMsg=function(d){ _onInfMsg45(d); const P=rt.party; if(P&&P.nextEv>pSlot()) P.nextEv=pSlot() };
+const _leaderEvent45=leaderEvent; leaderEvent=function(){ const P=rt.party; if(P&&P.raid){ P.nextEv=pSlot(); return } _leaderEvent45(); const Q=rt.party; if(Q&&!Q.raid) Q.nextEv=pSlot(); else if(Q) Q.nextEv=pSlot() };
+setInterval(()=>{ try{ const P=rt.party; if(P&&P.on&&amLeader()&&P.nextEv>pSlot()+1000){ P.nextEv=pSlot(); pNxSend() } }catch(e){} },2000);
+/* ================= p46: 화면 깜빡임 줄이기 · 파견 중 대원도 교체 · 쫓겨난 대원의 원한 ================= */
+/* ---------- 화면을 통째로 갈아엎지 않고 바뀐 부분만 고친다 ---------- */
+(()=>{ const v=document.getElementById('view'); if(!v) return; const D=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');
+  const sameAttrs=(a,b)=>{ if(a.attributes.length!==b.attributes.length) return false; for(const at of a.attributes){ if(b.getAttribute(at.name)!==at.value) return false } return true };
+  function morph(o,n,depth){ if(o.isEqualNode(n)) return;
+    if(o.nodeType===3&&n.nodeType===3){ o.nodeValue=n.nodeValue; return }
+    if(o.nodeType!==1||n.nodeType!==1||o.tagName!==n.tagName||depth>14){ o.replaceWith(n); return }
+    if(o.tagName==='CANVAS'&&o.id&&o.id===n.id){ if(!sameAttrs(o,n)) for(const at of n.attributes) if(o.getAttribute(at.name)!==at.value) o.setAttribute(at.name,at.value); return }
+    if(o.tagName==='INPUT'||o.tagName==='TEXTAREA'||o.tagName==='SELECT'){ if(o===document.activeElement&&sameAttrs(o,n)) return; o.replaceWith(n); return }
+    if(!sameAttrs(o,n)){ for(const at of [...o.attributes]) if(!n.hasAttribute(at.name)) o.removeAttribute(at.name); for(const at of n.attributes) if(o.getAttribute(at.name)!==at.value) o.setAttribute(at.name,at.value) }
+    const oc=[...o.childNodes], nc=[...n.childNodes];
+    if(o.id&&nc.length===0&&oc.length&&['chatlog','miniLog','pChat','nMsgs','rqInChat'].includes(o.id)) return;
+    if(oc.length!==nc.length){ o.replaceChildren(...nc); return }
+    for(let i=0;i<nc.length;i++) morph(oc[i],nc[i],depth+1) }
+  Object.defineProperty(v,'innerHTML',{configurable:true,get(){ return D.get.call(this) },set(html){ if(window.__noMorph||!this.firstChild){ D.set.call(this,html); return }
+    const t=document.createElement('template'); D.set.call(t,html); const nw=t.content, oc=[...this.childNodes], nc=[...nw.childNodes];
+    if(oc.length!==nc.length){ D.set.call(this,html); return } try{ for(let i=0;i<nc.length;i++) morph(oc[i],nc[i],0) }catch(e){ D.set.call(this,html) } }});
+  /* 탭을 옮길 때는 새로 그린다 */
+  const _setTab46=setTab; setTab=function(t){ window.__noMorph=true; try{ return _setTab46.apply(this,arguments) }finally{ window.__noMorph=false } };
+})();
+/* 날씨 연출의 갑작스러운 번쩍임·흔들림은 뺀다 (배경 색감만 남김) */
+(()=>{ const st=document.createElement('style'); st.textContent='#wxl.wx-heli.sweep .wx-tint{opacity:0!important;animation:none!important}'; document.head.append(st) })();
+
+/* ---------- 파견·탐험 중인 대원도 교체 가능 · 원한을 품고 돌아온다 ---------- */
+function crewKick(o){ if(!o) return; const away=o.state==='away';
+  if(away){ for(const m of S.missions||[]){ if(Array.isArray(m.crew)&&m.crew.includes(o.id)) m.crew=m.crew.filter(x=>x!==o.id) } S.missions=(S.missions||[]).filter(m=>m.crew&&m.crew.length);
+    (S.exp||[]).forEach(e=>{ if(Array.isArray(e.crew)) e.crew=e.crew.filter(x=>x!==o.id) }) }
+  S.crew=S.crew.filter(x=>x!==o);
+  if(away||Math.random()<.25) seed('kickedGrudge',{n:crewNm(o),st:o.st,away:away?1:0,loy:o.loy||30},20,60) }
+FOL.kickedGrudge=c=>{ const n=c.n||'쫓겨난 대원', str=(c.st&&c.st.str)||4;
+  return {t:'원한',mood:'threat',sfx:['knock'],b:[c.away?`${n}. 파견 나가 있던 사이 내가 내쫓은 사람이다. 무전으로 해고 소식을 들었다고 했다.`:`${n}. 자리 하나 때문에 내보냈던 사람이다.`,`캠프 철문 앞에 서 있다. 무기를 쥐고, 뒤에 낯선 얼굴 둘을 데리고.`,'"나한테 빚진 거, 오늘 받으러 왔어."'],o:[
+    {n:'사과하고 몫을 나눠 준다',f:()=>{ const fx=folLose(.12); return {t:['고개를 숙이고 창고 문을 열었다. 그는 한참 나를 노려보다 자루를 짊어졌다.','"다음엔 사람을 이렇게 버리지 마."'],fx} }},
+    {n:'"네 자리는 없어" 맞선다',f:()=>({t:`${n}이(가) 소리를 지르며 덤볐다. 데려온 놈들도 함께.`,fx:['쫓겨난 대원 무리와 전투'],fight:{z:str>=6?'enforcer':'raider',queue:['raider'],src:'fol',win:{$:30+str*5,scrap:12}}})},
+    {n:'다시 받아 준다',f:()=>{ const nc=addCrew(`돌아온 ${n}`,'str'); if(nc){ nc.name=n; nc.loy=10; nc.aff=0 } return {t:nc?['"…정말?" 그의 손에서 힘이 빠졌다. 데려온 둘은 투덜대며 떠났다.','그는 돌아왔지만, 예전처럼 웃지는 않는다.']:['받아 주려 했지만 자리가 없었다. 그는 침을 뱉고 떠났다.'],fx:nc?[`${n} 재합류 (충성 10)`]:folLose(.06)} }},
+    {n:'문을 잠그고 버틴다',f:()=>{ const fx=folLose(.08); S.hp=Math.max(1,S.hp-8); fx.push('체력 -8'); return {t:['밤새 철문을 두드리는 소리. 새벽이 되자 조용해졌다.','아침에 보니 텃밭이 짓밟히고 창고 자물쇠가 부서져 있었다.'],fx} }}]} };
+crewSwapNext=function(){ const Q=rt.crewQ||[]; const it=Q.shift(); if(!it) return; const nc=it.nc, all=crewAlive().map(crewInfo2), K=['str','agi','end','per','cha'], sum=x=>K.reduce((a,k)=>a+(x.st[k]||0),0);
+  const cell=(v,o)=>`<td class="num${o==null?'':v>o?' up':v<o?' dn':''}">${v}</td>`;
+  rt.modalLock=true;
+  openModal(`<div class="eyebrow">CREW <span class="dash"></span> 자리가 가득 찼어요</div><h2>새 사람: ${esc(nc.name)}</h2><p class="ch-p">${esc(crewDesc(nc))}${nc.per&&PERS[nc.per]?' · '+esc(PERS[nc.per].n):''} · ${esc(it.origin||'')}<br>탐험대가 가득 찼어요 (최대 ${CREW_MAX()}명). 지금 있는 대원 한 명을 내보내고 받을까요?</p>
+    <div class="cmpwrap"><table class="cmp"><thead><tr><th></th>${K.map(k=>`<th>${STN[k]}</th>`).join('')}<th>합</th><th></th></tr></thead><tbody>
+      <tr class="new"><th>${esc(nc.name)} <em>새로</em></th>${K.map(k=>cell(nc.st[k])).join('')}<td class="num"><b>${sum(nc)}</b></td><td></td></tr>
+      ${all.map(o=>`<tr><th>${esc(crewNm(o))}<small>${esc(crewDesc(o))} · 충성 ${o.loy}${o.state==='away'?' · <b class="warnc">파견 중</b>':''}</small></th>${K.map(k=>cell(o.st[k],nc.st[k])).join('')}<td class="num${sum(o)>sum(nc)?' up':sum(o)<sum(nc)?' dn':''}">${sum(o)}</td><td><button class="btn sm warn" data-sw="${o.id}">이 대원과 교체</button></td></tr>`).join('')}
+    </tbody></table></div><p class="note">초록 = 새 사람보다 높음 · 빨강 = 낮음. 파견 중인 대원을 내보내면 그 자리에서 해고되고, 원한을 품고 돌아올 수 있어요.</p><div class="row"><button class="btn" id="swNo">영입하지 않기</button></div>`);
+  $('mbox').classList.add('invbox');
+  const done=()=>{ rt.modalLock=false; $('mbox').classList.remove('invbox'); closeModal(); render(); if((rt.crewQ||[]).length) setTimeout(()=>whenFree(crewSwapNext),300) };
+  $('mbox').querySelectorAll('[data-sw]').forEach(b=>b.onclick=()=>{ const o=crewById(b.dataset.sw); if(!o) return; const away=o.state==='away', on=crewNm(o); crewKick(o); const r=_addCrew44(it.origin,null,nc);
+    toast(r?`${on}을(를) ${away?'파견지에서 해고하고':'내보내고'} ${nc.name}을(를) 받았어요.${away?' 원한을 품었을지도 몰라요.':''}`:'받지 못했어요.',true); if(away) setTimeout(()=>{ try{ FXL.pre('threat') }catch(e){} },200); markSave(); schedulePub(2000); done() });
+  $('swNo').onclick=()=>{ toast(`${nc.name}은(는) 다른 길로 떠났다.`); done() } };
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
