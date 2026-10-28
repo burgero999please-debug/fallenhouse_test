@@ -2770,9 +2770,9 @@ ACT.mapSel=el=>{ const k=el.dataset.n; if(!MAP[k]) return; rt.mapSel=k; rt.mapD=
 ACT.mapDist=el=>{ const d=el.dataset.d; if(d!=='all'&&DOF[d]&&!distOpen(DOF[d])) return toast('아직 알 수 없는 곳이다.'); rt.mz=1; rt.mp={x:0,y:0}; rt.mapD=d==='all'?'all':d; if(d!=='all'&&MAP[rt.mapSel]?.d!==d) rt.mapSel=ZDEF[d][0][0]; render() };
 ACT.mapGo=el=>{ const to=el.dataset.n, n=MAP[to]; if(!n||rt.enc||S.travel||to===S.pos) return; if(S.scan) return toast('조사 중에는 이동할 수 없습니다. 먼저 조사를 마치거나 중단하세요.'); if(S.forage) return toast('주변을 뒤지는 중에는 이동할 수 없습니다.');
   if(!distOpen(zoneD(to))) return toast('아직 그쪽으로는 갈 수 없다. 더 강해져야 한다.');
-  const v=curVeh(), mk=(S.inv.mapkit||0)>0, sec=Math.round(travelSec(S.pos,to)*(mk?.5:1)); if(mk) S.inv.mapkit--; let fuelUse=0; if(v&&v.fuel&&sec>20){ if(v.fuel<1){ S.vfuel=(S.vfuel||0)+v.fuel; if(S.vfuel>=1){ S.vfuel-=1; fuelUse=1 } } else fuelUse=1 } if(fuelUse) S.res.fuel=Math.max(0,(S.res.fuel||0)-1);
+  const v=curVeh(to), mk=(S.inv.mapkit||0)>0, sec=Math.round(travelSec(S.pos,to)*(mk?.5:1)); if(mk) S.inv.mapkit--; if(S.car&&S.cars?.[S.car]&&VEH[S.car].fuel&&v!==VEH[S.car]) toast(`연료가 모자라 ${VEH[S.car].n}을(를) 못 탄다 (필요 ${fuelNeed(VEH[S.car],to)}) · ${v?v.n+'(으)로':'걸어서'} 간다`,true); let fuelUse=0; if(v&&v.fuel&&sec>20){ fuelUse=fuelNeed(v,to) } if(fuelUse) S.res.fuel=Math.max(0,(S.res.fuel||0)-fuelUse);
   S.travel={from:S.pos,to,s:Date.now(),e:Date.now()+sec*1000,v:v?Object.keys(VEH).find(k=>VEH[k]===v):'',scan:n.home?0:clamp(+el.dataset.scan||0,0,10)}; S.hunger=Math.max(0,S.hunger-sec/40); sfx(v&&v.fuel?'engine':'steps');
-  toast(`${n.n}(으)로 ${v?v.n+' 타고 ':''}이동 · ${mmss(sec*1000)}${fuelUse?' · 연료 -1':''}${mk?' · 구역 지도 사용':''}`); markSave(); render() };
+  toast(`${n.n}(으)로 ${v?v.n+' 타고 ':''}이동 · ${mmss(sec*1000)}${fuelUse?` · 연료 -${fuelUse}`:''}${mk?' · 구역 지도 사용':''}`); markSave(); render() };
 function travelTick(){ if(S.travel&&Date.now()>=S.travel.e){ const tv=S.travel, n=MAP[tv.to]; S.pos=tv.to; S.visited=S.visited||{}; S.visited[S.pos]=1; S.travel=null; toast(`${n.n}에 도착했다.`); slog(`${n.n}에 도착했다.`); markSave(); if(!inputFocused()&&$('modal').hidden) render();
     const safe=tv.v&&VEH[tv.v]?.safe||1, amb=!n.home&&Math.random()<encChance(.12*n.dg)*safe;
     if(tv.scan>0&&!n.home&&!resting()){ const per=Math.round(n.sec*(rt.party&&rt.party.on?.85:1)*(petOn('owl')?.9:1)); S.scan={z:tv.to,n:tv.scan,i:0,s:Date.now(),per,got:{},cash:0,ings:[],finds:[],log:[],miss:0}; if(amb){ S.pend=S.pend||[]; S.pend.push({k:'z',z:tv.to,t:Date.now()}) } toast(`${n.n} 도착 · 조사 ${tv.scan}회 시작`); markSave(); if(!inputFocused()&&$('modal').hidden) render(); return }
@@ -3023,7 +3023,7 @@ function distInsets(){
 
 function zonePanel(){
   const sel=rt.mapSel&&MAP[rt.mapSel]?rt.mapSel:S.pos, n=MAP[sel], D=DOF[n.d], T=ZTYPE[n.t], here=sel===S.pos&&!S.travel, tv=S.travel, open=distOpen(D), sc=S.scan;
-  const sec=sel!==S.pos?travelSec(S.pos,sel):0, v=curVeh(), N=clamp(rt.scanN||3,1,10);
+  const sec=sel!==S.pos?travelSec(S.pos,sel):0, v=curVeh(sel), N=clamp(rt.scanN||3,1,10);
   let act='';
   if(tv) act=`<div class="tvbox"><span>${esc(MAP[tv.from].n)} → ${esc(MAP[tv.to].n)}${tv.v?` · ${esc(VEH[tv.v].n)}`:''}</span><div class="bar"><i id="tvBar" style="width:${clamp((Date.now()-tv.s)/(tv.e-tv.s),0,1)*100}%"></i></div><span class="num" id="tvLeft">${mmss(tv.e-Date.now())}</span></div>`;
   else if(here&&sc){ const p=clamp((Date.now()-sc.s)/(sc.per*1000),0,1);
@@ -3033,7 +3033,7 @@ function zonePanel(){
     <div class="row"><button class="btn pri lg" data-act="scanStart" ${canAct()?'':'disabled'}>조사 시작</button>${T.sp?`<button class="btn lg${spDone(sel)?'':' sp'}" data-act="special" ${canAct()&&!spDone(sel)?'':'disabled'}>${spDone(sel)?'특수 조사 완료':esc(T.sp)}</button>`:''}</div>
     <p class="note">허탕도 나옵니다. 조사 중 생긴 전투·사건은 '처리할 일'로 쌓였다가 나중에 한 번에 처리해요.</p>` }
   else if(here) act=`<p class="note">캠프입니다. 여기선 조사할 게 없어요. 다른 지점으로 이동하세요.</p>`;
-  else act=!open?`<button class="btn lg" disabled>아직 갈 수 없는 곳</button>`:sc?`<button class="btn lg" disabled>조사 중에는 이동 불가</button>`:`<div class="gobox"><div class="row spread"><b>이동 · <span class="num">${mmss(sec*1000)}</span>${MAP[sel].d!==MAP[S.pos].d?' · 구역 넘어감':''}${v?` · ${esc(v.n)}`:''}</b>${n.home?'':`<span class="note">도착 후 조사 ${N}회 · ${mmss(N*n.sec*1000)}</span>`}</div>
+  else act=!open?`<button class="btn lg" disabled>아직 갈 수 없는 곳</button>`:sc?`<button class="btn lg" disabled>조사 중에는 이동 불가</button>`:`<div class="gobox"><div class="row spread"><b>이동 · <span class="num">${mmss(sec*1000)}</span>${MAP[sel].d!==MAP[S.pos].d?' · 구역 넘어감':''}${v?` · ${esc(v.n)}${v.fuel?` · 연료 ${fuelNeed(v,sel)}`:''}`:''}</b>${n.home?'':`<span class="note">도착 후 조사 ${N}회 · ${mmss(N*n.sec*1000)}</span>`}</div>
     ${n.home?'':`<div class="scanset"><span class="note">도착하면 바로</span><div class="stepper"><button class="btn sm" data-act="scanN" data-d="-1" aria-label="줄이기" ${N<=1?'disabled':''}>−</button><b class="num">${N}</b><button class="btn sm" data-act="scanN" data-d="1" aria-label="늘리기" ${N>=10?'disabled':''}>+</button></div>${qn('scanSet',N)}<span class="note">회 조사</span></div>`}
     <div class="row">${n.home?'':`<button class="btn pri lg" data-act="mapGo" data-n="${sel}" data-scan="${N}" ${rt.enc?'disabled':''}>이동 후 조사 ${N}회</button>`}<button class="btn lg${n.home?' pri':''}" data-act="mapGo" data-n="${sel}" ${rt.enc?'disabled':''}>이동만</button></div></div>`;
   return `<section class="pcard mapinfo"><div class="pc-h">${icon('pin')}<h3>${esc(n.n)}</h3><span class="tagx ${n.dg>=4?'red':n.dg>=3?'warn':''}">위험 ${'■'.repeat(n.dg)}${'□'.repeat(5-n.dg)}</span></div>
@@ -4303,7 +4303,7 @@ function viewShop(){
       return `<div class="card${lk?' wlock':''}"><div class="row spread"><h3>${nm}</h3><span class="tag num">$${pr}</span></div><p>${d}${lk&&!i.w?` · Lv.${i.lv}+`:''}</p><div class="row"><button class="btn sm" data-act="buy" data-i="${ix}" ${dis?'disabled':''}>${own?'보유 중':'구매'}</button>${own||lk?'':`<button class="btn sm ghost" data-act="plunderShop" data-i="${ix}" title="돈을 내지 않고 운에 맡깁니다">약탈</button>`}</div></div>` }).join('')}</div></div>`;
   h+=`<div class="sec"><div class="sec-head"><h2>장비</h2><p>머리·몸·장신구·가방. 산 장비는 내 캐릭터에서 바꿔 낄 수 있어요.</p></div><div class="grid">${Object.entries(GEAR).filter(([k,g])=>g.p).map(([k,g])=>{ const own=S.gear?.[k], lk=g.lv&&lvlOf(S.xp)<g.lv, pr=price(g.p);
     return `<div class="card${lk?' wlock':''}"><div class="row spread"><h3>${esc(g.n)}</h3><span class="tag num">${own?'보유':'$'+fmt(pr)}</span></div><p>${SLOTS[g.slot]} · ${esc(g.d)}${lk?` · Lv.${g.lv}+`:''}</p>${own?'':`<button class="btn sm" data-act="buyGear" data-k="${k}" ${lk||(S.money||0)<pr?'disabled':''}>구매</button>`}</div>` }).join('')}</div></div>`;
-  h+=`<div class="sec"><div class="sec-head"><h2>탈것</h2><p>이동 시간을 줄여요. 지금: <b>${esc(curVeh()?.n||'걸어서')}</b>${S.car&&VEH[S.car]?.fuel&&(S.res.fuel||0)<1?' (연료 없음)':''}</p></div><div class="grid">${Object.entries(VEH).map(([k,v])=>{ const own=S.cars?.[k], lk=lvlOf(S.xp)<v.lv, pr=price(v.p);
+  h+=`<div class="sec"><div class="sec-head"><h2>탈것</h2><p>이동 시간을 줄여요. 지금: <b>${esc(curVeh()?.n||'걸어서')}</b>${S.car&&VEH[S.car]?.fuel&&(S.res.fuel||0)<VEH[S.car].fuel?' (연료 부족)':''} · 빠르고 좋은 차일수록 연료를 많이 먹어요. 구역을 넘어가면 연료 2배</p></div><div class="grid">${Object.entries(VEH).map(([k,v])=>{ const own=S.cars?.[k], lk=lvlOf(S.xp)<v.lv, pr=price(v.p);
     return `<div class="card${own&&S.car===k?' wequip':''}${lk?' wlock':''}"><div class="row spread"><h3>${esc(v.n)}</h3><span class="tag num">${own?'보유':'$'+fmt(pr)}</span></div><p>${esc(v.d)}${lk?` · Lv.${v.lv}+`:''}</p>${own?`<button class="btn sm${S.car===k?' pri':''}" data-act="useCar" data-k="${S.car===k?'':k}">${S.car===k?'타는 중 · 내리기':'타기'}</button>`:`<button class="btn sm" data-act="buyCar" data-k="${k}" ${lk||(S.money||0)<pr?'disabled':''}>구입</button>`}</div>` }).join('')}</div></div>`;
   h+=`<div class="sec"><div class="sec-head"><h2>팔기</h2></div><div class="grid">${Object.entries(SHOP_SELL).map(([k,[q,p]])=>`<div class="card"><div class="row spread"><h3>${RES[k].n} ${q}</h3><span class="tag num">$${p}</span></div><p class="muted">보유 ${fmt(S.res[k]||0)}</p><div class="row"><button class="btn sm" data-act="sell" data-k="${k}" ${(S.res[k]||0)>=q?'':'disabled'}>1회</button><button class="btn sm" data-act="sell" data-k="${k}" data-n="10" ${(S.res[k]||0)>=q*10?'':'disabled'}>10회</button></div></div>`).join('')}</div></div>`;
   return h;
@@ -8576,6 +8576,12 @@ setInterval(()=>{ try{ const b=document.querySelector('[data-act=support]'); if(
   if(n&&!b.parentNode.querySelector('.supcnt')) b.insertAdjacentHTML('afterend',`<span class="supcnt num">지원 ${n}회</span>`); else { const c=b.parentNode.querySelector('.supcnt'); if(c) c.textContent=`지원 ${n}회` } }catch(e){} },150);
 for(const c of PCH) if(!ALL_CH.includes(c)) ALL_CH.push(c); PC_NAMES.push('Jasper','Wyatt','Beau');
 window.__WX=WX;
+/* ================= p37: 탈것 연료 · 빠르고 좋을수록 많이 먹는다 ================= */
+const VFUEL={bike:0,cart:0,cargo:0,scooter:1,tow:1,dirt:2,pickup:2,ice:2,rv:2,bus:3,humvee:4};
+const VFD={scooter:'이동 시간 -35%. 이동마다 연료 1.',pickup:'이동 시간 -50%, 도착 습격 -30%. 이동마다 연료 2.',humvee:'이동 시간 -65%, 도착 습격 -60%. 기름 먹는 하마: 이동마다 연료 4.',dirt:'아주 빠르다(-50%). 엔진 소리 때문에 도착 습격 +50%. 이동마다 연료 2.',tow:'느리다(+20%). 길가 폐차에서 부품을 뜯어 1분마다 고철·전자부품, 가끔 장비를 얻는다. 이동마다 연료 1.',ice:'멜로디가 놈들을 부른다. 도착하면 감염자 무리 퇴치전이 열리고 보상이 크다(+10%). 이동마다 연료 2.',rv:'아주 느리다(+35%). 차 안에서 쉬며 가서 도착하면 체력 15%·정신 +6, 허기도 덜 닳는다. 도착 습격 -40%. 이동마다 연료 2.',bus:'느리다(+15%). 길가 생존자를 태워 와서 도착하면 사람을 만난다. 도착 습격 -65%. 이동마다 연료 3.'};
+for(const k in VEH){ if(VFUEL[k]!=null) VEH[k].fuel=VFUEL[k]; if(VFD[k]) VEH[k].d=VFD[k]; if(VEH[k].fuel) VEH[k].d=VEH[k].d.replace(/\s*$/,' 구역을 넘어가면 2배.') }
+function fuelNeed(v,to){ if(!v||!v.fuel) return 0; const a=MAP[S.pos], b=to&&MAP[to]; return v.fuel*(a&&b&&a.d!==b.d?2:1) }
+curVeh=function(to){ const k=S.car; if(!k||!S.cars?.[k]) return null; const v=VEH[k]; if(v.fuel&&(S.res.fuel||0)<fuelNeed(v,to)) return S.cars.bike?VEH.bike:S.cars.cargo?VEH.cargo:null; return v };
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
