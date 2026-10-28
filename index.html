@@ -1030,6 +1030,36 @@ details.cat2>summary h2{display:inline;margin:0}details.cat2>.grid,details.cat2>
 details[data-col=weapons] .grid .card,.gearlist .gearb{display:flex;flex-direction:column}details[data-col=weapons] .grid .card>.btn:last-child,details[data-col=weapons] .grid .card>[data-act=equip],details[data-col=weapons] .grid .card>[data-act=craftW]{margin-top:auto}
 .gearlist{align-items:stretch}.gearb em{margin-top:auto}
 h2.num.big{font-size:40px;letter-spacing:.15em}
+
+/* p30 */
+[data-act=resetAsk]{display:none!important}
+.duelbox{max-width:min(520px,calc(100vw - 24px))}.duelbox *{min-width:0}
+.dvs{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin:8px 0 10px}.dvs.small{display:flex;gap:10px;align-items:center;margin:0 0 8px}
+.dside{display:grid;justify-items:center;gap:5px;padding:10px 8px;border:1px solid var(--line2);border-radius:12px;overflow:hidden}.dside.op{border-color:rgba(163,36,36,.45)}
+.dside .dnm{font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dside .bar{width:100%;height:9px}.dside .bar.red i{background:var(--blood)}
+.dhpn{font-size:15px;font-weight:700;white-space:nowrap;line-height:1.3}.dhpn small{font-size:11px;color:var(--muted);font-weight:500}.dvx{font-family:var(--f-mono,monospace);font-weight:800;color:var(--muted);font-size:13px}
+.dlog li{overflow-wrap:anywhere}
+#lordDock{position:fixed;left:12px;bottom:12px;z-index:60;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:99px;border:1px solid var(--line2);background:var(--panel-solid,var(--bg));color:var(--fg);box-shadow:0 8px 24px rgba(0,0,0,.2);font:inherit;cursor:pointer;max-width:calc(100vw - 24px)}
+#lordDock span{display:grid;text-align:left;line-height:1.2;min-width:0}#lordDock b{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#lordDock small{font-size:11px;color:var(--muted)}#lordDock em{font-style:normal;font-size:12px;font-weight:700}
+#lordDock.lord{border-color:var(--accent);}#lordDock.sub{border-color:var(--blood);color:var(--blood)}
+@media (max-width:1000px){#lordDock{bottom:76px}}
+.cmdgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:12px 0}.cmdb{display:grid;gap:3px;text-align:left;padding:10px;border:1px solid var(--line2);border-radius:10px;background:var(--panel);color:var(--fg);font:inherit;cursor:pointer}.cmdb small{color:var(--muted);font-size:11.5px;line-height:1.4}.cmdb em{font-style:normal;font-size:11px;color:var(--warn)}.cmdb:disabled{opacity:.5;cursor:default}.cmdb.free{border-style:dashed}.cmdb:not(:disabled):hover{border-color:var(--accent)}
+.nbox{display:grid;grid-template-columns:minmax(180px,240px) 1fr;border:1px solid var(--line2);border-radius:12px;overflow:hidden;min-height:340px}.nlist{display:flex;flex-direction:column;border-right:1px solid var(--line);overflow:auto;max-height:460px}
+.nwho{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:10px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--fg);text-align:left;font:inherit;cursor:pointer}.nwho.on{background:var(--accent-soft)}.nwho span{display:grid;min-width:0}.nwho small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nwho em{font-style:normal;background:var(--blood);color:#fff;border-radius:99px;font-size:11px;padding:0 6px}
+.nthread{display:grid;grid-template-rows:auto 1fr auto;min-width:0}.nth-h{display:flex;align-items:center;gap:8px;padding:10px;border-bottom:1px solid var(--line)}.nth-h .btn{margin-left:auto}
+.nmsgs{display:flex;flex-direction:column;gap:8px;padding:12px;overflow:auto;max-height:340px}.nm{max-width:78%;display:grid;gap:2px}.nm p{margin:0;padding:8px 11px;border-radius:12px;border:1px solid var(--line2);white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}.nm span{font-size:10.5px;color:var(--muted)}
+.nm.out{align-self:flex-end;justify-items:end}.nm.out p{background:var(--accent-soft);border-color:var(--accent-line);border-radius:12px 12px 2px 12px}.nm.in p{border-radius:12px 12px 12px 2px}
+.nrep{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}.nrep textarea{flex:1;font:inherit;padding:8px;border:1px solid var(--line2);border-radius:8px;background:var(--field,var(--panel));color:var(--fg);resize:vertical}
+@media (max-width:640px){.nbox{grid-template-columns:1fr}.nlist{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}.nwho{border-bottom:0;border-right:1px solid var(--line);min-width:160px}}
+
+/* p31 */
+.prlog,.pt-log{list-style:none;padding-left:0}.prlog li{padding:2px 0;border-bottom:1px dashed var(--line)}.prlog li:first-child{color:var(--fg);font-weight:600}
+.bagb .cnt{font-weight:500;color:var(--muted);font-size:.9em}
+.card.crew h3 small.muted{font-size:11px;color:#9aa0a6;font-weight:400;margin-left:2px}
+.bar.g{height:11px;border-radius:99px;background:rgba(127,127,127,.18)}.bar.g i{border-radius:99px}
+.bar.g.hpb i{background:linear-gradient(90deg,#1f5fa8,#5ea2ec)}.bar.g.mdb i{background:linear-gradient(90deg,#5b3fa8,#a58be6)}.bar.g.hgb i{background:linear-gradient(90deg,#a32424,#ec6a5e)}.bar.g.xpb i{background:linear-gradient(90deg,#9aa0a6,#d9dcdf)}
+.autoc .row.qn{flex-wrap:wrap;gap:6px;margin:6px 0}.autolog{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:6px;font-size:12.5px}.autolog li{display:grid;gap:2px;border-left:3px solid var(--accent-line);padding-left:8px}.autolog li.bad{border-color:var(--blood)}.autolog small{color:var(--muted)}
+.steps{margin:0 0 10px;padding-left:20px;display:grid;gap:4px;font-size:13.5px;line-height:1.5}
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -7447,6 +7477,121 @@ const _ko9=knockedOut; knockedOut=function(){ const hero=crewAlive().filter(c=>c
   if(hero&&Math.random()<.35+(hero.loy-70)/100){ rt.enc=null; S.hp=Math.max(1,Math.round(maxHp()*.25)); const died=Math.random()<.4; if(died){ hero.state='dead'; hero.diedAt=Date.now(); hx('crewDead') } else hero.hp=Math.max(5,hero.hp-60); cAdd(hero,'aff',10); markSave(); render(); sfx('sting');
     return whenFree(()=>outcome({n:'전투'},`${crewNm(hero)}이(가) 대신 막아섰다`,`쓰러지기 직전, ${crewNm(hero)}이(가) 내 앞을 막았다.\n${died?`"${crewSay(hero,'lost','대장')}"… 그게 마지막 말이었다.`:'피투성이가 됐지만 살아 있다. 그가 웃었다. "빚 갚은 거예요."'}`,[died?`대원 ${crewNm(hero)} 사망`:`${crewNm(hero)} 체력 -60`,'체력 25%로 버팀'],!died)) }
   return _ko9() };
+
+/* ================= 결투: 하루 2번 · 프로필이 보이는 화면 · 넘치지 않게 ================= */
+function duelDayCnt(){ if(!S.duelDay||S.duelDay.d!==today()) S.duelDay={d:today(),n:0}; return S.duelDay.n }
+const _duelReq10=ACT.duelReq; ACT.duelReq=el=>{ if(duelDayCnt()>=2) return toast('결투 신청은 하루 두 번까지예요. 내일 다시 걸 수 있어요.'); S.duelT=0; _duelReq10(el); const b=$('dqGo'); if(b){ const f=b.onclick; b.onclick=()=>{ duelDayCnt(); S.duelDay.n++; markSave(); f() }; const p=$('mbox').querySelector('.ch-p'); if(p) p.insertAdjacentHTML('beforeend',`<br><span class="note">오늘 남은 신청 ${2-duelDayCnt()}번</span>`) } };
+const duelAv=(id,sz)=>{ const me=id===rt.myId, p=me?{av:S.avatar,cos:S.cos}:(rt.players.get(id)||{}); return avHtml(p.av,p.cos,me?S.nick:nameOf(id),sz) };
+duelDraw=function(){ const D=rt.duel; if(!D) return; const my=(D.mv[D.r]||{}).m;
+  const side=(id,hp,max,cls)=>`<div class="dside ${cls}">${duelAv(id,56)}<b class="dnm">${esc(id===rt.myId?S.nick:nameOf(id))}</b><div class="bar${cls==='op'?' red':''}"><i style="width:${clamp(hp/max,0,1)*100}%"></i></div><span class="num dhpn">${Math.ceil(hp)}<small>/${max}</small></span></div>`;
+  openModal(`<div class="eyebrow">DUEL <span class="dash"></span> ${D.r} / 5합</div><div class="dvs">${side(rt.myId,D.me,D.meMax,'me')}<span class="dvx">VS</span>${side(D.opp,D.op,D.opMax,'op')}</div>
+    <ol class="cklog dlog">${D.log.slice(-4).map(l=>`<li>${esc(l)}</li>`).join('')}</ol>
+    ${my?`<p class="muted">「${DUEL_A[my.a][0]}」을(를) 골랐다. 상대를 기다리는 중… <span class="num" id="dlT"></span></p>`:`<div class="story-opts">${Object.entries(DUEL_A).map(([k,[n,t]])=>`<button class="btn opt" data-da="${k}">${n}${t?` <small class="optlv">${t}</small>`:''}</button>`).join('')}</div><p class="note">12초 안에 고르지 않으면 공격해요. <span class="num" id="dlT">12</span></p>`}`);
+  $('mbox').classList.add('duelbox'); $('mbox').querySelectorAll('[data-da]').forEach(b=>b.onclick=()=>duelPick(b.dataset.da)); clearInterval(D.tm); let left=my?25:12; D.tm=setInterval(()=>{ left--; const e=$('dlT'); if(e) e.textContent=left; if(left<=0){ clearInterval(D.tm); if(!(D.mv[D.r]||{}).m) duelPick('atk'); else duelForfeit() } },1000) };
+const _duelEnd10=duelEnd; duelEnd=function(win){ const D=rt.duel; _duelEnd10(win); const h=$('mbox').querySelector('h2'); if(h&&D) h.insertAdjacentHTML('beforebegin',`<div class="dvs small">${duelAv(rt.myId,40)}<span class="dvx">${win?'승':'패'}</span>${duelAv(D.opp,40)}</div>`) };
+const _closeModal10=closeModal; closeModal=function(){ const b=$('mbox'); if(b) b.classList.remove('duelbox'); return _closeModal10() };
+
+/* ================= 수하 지시 창: 언제든 띄우기 ================= */
+STS.exhaust={n:'녹초',d:'몸이 잔뜩 지쳤다. 손이 떨리고 눈꺼풀이 무겁다. 힘·민첩 -1, 정신이 잘 회복되지 않는다'}; ST_PEN.exhaust={str:-1,agi:-1};
+SUB_CMD.chores=['잡일을 몰아 시켜라','물 긷기·창고 정리·밤 보초를 한꺼번에 시킨다. 거부하면 물건을 빼앗긴다'];
+function lordModal(){ if(!lordOn()) return; const L=S.lord, T=S.lord.cmdT||{}, now=Date.now();
+  openModal(`<div class="eyebrow">COMMAND <span class="dash"></span> 남은 ${mmss(L.until-now)}</div><div class="dvs small">${duelAv(L.id,48)}<div><h2 style="margin:0">${esc(L.nick)}</h2><p class="muted" style="margin:0">내 수하 · ${rt.online.has(L.id)?'접속 중':'연결 끊김'}</p></div></div>
+    <div class="cmdgrid">${Object.entries(SUB_CMD).map(([k,[n,d]])=>{ const cd=k!=='free'?Math.max(0,120000-(now-(T[k]||0))):0; return `<button class="cmdb${k==='free'?' free':''}" data-sc="${k}" ${cd?'disabled':''}><b>${esc(n)}</b><small>${esc(d)}</small>${cd?`<em class="num">${mmss(cd)}</em>`:''}</button>` }).join('')}</div><button class="btn" data-act="closeModal">닫기</button>`);
+  $('mbox').querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>{ ACT.subCmd({dataset:{c:b.dataset.sc}}); if(lordOn()) lordModal(); else closeModal() }) }
+ACT.lordOpen=()=>lordModal();
+setInterval(()=>{ try{ let el=$('lordDock'); const show=lordOn()||subOn(); if(!show){ if(el) el.remove(); return }
+  if(!el){ el=document.createElement('button'); el.id='lordDock'; el.type='button'; el.onclick=()=>{ if(lordOn()) lordModal(); else toast(`굴복 상태: ${S.sub.nick}님의 지시를 기다리는 중`) }; document.body.append(el) }
+  const L=lordOn()?S.lord:S.sub, lord=lordOn(); el.className=lord?'lord':'sub'; el.innerHTML=`${duelAv(lord?L.id:L.by,26)}<span>${lord?`<b>수하 · ${esc(L.nick)}</b><small>눌러서 지시하기</small>`:`<b>굴복 · ${esc(L.nick)}</b><small>지시만 따를 수 있다</small>`}</span><em class="num">${mmss(L.until-Date.now())}</em>` }catch(e){} },1000);
+/* 잡일: 수락(또는 시간 초과)하면 녹초, 거부하면 물건을 빼앗긴다 */
+const _subCmdIn10=subCmdIn; subCmdIn=function(by,d){ if(d.c!=='chores'||!subOn()||S.sub.by!==by) return _subCmdIn10(by,d); sfx('alert'); vib([60,40,60]);
+  let left=30, done=false; const card=msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>지시 · ${esc(nameOf(by))}</b><span class="num mc-t">30</span></div><p>「잡일을 몰아 시켜라」 — 물 긷기, 창고 정리, 밤 보초까지. 거부하면 가방을 털린다. 30초 뒤엔 몸이 먼저 움직인다.</p><div class="row"><button class="btn sm pri" data-ch2="1">한다</button><button class="btn sm warn" data-ch2="0">거부한다</button></div>`,'inv subc');
+  const fin=ok=>{ if(done) return; done=true; clearInterval(t); if(card) card.remove(); const fx=[];
+    if(ok){ fx.push(addSt('exhaust',25,true)||'녹초'); mindAdd(-8); fx.push('정신 -8'); const L=lvlOf(S.xp), g={dl:'give',id:'w'+Date.now().toString(36),to:by,res:{water:8+L,scrap:6+L,wood:6+L},items:{},money:0,why:'cmd'}; dSend(g); dSend({dl:'done',id:d.id,to:by,c:'chores',r:'해냈다'});
+      whenFree(()=>outcome({n:'굴복'},'몸이 잔뜩 지쳤다',`물통을 서른 번 날랐다. 창고를 다 비우고 다시 쌓았다. 밤새 보초를 섰다.\n손이 덜덜 떨리고 눈꺼풀이 천근 같다. 다리가 내 것 같지 않다.`,fx,false)) }
+    else { duelTakeIn(by,{k:'items',id:d.id}); dSend({dl:'done',id:d.id,to:by,c:'chores',r:'거부 · 물건을 빼앗김'}) } markSave(); render() };
+  const t=setInterval(()=>{ left--; const e=card&&card.querySelector('.mc-t'); if(e) e.textContent=left; if(left<=0) fin(true) },1000); if(card) card.querySelectorAll('[data-ch2]').forEach(b=>b.onclick=()=>fin(b.dataset.ch2==='1')); else fin(true) };
+const _mindAdd10=mindAdd; mindAdd=function(v,why){ if(v>0&&stOn('exhaust')) v=Math.round(v*.5); return _mindAdd10(v,why) };
+
+/* ================= 쪽지: 사람별 대화로 모아 보기 ================= */
+function noteSync(){ S.noteLog=S.noteLog||[]; const ids=new Set(S.noteLog.map(n=>n.id)); for(const n of myNotes()) if(!ids.has(n.id)){ S.noteLog.push({id:n.id,w:n.from,d:'in',x:n.x,t:n.t,u:1}); ids.add(n.id) }
+  for(const n of S.notes||[]) if(!ids.has(n.id)){ S.noteLog.push({id:n.id,w:n.to,d:'out',x:n.x,t:n.t}); ids.add(n.id) } S.noteLog.sort((a,b)=>a.t-b.t); S.noteLog=S.noteLog.slice(-300) }
+function sendNoteTo(to,x){ x=String(x||'').trim().slice(0,300); if(!x||!to) return false; const n={id:'n'+Date.now().toString(36)+ri(100,999),to,x,t:Date.now()}; S.notes=(S.notes||[]).concat(n).slice(-20); S.noteLog=(S.noteLog||[]).concat({id:n.id,w:to,d:'out',x,t:n.t}); sfx('send'); markSave(); flushPub(); return true }
+const _openNote10=openNote; openNote=function(to){ _openNote10(to); const f=$('nForm'); if(!f) return; f.onsubmit=e=>{ e.preventDefault(); if(sendNoteTo(to,$('nTx').value)){ toast(`${nameOf(to)}님에게 쪽지를 보냈습니다.`); closeModal(); if(rt.tab==='mail'){ rt.noteW=to; render() } } } };
+ACT.noteW=el=>{ rt.noteW=el.dataset.id; (S.noteLog||[]).forEach(n=>{ if(n.w===rt.noteW) n.u=0 }); markSave(); render() };
+ACT.noteDel=el=>{ const w=el.dataset.id; S.noteHide=(S.noteHide||[]).concat((S.noteLog||[]).filter(n=>n.w===w&&n.d==='in').map(n=>n.id)).slice(-300); S.noteLog=(S.noteLog||[]).filter(n=>n.w!==w); if(rt.noteW===w) rt.noteW=null; markSave(); render() };
+function noteThreads(){ noteSync(); const by={}; for(const n of S.noteLog){ (by[n.w]=by[n.w]||[]).push(n) } return Object.entries(by).sort((a,b)=>b[1][b[1].length-1].t-a[1][a[1].length-1].t) }
+const _viewMail10=viewMail; viewMail=function(){ let h=_viewMail10(); const i=h.indexOf('<div class="sec"><div class="sec-head"><h2>받은 선물'); if(i>0) h=h.slice(i); h=h.replace(/<div class="gift sent"><div><b>→ [^<]*<\/b><p class="note-x">[^<]*<\/p><div class="muted">쪽지 · [^<]*<\/div><\/div><\/div>/g,'').replace('<h2>보낸 쪽지 · 선물</h2>','<h2>보낸 선물</h2>');
+  const T=noteThreads(); if(!rt.noteW||!T.some(([w])=>w===rt.noteW)) rt.noteW=T.length?T[0][0]:null; const cur=T.find(([w])=>w===rt.noteW);
+  if(cur) cur[1].forEach(n=>{ if(n.u) n.u=0 });
+  const nh=`<div class="sec"><div class="sec-head"><h2>쪽지</h2><p>${T.length}명과 주고받음</p></div>${T.length?`<div class="nbox"><div class="nlist">${T.map(([w,L])=>{ const un=L.filter(n=>n.u).length, last=L[L.length-1]; return `<button class="nwho${w===rt.noteW?' on':''}" data-act="noteW" data-id="${esc(w)}">${duelAv(w,30)}<span><b>${esc(nameOf(w))}</b><small>${last.d==='out'?'나: ':''}${esc(last.x.slice(0,22))}</small></span>${un?`<em class="num">${un}</em>`:''}</button>` }).join('')}</div>
+    <div class="nthread">${cur?`<div class="nth-h">${duelAv(cur[0],28)}<b>${esc(nameOf(cur[0]))}</b><button class="btn sm ghost" data-act="noteDel" data-id="${esc(cur[0])}">대화 지우기</button></div><div class="nmsgs" id="nMsgs">${cur[1].map(n=>`<div class="nm ${n.d}"><p>${esc(n.x)}</p><span class="num">${hhmm(n.t)}</span></div>`).join('')}</div><form class="nrep" id="nRep"><textarea id="nRepTx" rows="2" maxlength="300" placeholder="${esc(nameOf(cur[0]))}님에게 답장"></textarea><button class="btn pri" type="submit">보내기</button></form>`:''}</div></div>`:'<p class="muted">주고받은 쪽지가 없습니다. 생존자 명단에서 쪽지를 보낼 수 있어요.</p>'}</div>`;
+  markSave(); return nh+h };
+const _renderBody10=renderBody; renderBody=function(){ _renderBody10(); if(rt.tab!=='mail') return; const f=$('nRep'), m=$('nMsgs'); if(m) m.scrollTop=m.scrollHeight; if(f) f.onsubmit=e=>{ e.preventDefault(); if(sendNoteTo(rt.noteW,$('nRepTx').value)){ toast(`${nameOf(rt.noteW)}님에게 보냈어요.`); render() } } };
+const _badges10=badges; badges=function(){ const B=_badges10(); try{ noteSync(); const un=(S.noteLog||[]).filter(n=>n.u).length; if(un){ B.mail=[(B.mail?.[0]|0)+un,'hot'] } }catch(e){} return B };
+
+/* ================= 지원 사격: 소모를 분명하게 보여 주기 ================= */
+const _support10=ACT.support; ACT.support=()=>{ const s0=S.res.scrap||0, d0=S.raid.dmg; _support10(); if((S.res.scrap||0)<s0) toast(`지원 사격 · 고철 -8 (남은 ${Math.floor(S.res.scrap)}) · 습격 무리에 ${Math.round(S.raid.dmg-d0)} 피해`) };
+
+/* 명단에 쪽지 버튼 되살리기 */
+const _viewRoster10=viewRoster0; viewRoster0=function(){ return _viewRoster10().replace(/<button class="btn sm" data-act="gift" data-id="([^"]*)">선물<\/button>/g,'<button class="btn sm" data-act="note" data-id="$1">쪽지</button><button class="btn sm" data-act="gift" data-id="$1">선물</button>') };
+/* ================= 대원 애정 주기: 하루 3번 (전체 합쳐서) ================= */
+function loveCnt(){ if(!S.loveDay||S.loveDay.d!==today()) S.loveDay={d:today(),n:0}; return S.loveDay.n }
+const _crewLove11=ACT.crewLove; ACT.crewLove=el=>{ const c=crewById(el.dataset.id); if(!c) return; if(loveCnt()>=3) return toast('애정 주기는 하루 세 번까지예요. 내일 다시 할 수 있어요.'); c.loveT=0; S.loveDay.n++; markSave(); _crewLove11(el); c.loveT=0 };
+const _crewCard11=crewCard; crewCard=function(c,sel){ const h=_crewCard11(c,sel), left=3-loveCnt(); return h.replace(/(<button class="btn sm" data-act="crewLove" data-id="[^"]+")[^>]*>애정 주기<\/button>/,(m,a)=>`${a} ${left<=0?'disabled':''}>애정 주기 <small class="num">${Math.max(0,left)}/3</small></button>`) };
+
+/* ================= 동행 레이드 기록: 번호 없이 최신이 위로 ================= */
+/* (ol 번호를 없애는 CSS는 아래) */
+
+/* ================= 가방: 개수는 이름 옆 (x4) ================= */
+const _bagHtml11=bagHtml; bagHtml=function(){ return _bagHtml11().replace(/<button class="bagb"([^>]*)><b>([^<]*)<\/b>((?:(?!<button)[\s\S])*?)<em class="num">×?(\d+)(?:회분)?<\/em><\/button>/g,(m,a,n,mid,q)=>`<button class="bagb"${a}><b>${n} <span class="num cnt">(x${q})</span></b>${mid}</button>`) };
+
+/* ================= 내 캐릭터: 체력 · 정신 · 허기 · 경험치(맨 아래) ================= */
+charTop=function(){ const l=lvlOf(S.xp), a=xpFor(l), b=xpFor(l+1), p=clamp((S.xp-a)/(b-a),0,1), hp=S.hp/maxHp();
+  const row=(n,cls,w,t)=>`<div class="ct-row"><span>${n}</span><div class="bar g ${cls}"><i style="width:${clamp(w,0,1)*100}%"></i></div><b class="num">${t}</b></div>`;
+  return `<section class="pcard chartop"><div class="ct-lv"><span class="label">LEVEL</span><b class="num">${l}</b></div><div class="ct-bars">
+    ${row('체력','hpb',hp,`${Math.ceil(S.hp)} / ${maxHp()}`)}${row('정신','mdb',(S.mind||0)/100,`${Math.round(S.mind||0)} / 100`)}${row('허기','hgb',S.hunger/100,`${Math.ceil(S.hunger)} / 100`)}${row('경험치','xpb',p,`${fmt(Math.floor(S.xp-a))} / ${fmt(Math.ceil(b-a))}`)}
+    <p class="note num">다음 레벨까지 ${fmt(Math.max(0,Math.ceil(b-S.xp)))} XP · 소지금 $${fmt(S.money||0)}</p></div></section>` };
+
+/* ================= 탐험대: 자리를 비운 동안 자동 파견 ================= */
+const S_AUTO_DEF={on:false,need:'food',size:2,hp:50};
+const autoCfg=()=>{ S.autoCrew=Object.assign({},S_AUTO_DEF,S.autoCrew||{}); return S.autoCrew };
+ACT.autoCrew=el=>{ const A=autoCfg(), k=el.dataset.k; if(k==='on') A.on=!A.on; else if(k==='need') A.need=el.dataset.v; else if(k==='size') A.size=clamp(+el.dataset.v,1,3); else if(k==='hp') A.hp=clamp(+el.dataset.v,20,90);
+  toast(A.on?`자동 파견 켬 · ${(needList().find(x=>x[0]===A.need)||['',''])[1]} 찾아 ${A.size}명씩`:'자동 파견 끔'); markSave(); render(); if(A.on) autoCrewTick(true) };
+function autoCrewTick(force){ const A=S.autoCrew; if(!A||!A.on||!S.intro) return; const now=Date.now(); if(!force&&now-(rt.acT||0)<15000) return; rt.acT=now; let ch=false;
+  for(const m of (S.missions||[]).slice()){ if(now<m.e) continue; const i=S.missions.indexOf(m); if(i<0) continue; S.missions.splice(i,1); const lines=resolveMission(m)||[];
+    const bad=lines.filter(l=>(l.bad||0)>=2).length, fx=lines.flatMap(l=>l.fx||[]).filter(x=>!/^배신$|^납치$|^사망$|^감염$/.test(x)).slice(0,8);
+    S.autoLog=[{t:now,node:m.node,n:m.crew.length,bad,fx,say:(lines.find(l=>l.k==='say')||{}).t||'',sum:(lines.find(l=>l.k==='sum')||{}).t||''}].concat(S.autoLog||[]).slice(0,20); ch=true;
+    toast(`자동 파견 귀환 · ${MAP[m.node].n}${bad?` · 나쁜 소식 ${bad}건`:''}`,!!bad) }
+  const idle=crewAlive().filter(c=>c.state==='idle'&&c.hp>=A.hp).sort((a,b)=>power(b)-power(a));
+  while(idle.length>=Math.min(A.size,idle.length)&&idle.length){ const team=idle.splice(0,A.size); const rec=recNodes(A.need,team); const node=(rec[0]||{}).k; if(!node||lvlOf(S.xp)<MAP[node].lv) break;
+    const sec=missionTime(node,team.length); team.forEach(c=>c.state='away'); S.missions=S.missions||[]; S.missions.push({id:'m'+Date.now().toString(36)+ri(100,999),crew:team.map(c=>c.id),node,s:now,e:now+sec*1000,auto:1}); ch=true; if(team.length<A.size) break }
+  if(ch){ markSave(); schedulePub(3000); if(rt.tab==='crew'&&$('modal').hidden&&!inputFocused()) render() } }
+setInterval(()=>{ try{ autoCrewTick(false) }catch(e){} },5000);
+function autoCrewHtml(){ const A=autoCfg(), L=S.autoLog||[];
+  return `<section class="pcard autoc"><div class="pc-h">${icon('signal')}<h3>자동 파견</h3><button class="btn sm${A.on?' pri':''}" data-act="autoCrew" data-k="on">${A.on?'켜짐':'꺼짐'}</button></div>
+    <p class="note">켜 두면 쉬는 대원을 알아서 짝지어 보내고, 돌아오면 보고를 받아 다시 보내요. 게임 창이 열려 있는 동안 돌아가고, 다시 접속하면 그동안 끝난 파견부터 정리해요.</p>
+    <div class="row qn"><span class="note">찾을 것</span>${needList().map(([k,n])=>`<button class="chipb${A.need===k?' on':''}" data-act="autoCrew" data-k="need" data-v="${k}">${esc(n)}</button>`).join('')}</div>
+    <div class="row qn"><span class="note">한 번에</span>${[1,2,3].map(n=>`<button class="chipb${A.size===n?' on':''}" data-act="autoCrew" data-k="size" data-v="${n}">${n}명</button>`).join('')}<span class="note">체력</span>${[30,50,70].map(n=>`<button class="chipb${A.hp===n?' on':''}" data-act="autoCrew" data-k="hp" data-v="${n}">${n}+</button>`).join('')}</div>
+    ${L.length?`<details class="fold" open><summary>자동 파견 기록 ${L.length}</summary><ul class="autolog">${L.slice(0,8).map(x=>`<li class="${x.bad?'bad':''}"><b>${hhmm(x.t)} · ${esc(MAP[x.node]?.n||'')}</b> <span>${esc(x.fx.join(', ')||'빈손')}</span>${x.sum?`<small>${esc(x.sum)}</small>`:''}</li>`).join('')}</ul></details>`:''}</section>` }
+const _viewCrew11=viewCrew; viewCrew=function(){ const h=_viewCrew11(); return autoCrewHtml()+h };
+
+/* ================= 이벤트 옮기기: 편집기 맨 위에 크게 ================= */
+function cevMoveModal(){ const L=rt.cev||[]; rt.modalLock=true;
+  openModal(`<div class="eyebrow">ADMIN <span class="dash"></span> BACKUP</div><h2>이벤트 옮기기 (테스트 서버 → 본 서버)</h2>
+    <ol class="steps"><li><b>테스트 서버</b>에서 이 창을 열고 「1. 전부 내보내기」를 누르세요. 아래 칸에 이벤트 ${L.length}개가 글자로 채워지고 복사돼요.</li><li>그 글자를 메모장이나 카톡 「나에게 보내기」에 붙여 넣어 두세요.</li><li><b>본 서버</b>에 관리자로 들어가 이 창을 열고, 칸에 붙여 넣은 뒤 「2. 가져오기」를 누르세요.</li></ol>
+    <div class="row"><button class="btn pri" id="mvOut" type="button">1. 전부 내보내기 (${L.length}개)</button><button class="btn" id="mvSel" type="button">칸 전체 선택</button></div>
+    <textarea id="mvTx" rows="7" class="cbtx" placeholder="여기에 내보낸 글자가 나오거나, 가져올 글자를 붙여 넣어요"></textarea><div id="mvPrev" class="note"></div>
+    <div class="row"><button class="btn warn" id="mvIn" type="button">2. 가져오기</button><button class="btn" id="mvBack" type="button">편집기로</button></div>`);
+  const prev=()=>{ let o=null; try{ o=JSON.parse($('mvTx').value) }catch(e){} const E=o&&(Array.isArray(o)?o:o.events); $('mvPrev').innerHTML=Array.isArray(E)?`가져올 이벤트 ${E.length}개: ${E.slice(0,12).map(e=>esc(String(e&&e.t||'?'))).join(', ')}${E.length>12?' …':''}`:($('mvTx').value.trim()?'<span class="warnc">이벤트 백업 글자가 아니에요. 내보내기로 만든 글자 전체를 붙여 넣어 주세요.</span>':'') };
+  $('mvTx').oninput=prev;
+  $('mvOut').onclick=async()=>{ const txt=JSON.stringify({fh:'cevents',v:1,at:Date.now(),events:(rt.cev||[]).map(e=>JSON.parse(JSON.stringify(e)))}); $('mvTx').value=txt; prev(); $('mvTx').select(); let ok=false; try{ await navigator.clipboard.writeText(txt); ok=true }catch(e){ try{ ok=document.execCommand('copy') }catch(_){} } toast(ok?`이벤트 ${L.length}개를 복사했어요.`:'칸의 글자를 길게 눌러 전체 복사해 주세요.',true) };
+  $('mvSel').onclick=()=>{ $('mvTx').focus(); $('mvTx').select() };
+  $('mvBack').onclick=()=>{ rt.modalLock=false; cevOpen() };
+  $('mvIn').onclick=async()=>{ if(!rt.db) return toast('공유 서버에 연결되어 있어야 해요.'); let o; try{ o=JSON.parse($('mvTx').value) }catch(e){ return toast('백업 글자가 올바르지 않아요.') } const E=Array.isArray(o)?o:o&&o.events; if(!Array.isArray(E)) return toast('이벤트 목록을 찾지 못했어요.');
+    let n=0, bad=0; for(const e of E){ const id=String(e&&e.id||'').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,40); if(!id||id==='_ann'){ bad++; continue } const c=cevClean(id,e); if(!c){ bad++; continue } const doc=Object.assign({},c,{fire:0}); delete doc.id; try{ await rt.db.doc('cevents/'+id).set(doc); n++ }catch(err){ bad++ } }
+    $('mvPrev').textContent=`${n}개를 가져왔어요${bad?` · ${bad}개는 건너뜀`:''}. 편집기 목록에서 확인하세요.`; toast(`이벤트 ${n}개 가져오기 완료`,true) } }
+ACT.cevMove=()=>cevMoveModal();
+const _cevOpen11=cevOpen; cevOpen=function(){ _cevOpen11(); const box=$('mbox'); if(!box||!rt.isAdmin) return; const h=box.querySelector('h2'); if(h&&!box.querySelector('[data-act=cevMove]')) h.insertAdjacentHTML('afterend',`<div class="row"><button class="btn warn" data-act="cevMove" type="button">📦 이벤트 옮기기 (백업 · 테섭 → 본섭)</button><span class="note">지금 이 서버의 이벤트 ${(rt.cev||[]).length}개</span></div>`) };
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
