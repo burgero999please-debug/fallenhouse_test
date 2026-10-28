@@ -1060,6 +1060,13 @@ h2.num.big{font-size:40px;letter-spacing:.15em}
 .bar.g.hpb i{background:linear-gradient(90deg,#1f5fa8,#5ea2ec)}.bar.g.mdb i{background:linear-gradient(90deg,#5b3fa8,#a58be6)}.bar.g.hgb i{background:linear-gradient(90deg,#a32424,#ec6a5e)}.bar.g.xpb i{background:linear-gradient(90deg,#9aa0a6,#d9dcdf)}
 .autoc .row.qn{flex-wrap:wrap;gap:6px;margin:6px 0}.autolog{list-style:none;padding:0;margin:6px 0 0;display:grid;gap:6px;font-size:12.5px}.autolog li{display:grid;gap:2px;border-left:3px solid var(--accent-line);padding-left:8px}.autolog li.bad{border-color:var(--blood)}.autolog small{color:var(--muted)}
 .steps{margin:0 0 10px;padding-left:20px;display:grid;gap:4px;font-size:13.5px;line-height:1.5}
+
+/* p32 */
+body.sheet-open .petroam,body.sheet-open #lordDock{display:none!important}body.sheet-open #party.pmini{visibility:hidden}
+.toasts{pointer-events:none}.toast{pointer-events:auto;cursor:pointer;line-height:1.5}
+
+/* p33 */
+.petcare{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}.petcare small{opacity:.7;margin-left:3px}
 </style>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -7592,6 +7599,50 @@ function cevMoveModal(){ const L=rt.cev||[]; rt.modalLock=true;
     $('mvPrev').textContent=`${n}개를 가져왔어요${bad?` · ${bad}개는 건너뜀`:''}. 편집기 목록에서 확인하세요.`; toast(`이벤트 ${n}개 가져오기 완료`,true) } }
 ACT.cevMove=()=>cevMoveModal();
 const _cevOpen11=cevOpen; cevOpen=function(){ _cevOpen11(); const box=$('mbox'); if(!box||!rt.isAdmin) return; const h=box.querySelector('h2'); if(h&&!box.querySelector('[data-act=cevMove]')) h.insertAdjacentHTML('afterend',`<div class="row"><button class="btn warn" data-act="cevMove" type="button">📦 이벤트 옮기기 (백업 · 테섭 → 본섭)</button><span class="note">지금 이 서버의 이벤트 ${(rt.cev||[]).length}개</span></div>`) };
+
+/* ================= 알림: 읽을 시간만큼 오래 · 누르면 닫힘 ================= */
+toast=function(msg,rare){ const box=$('toasts'); if(!box) return; msg=String(msg); for(const x of [...box.children]) if(x.dataset.m===msg) x.remove(); const now=Date.now(); if(now-(rt.toastSnd||0)>500){ rt.toastSnd=now; sfx(rare?'rare':'toast') }
+  const d=document.createElement('div'); d.className='toast'+(rare?' rare':''); d.dataset.m=msg; d.textContent=josa(msg); d.title='눌러서 닫기'; box.append(d);
+  const ms=clamp(3500+msg.length*70,4500,rare?11000:9000); let left=ms, t0=Date.now(), tm=setTimeout(()=>d.remove(),ms);
+  d.onclick=()=>{ clearTimeout(tm); d.remove() }; d.onmouseenter=()=>{ clearTimeout(tm); left-=Date.now()-t0 }; d.onmouseleave=()=>{ t0=Date.now(); tm=setTimeout(()=>d.remove(),Math.max(1500,left)) };
+  while(box.children.length>4) box.firstChild.remove() };
+const _msgCard12=msgCard; msgCard=function(html,cls,ttl){ return _msgCard12(html,cls,ttl?Math.max(ttl,9000):ttl) };
+
+/* ================= 화면이 그려지지 않을 때 대신 보여 주기 ================= */
+const _viewShop12=viewShop; viewShop=function(){ try{ return _viewShop12() }catch(e){ console.error(e); rt.lastErr='shop: '+(e&&e.message); try{ return `<p class="warnx">상점 일부를 그리지 못해 기본 모양으로 보여요. (${esc(String(e&&e.message||e).slice(0,80))})</p>`+_viewShop5() }catch(e2){ return `<p class="warnx">상점을 열지 못했어요: ${esc(String(e2&&e2.message||e2).slice(0,120))}</p>` } } };
+const _renderBody12=renderBody; renderBody=function(){ try{ return _renderBody12() }catch(e){ console.error(e); rt.lastErr=String(e&&e.message||e); const v=$('view'); if(v) v.innerHTML=pageHead()+`<section class="pcard"><h3>이 화면을 그리지 못했어요</h3><p class="muted">${esc(rt.lastErr.slice(0,160))}</p><p class="note">이 문구를 캡처해서 알려 주시면 바로 고칠게요.</p><button class="btn pri" data-act="go" data-view="home">본부로</button></section>` } };
+
+/* ================= 펫 목줄: 빼앗기 시도를 10번 막고 끊어진다 ================= */
+ITEMS.leash={n:'펫 목줄',d:'함께 다니는 펫을 남이 강제 입양하거나 훔치려 할 때 10번 막아 준다. 10번 막으면 끊어진다',use:()=>{ if(!S.pet) { S.inv.leash++; return '함께 다니는 펫이 없다' } const b=S.leash||0; S.leash=10; schedulePub(1500); return b?`목줄을 새것으로 바꿨다 (10/10)`:`${petE(S.pet)} ${petLabel(S.pet)}에게 목줄을 채웠다 (10/10)` }};
+SHOP_BUY.push({k:'leash',p:650,lv:3});
+const _pubDoc12=pubDoc; pubDoc=function(){ const d=_pubDoc12(); if(d.pet) d.pet.l=clamp(S.leash|0,0,10); return d };
+const _petTake12=petTake; petTake=async function(id,how,fee){ const p=rt.players.get(id), P=p&&p.pet; if(P&&(P.l|0)>0&&rt.online.has(id)){ if(Date.now()-(S.petRaidT||0)<10*60000) return toast(`다음 시도까지 ${mmss(10*60000-(Date.now()-(S.petRaidT||0)))}`); closeModal(); S.petRaidT=Date.now(); markSave();
+    dSend({dl:'leash',id:'l'+Date.now().toString(36),to:id,how}); sfx('hurt'); return outcome({n:nameOf(id)+'의 캠프'},'목줄에 막혔다',`${petE(P.k)} 그 애 목에 단단한 목줄이 채워져 있었다. 주인 쪽으로 버티며 꿈쩍도 하지 않는다.`,[`목줄 남은 횟수 약 ${Math.max(0,(P.l|0)-1)}`],false) }
+  return _petTake12(id,how,fee) };
+const _onDuel12=onDuel; onDuel=function(m){ const d=m.data||{}; if(d.dl==='leash'&&d.to===rt.myId&&!m.isMe){ if((S.leash|0)>0){ S.leash--; markSave(); schedulePub(1000); if(S.leash<=0) toast(`${nameOf(m.by)}님이 펫을 노렸다. 목줄이 끝내 끊어졌다!`,true); else toast(`${nameOf(m.by)}님이 펫을 ${d.how==='adopt'?'데려가려':'훔치려'} 했지만 목줄이 지켰다 (남은 ${S.leash}/10)`,true) } return } return _onDuel12(m) };
+const _petCard12=petCard; petCard=function(){ const h=_petCard12(); return S.pet&&(S.leash|0)>0?h.replace('</h3>',`</h3><span class="tagx ok">목줄 ${S.leash}/10</span>`):h };
+const _petPick12=ACT.petPick; ACT.petPick=el=>{ _petPick12(el); const p=rt.players.get(el.dataset.id), l=p&&p.pet&&(p.pet.l|0); if(l&&$('mbox')){ const t=$('mbox').querySelector('.ch-p'); if(t) t.insertAdjacentHTML('beforeend',`<br><b>목줄이 채워져 있어요 (${l}/10).</b> 시도하면 무조건 막히고 목줄만 닳아요.`) } };
+
+/* 메뉴가 1초마다 새로 그려지며 누른 버튼이 사라지던 문제: 내용이 같으면 다시 그리지 않는다 */
+(function(){ const D=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML'); for(const id of ['sheet','tabbar','nav']){ const el=document.getElementById(id); if(!el) continue;
+  Object.defineProperty(el,'innerHTML',{configurable:true,get(){ return D.get.call(this) },set(v){ if(v===this.__lastHTML) return; this.__lastHTML=v; D.set.call(this,v) }}) } })();
+/* ================= 펫 친밀도 올리기: 쓰다듬기 · 간식 · 놀아 주기 ================= */
+function petDay(){ if(!S.petDay||S.petDay.d!==today()) S.petDay={d:today(),snack:0,play:0}; return S.petDay }
+const PET_SNACK={dog:'뼈다귀 대신 말린 고기',cat:'참치 한 숟갈',rod:'해바라기씨',bird:'곡식 한 줌',big:'사과 반쪽',cold:'작은 벌레',monkey:'바나나 칩',fox:'훈제 소시지 조각'};
+ACT.petCare=el=>{ const k=S.pet, t=el.dataset.t; if(!k||!PETS[k]) return; const D=petDay(), e=petE(k), lb=petLabel(k);
+  if(t==='pat'){ petPoke(null); return }
+  if(t==='snack'){ if(D.snack>=3) return toast('간식은 하루 세 번까지예요.'); if((S.res.food||0)<3) return toast('식량 3이 필요해요.'); S.res.food-=3; D.snack++; affAdd(k,5); markSave(); sfx('eat'); toast(`${e} ${lb}에게 ${PET_SNACK[PG[k]]||'간식'}을(를) 줬다 · 친밀도 +5 (오늘 ${D.snack}/3)`,true); return render() }
+  if(t==='play'){ if(D.play>=3) return toast('놀아 주기는 하루 세 번까지예요.'); if(Date.now()<(S.petPlayT||0)) return toast(`조금 쉬었다가 · ${mmss(S.petPlayT-Date.now())}`); D.play++; S.petPlayT=Date.now()+5*60000; const n=ri(3,6); affAdd(k,n); mindAdd(3); markSave(); sfx('click');
+    toast(`${e} ${lb}와(과) ${stPick(['공 던지기를 했다','숨바꼭질을 했다','캠프 한 바퀴를 같이 뛰었다','끈 놀이를 했다'])} · 친밀도 +${n}, 정신 +3 (오늘 ${D.play}/3)`,true); return render() } };
+function petCareRow(){ const k=S.pet; if(!k) return ''; const D=petDay();
+  return `<div class="petcare"><button class="btn sm" data-act="petCare" data-t="pat">쓰다듬기</button><button class="btn sm" data-act="petCare" data-t="snack" ${D.snack>=3||(S.res.food||0)<3?'disabled':''}>간식 주기 · 식량 3 <small class="num">${D.snack}/3</small></button><button class="btn sm" data-act="petCare" data-t="play" ${D.play>=3||Date.now()<(S.petPlayT||0)?'disabled':''}>놀아 주기 <small class="num">${D.play}/3</small></button></div><p class="note">친밀도는 쓰다듬기(20초에 +1), 간식(+5), 놀아 주기(+3~6), 함께 다니기(10분에 +1)로 올라요. 감염에서 살아남으면 크게 올라요.</p>` }
+const _petCard13=petCard; petCard=function(){ const h=_petCard13(); return S.pet?h.replace(/<\/section>$/,petCareRow()+'</section>'):h };
+const _petsHtml13=petsHtml; petsHtml=function(){ const h=_petsHtml13(); return S.pet?h.replace('<div class="petgrid">',petCareRow()+'<div class="petgrid">'):h };
+
+/* ================= 탐험대의 아이에게는 애정 주기 없음 ================= */
+const _crewCard13=crewCard; crewCard=function(c,sel){ crewInfo(c); const h=_crewCard13(c,sel); return c.age==='어린이'?h.replace(/<button class="btn sm" data-act="crewLove"[^>]*>[\s\S]*?<\/button>/,''):h };
+const _crewLove13=ACT.crewLove; ACT.crewLove=el=>{ const c=crewById(el.dataset.id); if(c&&crewInfo(c).age==='어린이') return; return _crewLove13(el) };
+const _crewAsk13=crewAsk; crewAsk=function(c){ if(crewInfo(c).age==='어린이') return; return _crewAsk13(c) };
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
