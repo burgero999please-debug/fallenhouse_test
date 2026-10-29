@@ -9026,7 +9026,7 @@ const _crewCard44=crewCard; crewCard=function(c,sel){ let h=_crewCard44(c,sel); 
   if(isKid(c)){ h=h.replace(/<button class="btn sm" data-act="crewLove"[^>]*>[\s\S]*?<\/button>/,''); if(!away) h=h.replace(/(<button class="btn sm ghost" data-act="dismissCrew")/,`<button class="btn sm" data-act="crewPlay" data-id="${c.id}" ${left<=0||Date.now()<(c.loveT||0)?'disabled':''}>놀아 주기 <small class="num">${Math.max(0,left)}/3</small></button>$1`) }
   if(!away) h=h.replace(/(<button class="btn sm ghost" data-act="dismissCrew")/,`<button class="btn sm" data-act="crewGift" data-id="${c.id}">선물</button>$1`);
   return h };
-const _crewLove44=ACT.crewLove; ACT.crewLove=el=>{ const c=crewById(el.dataset.id); if(!c) return; if(isKid(c)) return ACT.crewPlay(el); crewInfo2(c); const b=c.loy; _crewLove44(el); if(c.loy!==b) loveFx(c.loy>b) };
+const _crewLove44=ACT.crewLove; ACT.crewLove=el=>{ const c=crewById(el.dataset.id); if(!c) return; if(isKid(c)) return ACT.crewPlay(el); crewInfo2(c); const b=c.loy; _crewLove44(el); if(c.loy!==b){ loveFx(c.loy>b); if(c.loy>b&&c.sex!=='여') setTimeout(()=>{ try{ rt.sgT.mmh=0; _sfx72('mmh') }catch(e){} },700) } };
 const _crewAsk44=crewAsk; crewAsk=function(c){ if(isKid(c)) return; return _crewAsk44(c) };
 ACT.crewPlay=el=>{ const c=crewById(el.dataset.id); if(!c||c.state==='dead') return; crewInfo2(c); if(loveCnt()>=3) return toast('놀아 주기·애정 주기는 하루 세 번까지예요.'); if(Date.now()<(c.loveT||0)) return;
   c.loveT=Date.now()+3*60000; S.loveDay.n++; const p=clamp(.62+(ST('cha')-3)*.04+c.aff/500,.25,.93), ok=Math.random()<p, fx=[];
@@ -10135,17 +10135,14 @@ const _sfx72=sfx; sfx=function(n){ const L=SFX_LONG[n]; if(L){ rt.sgL=rt.sgL||{}
   if(n==='sting'){ _sfx72(n); if(r<.4) sfx('horror'); return }
   if(n==='distant'&&r<.35) return _sfx72('zmoan');
   if(n==='whisper'&&r<.3) return sfx('zbreath');
-  if(n==='eat'){ _sfx72(n); if(r<.3) setTimeout(()=>_sfx72('hmm'),380); return }
-  if(n==='level'){ _sfx72(n); if(r<.35) setTimeout(()=>_sfx72('mmh'),650); return }
-  return _sfx72(n) };
+      return _sfx72(n) };
 
 /* 전투 시작: 좀비면 가끔 울음소리 */
 const _startEnc72=startEnc; startEnc=function(){ const was=rt.enc, r=_startEnc72.apply(this,arguments); try{ const e=rt.enc; if(e&&e!==was&&!(e.z&&e.z.human)) sfxP(Math.random()<.7?'zmoan':'zbreath',.5,250) }catch(x){} return r };
 
 /* 대원과 놀아 주기·애정 주기·선물 */
 const _crewPlay72=ACT.crewPlay; ACT.crewPlay=el=>{ const n0=loveCnt(); const r=_crewPlay72(el); if(loveCnt()>n0) sfxP('hum',.6,300); return r };
-const _crewLove72=ACT.crewLove; ACT.crewLove=el=>{ const n0=loveCnt(); const r=_crewLove72(el); if(loveCnt()>n0) sfxP(Math.random()<.5?'mmh':'hum',.55,300); return r };
-const _crewGift72=ACT.crewGift; ACT.crewGift=el=>{ const r=_crewGift72(el); sfxP('hmm',.3,200); return r };
+
 
 /* 이야기·사건 창: 글 내용에 맞는 소리를 가끔 */
 const MOOD72=[[/아기|갓난|젖먹이|애기/,'baby',.6],[/흐느|울음|울고|울었|울며|눈물|오열/,'sob',.4],[/콧노래|흥얼|휘파람/,'hum',.6],
@@ -10235,7 +10232,7 @@ const _petDie74=petDie; petDie=function(k){ if(k==='ghost') return; return _petD
 /* 얻는 장면 */
 function hpetGet(k,title,txt){ if(!HPET[k]||(S.pets||{})[k]) return false; S.pets=S.pets||{}; whenFree(()=>{ if((S.pets||{})[k]) return; const r=gainPet(k); if(!r) return; S.hpetT=S.hpetT||{}; S.hpetT[k]=Date.now(); try{ feed(`${S.nick}님 곁에 무언가 특별한 것이 생겼습니다`) }catch(e){}
     openModal(`<div class="eyebrow">HIDDEN PET <span class="dash"></span> 히든 펫</div><h2><span class="pemo big">${HPET[k].e}</span> ${esc(title)}</h2><p class="ch-p">${esc(txt)}</p><p class="note">${esc(HPET[k].n)} · ${esc(PETS[k].d)}</p><div class="row"><button class="btn pri" data-act="closeModal">확인</button></div>`);
-    if(k==='ghost') sfxP('horror',1,300); else sfxP('hmm',1,400); markSave() }); return true }
+    if(k==='ghost') sfxP('horror',1,300);; markSave() }); return true }
 /* 무릎 꿇은 약탈자: 사람 적을 이긴 뒤 3% · 결투 승리 15% (Lv.20 이상) */
 const _winEnc74=winEnc; winEnc=function(){ const e=rt.enc, hu=!!(e&&e.z&&e.z.human); const r=_winEnc74.apply(this,arguments);
   if(hu&&lvlOf(S.xp)>=20&&!(S.pets||{}).human&&Math.random()<.03) hpetGet('human','무릎 꿇은 약탈자','칼끝을 겨누자 그는 무기를 내던지고 무릎을 꿇었다. 살려만 주면 뭐든 하겠단다. 그날부터 그는 내 뒤를 한 걸음 떨어져 따라다닌다.'); return r };
@@ -10255,6 +10252,15 @@ const _viewCodex74=viewCodex; viewCodex=function(){ const h=_viewCodex74.apply(t
   sec.insertAdjacentHTML('afterend',`<div class="sec hpet"><div class="sec-head"><h2>히든 펫</h2><p class="num">${Object.keys(HPET).filter(own).length}/${Object.keys(HPET).length}</p></div><div class="codex">${Object.keys(HPET).map(k=>own(k)?cxItem(1,`${HPET[k].e} ${esc(HPET[k].n)}`,esc(PETS[k].d),`<button class="btn sm${petOn(k)?' pri':''}" data-act="equipPet" data-k="${k}">${petOn(k)?'함께 다니는 중':'데리고 다니기'}</button>`):cxItem(0,'',esc(HPET[k].hint))).join('')}</div></div>`);
   const d=document.createElement('div'); d.append(tp.content); return d.innerHTML };
 window.__HPET={HPET,hpetGet,lossCnt};
+
+/* ================= p75: '흠·음~' 만족 소리는 포지션 이벤트·스토리 창에서만 ================= */
+rt.storyT=0; const storyMark=()=>{ rt.storyT=Date.now() };
+const storyOn=()=>Date.now()-(rt.storyT||0)<180000&&!$('modal').hidden;
+const _openStory75=openStory; openStory=function(){ storyMark(); return _openStory75.apply(this,arguments) };
+const _runChain75=runChain; runChain=function(){ storyMark(); return _runChain75.apply(this,arguments) };
+const _cevRun75=cevRun; cevRun=function(){ storyMark(); return _cevRun75.apply(this,arguments) };
+const _sfx75=sfx; sfx=function(n){ if((n==='hmm'||n==='mmh')&&!storyOn()) return; return _sfx75(n) };
+MOOD72.push([/만족|흡족|미소를|씩 웃|피식/,'mmh',.35]);
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
