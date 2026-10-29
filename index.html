@@ -9862,6 +9862,27 @@ const _viewMap59b=viewMap; viewMap=function(){ const h=_viewMap59b.apply(this,ar
   const d=document.createElement('div'); d.append(tp.content); return d.innerHTML };
 (()=>{ const st=document.createElement('style'); st.textContent=`.mapinfo .midesc{font-size:14px;line-height:1.6;margin:4px 0 8px;color:var(--fg)}`; document.head.append(st) })();
 
+/* 지도 '무엇이 필요해요?' 버튼: 가로로 잘리지 않게 여러 줄로 감싼다 */
+(()=>{ const st=document.createElement('style'); st.textContent=`.needwide .needbox .row.qn,.needbox .row.qn{flex-wrap:wrap!important;overflow:visible!important;mask-image:none!important;-webkit-mask-image:none!important;padding-bottom:0}
+.needbox .row.qn .chipb{flex:0 0 auto;white-space:nowrap}
+.mapcol>.maptool{flex-wrap:wrap!important;overflow:visible!important;row-gap:6px;mask-image:none!important;-webkit-mask-image:none!important}.mapcol>.maptool>*{flex:0 0 auto;white-space:nowrap}`; document.head.append(st) })();
+
+/* 메뉴 순서·묶음: 내 정보 / 현장 / 캠프 운영 / 교신 / 지갑 */
+(()=>{ const by={}; NAV.filter(x=>x.k).forEach(x=>by[x.k]=x);
+  const G=[['내 정보',['home','char','survive','codex']],['현장',['map','ops']],['캠프 운영',['crew','work','build','craft']],['교신',['radio','roster','mail']],['지갑',['shop','jobs']]];
+  const out=[], used=new Set(); for(const [g,ks] of G){ out.push({g}); for(const k of ks) if(by[k]){ out.push(by[k]); used.add(k) } }
+  NAV.filter(x=>x.k&&!used.has(x.k)).forEach(x=>out.push(x));
+  NAV.splice(0,NAV.length,...out); VIEWS.splice(0,VIEWS.length,...NAV.filter(x=>x.k)) })();
+(()=>{ const st=document.createElement('style'); st.textContent=`.nav .nav-g{margin-top:14px}.nav .nav-g:first-child{margin-top:0}`; document.head.append(st) })();
+
+/* 정원 초과 영입: 능력치 합이 가장 낮은 대원을 표시 */
+const _crewSwap62=crewSwapNext; crewSwapNext=function(){ const r=_crewSwap62.apply(this,arguments); try{ const rows=[...$('mbox').querySelectorAll('.cmp tbody tr:not(.new)')], val=tr=>+((tr.querySelector('td[data-l="합"]')||{}).textContent||NaN);
+  const vs=rows.map(val).filter(v=>!isNaN(v)); if(!vs.length) return r; const mn=Math.min(...vs);
+  rows.forEach(tr=>{ if(val(tr)===mn){ tr.classList.add('weakest'); const th=tr.querySelector('th'); if(th&&!th.querySelector('.wk')) th.insertAdjacentHTML('afterbegin','<span class="wk">가장 약함</span> ') } });
+  const note=$('mbox').querySelector('.cmpwrap'); if(note&&!$('mbox').querySelector('.wknote')) note.insertAdjacentHTML('beforebegin',`<p class="note wknote">능력치 합이 가장 낮은 대원(${mn})에 <b>가장 약함</b> 표시를 했어요.</p>`) }catch(e){} return r };
+(()=>{ const st=document.createElement('style'); st.textContent=`.cmp tr.weakest{background:color-mix(in srgb,var(--blood) 9%,transparent);outline:1px solid color-mix(in srgb,var(--blood) 45%,transparent)}.mbox:has(.cmp){width:min(680px,100%)}.cmp td .btn{white-space:nowrap}
+.cmp .wk{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:var(--blood);padding:1px 6px;border-radius:9px;margin-right:4px;vertical-align:middle}`; document.head.append(st) })();
+
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
