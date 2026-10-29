@@ -2509,9 +2509,9 @@ function slog(x){ rt.slog=(rt.slog||[]).concat({t:Date.now(),x:josa(x)}).slice(-
 function encChance(base){ const k=curEv().def.k; return Math.min(.75,base*evM('enc')*(k==='horde'?1.5:k==='quiet'?.6:k==='fog'?.8:1)*(petOn('dog')?.85:1)*(S.route==='duo'?.9:1)*(Date.now()<(S.flareT||0)?.5:1)*(1-gearV('stealth'))) }
 function maybeWeapon(src){
   const l=lvlOf(S.xp);
-  for(const w of MELEE.slice().sort(()=>Math.random()-.5)){ if(!w.find||S.weapons[w.k]||l<w.find) continue; if(w.k==='pulse'&&MAP[S.pos]?.d!=='quabbin') continue;
-    if(Math.random()<(w.rare?.012:w.k==='bat'?.06:.035)){ S.weapons[w.k]=1; if(w.dmg>curWeapon().dmg) S.weapon=w.k;
-      toast(`무기 발견: ${w.n} (피해 ${w.dmg})`,true); slog(`${src}에서 ${w.n}을(를) 손에 넣었다.`); feed(`${S.nick}님이 ${w.n}을(를) 손에 넣었습니다`); return } }
+  for(const w of MELEE.slice().sort(()=>Math.random()-.5)){ if(!w.find||l<w.find) continue; const had=!!S.weapons[w.k]; if(w.k==='pulse'&&MAP[S.pos]?.d!=='quabbin') continue;
+    if(Math.random()<(w.rare?.012:w.k==='bat'?.06:.035)*(had?.5:1)){ wGain(w.k); if(!had&&w.dmg>curWeapon().dmg) S.weapon=w.k;
+      toast(had?`무기 발견: ${w.n} 하나 더 (보유 ${wCount(w.k)}개 · 선물할 수 있어요)`:`무기 발견: ${w.n} (피해 ${w.dmg})`,true); slog(`${src}에서 ${w.n}을(를) 손에 넣었다.`); feed(`${S.nick}님이 ${w.n}을(를) 손에 넣었습니다`); return } }
 }
 ACT.search=()=>{
   if(!canAct()) return; const now=Date.now(); if(now-(S.scavT||0)<3200) return; S.scavT=now;
@@ -2544,8 +2544,8 @@ ACT.bandage=()=>{
   slog('붕대를 감았다.'); if(rt.enc) updEnc(); else render(); markSave();
 };
 ACT.equip=el=>{ const k=el.dataset.k; if(!S.weapons[k]||rt.enc) return; S.weapon=k; toast(`${weaponOf(k).n} 장착`); markSave(); render() };
-ACT.craftW=el=>{ const w=weaponOf(el.dataset.k); if(!w.craft||S.weapons[w.k]||lvlOf(S.xp)<w.lv||!canPay(w.craft)) return;
-  pay(w.craft); S.weapons[w.k]=1; if(w.dmg>curWeapon().dmg) S.weapon=w.k; addXp(6); toast(`${w.n} 제작 완료 (피해 ${w.dmg})`,true); markSave(); render() };
+ACT.craftW=el=>{ const w=weaponOf(el.dataset.k); if(!w.craft||lvlOf(S.xp)<w.lv||!canPay(w.craft)) return; const had=!!S.weapons[w.k];
+  pay(w.craft); wGain(w.k); if(!had&&w.dmg>curWeapon().dmg) S.weapon=w.k; addXp(6); toast(had?`${w.n} 하나 더 제작 (보유 ${wCount(w.k)}개)`:`${w.n} 제작 완료 (피해 ${w.dmg})`,true); markSave(); render() };
 
 /* ================= 좀비 도감 데이터 ================= */
 const ZOMBIES={
@@ -3487,10 +3487,10 @@ const SHOP_BUY=[
 const SHOP_SELL={scrap:[10,4],wood:[10,3],food:[10,6],water:[10,5],med:[1,8],fuel:[1,6],elec:[1,10]};
 /* ================= 무기 합성 ================= */
 ACT.synthW=el=>{ const r=SYNTH_W[+el.dataset.i]; if(!r||!synthOk(r)) return;
-  for(const w of r.w){ delete S.weapons[w]; if(S.weapon===w) S.weapon='fist' } pay(r.cost); for(const k in r.it||{}) S.inv[k]-=r.it[k];
-  S.weapons[r.to]=1; const w=weaponOf(r.to); if(w.dmg>curWeapon().dmg) S.weapon=r.to; S.synthN=(S.synthN||0)+1; addXp(20+w.dmg*4);
+  for(const w of r.w){ if((S.wExtra||{})[w]>0) S.wExtra[w]--; else { delete S.weapons[w]; if(S.weapon===w) S.weapon='fist' } } pay(r.cost); for(const k in r.it||{}) S.inv[k]-=r.it[k];
+  const hadTo=!!S.weapons[r.to]; wGain(r.to); const w=weaponOf(r.to); if(!hadTo&&w.dmg>curWeapon().dmg) S.weapon=r.to; S.synthN=(S.synthN||0)+1; addXp(20+w.dmg*4);
   toast(`합성 완료: ${w.n} (피해 ${w.dmg})`,true); feed(`${S.nick}님이 ${w.n}을(를) 만들어 냈습니다`); markSave(); render() };
-function synthOk(r){ return r.w.every(w=>S.weapons[w])&&!S.weapons[r.to]&&canPay(r.cost)&&Object.entries(r.it||{}).every(([k,v])=>(S.inv[k]||0)>=v)&&lvlOf(S.xp)>=(r.lv||0) }
+function synthOk(r){ return r.w.every(w=>S.weapons[w])&&canPay(r.cost)&&Object.entries(r.it||{}).every(([k,v])=>(S.inv[k]||0)>=v)&&lvlOf(S.xp)>=(r.lv||0) }
 function synthWHtml(){
   return `<div class="sec"><div class="sec-head"><h2>무기 합성</h2><p>재료 무기는 사라지고 더 강한 무기가 됩니다.</p></div><div class="grid">${SYNTH_W.map((r,i)=>{ const to=weaponOf(r.to), own=S.weapons[r.to], have=r.w.every(w=>S.weapons[w]), lk=lvlOf(S.xp)<(r.lv||0);
     const need=[...r.w.map(w=>`<span class="tag${S.weapons[w]?' ok':''}">${esc(weaponOf(w).n)}</span>`),...Object.entries(r.it||{}).map(([k,v])=>`<span class="tag${(S.inv[k]||0)>=v?' ok':''}">${esc(ITEMS[k].n)} ${v}</span>`)].join('');
@@ -4238,7 +4238,7 @@ ACT.sell=el=>{ const k=el.dataset.k, [q,p]=SHOP_SELL[k], n=+(el.dataset.n||1); l
   for(let j=0;j<n;j++){ if((S.res[k]||0)<q) break; S.res[k]-=q; sold++ } if(!sold) return toast('팔 물건이 부족합니다.');
   addMoney(p*sold); toast(`판매: ${RES[k].n} ${q*sold} → $${p*sold}`); markSave(); render() };
 ACT.plunderShop=el=>{ const i=SHOP_BUY[+el.dataset.i]; if(!i) return; if(i.f) return plunder({n:'떠돌이 상인의 창고',t:'shelter',dg:zoneD(S.pos).dg},'상점',fx=>{ gainFood(i.f,3); fx.push(FOODS[i.f].n+' 3개 (공짜)') }); const nm=i.w?weaponOf(i.w).n:i.r?`${RES[i.r].n} ${i.q}`:ITEMS[i.k].n;
-  plunder({n:'떠돌이 상인의 창고',t:'shelter',dg:zoneD(S.pos).dg},'상점',fx=>{ if(i.w){ S.weapons[i.w]=1; if(weaponOf(i.w).dmg>curWeapon().dmg) S.weapon=i.w } else if(i.r) gain(i.r,i.q); else S.inv[i.k]=(S.inv[i.k]||0)+1; fx.push(nm+' (공짜)') }) };
+  plunder({n:'떠돌이 상인의 창고',t:'shelter',dg:zoneD(S.pos).dg},'상점',fx=>{ if(i.w){ const had=!!S.weapons[i.w]; wGain(i.w); if(!had&&weaponOf(i.w).dmg>curWeapon().dmg) S.weapon=i.w } else if(i.r) gain(i.r,i.q); else S.inv[i.k]=(S.inv[i.k]||0)+1; fx.push(nm+' (공짜)') }) };
 ACT.useItem=el=>{ const k=el.dataset.k, it=ITEMS[k]; if(!it||!it.use||!(S.inv[k]>0)) return; S.inv[k]--; const r=it.use(); toast(`${it.n} 사용: ${r}`); markSave(); render() };
 
 /* ================= 공중 보급 (30분마다 3개) ================= */
@@ -5706,10 +5706,10 @@ function matsPanel(){ const g=(t,arr)=>arr.length?`<div class="mp-g"><span class
 renderCraft=function(){ const l=lvlOf(S.xp), out=[];
   /* 무기 */
   const wr=[]; for(const w of MELEE.filter(x=>x.craft&&l>=(x.lv||0))){ const own=!!S.weapons[w.k];
-    wr.push(rcpRow({key:'w_'+w.k,n:w.n,eff:`피해 ${w.dmg} · ${(WCLS[w.c]||WCLS.blunt).n}`,own,need:own?[]:needOf(w.craft),btns:own?'<span class="note">보유 중</span>':`<button class="btn sm${canPay(w.craft)?' pri':''}" data-act="craftW" data-k="${w.k}" ${canPay(w.craft)?'':'disabled'}>만들기</button>`})) }
+    wr.push(rcpRow({key:'w_'+w.k,n:w.n,eff:`피해 ${w.dmg} · ${(WCLS[w.c]||WCLS.blunt).n}`,own,need:needOf(w.craft),btns:`${own?`<span class="note">보유 ${wCount(w.k)}</span>`:''}<button class="btn sm${canPay(w.craft)?' pri':''}" data-act="craftW" data-k="${w.k}" ${canPay(w.craft)?'':'disabled'}>${own?'하나 더':'만들기'}</button>`})) }
   SYNTH_W.forEach((r,i)=>{ if(l<(r.lv||0)) return; const to=weaponOf(r.to), own=!!S.weapons[r.to]; if(!own&&!r.w.some(w=>S.weapons[w])) return;
     const need=r.w.map(w=>[weaponOf(w).n,S.weapons[w]?1:0,1]).concat(needOf(r.cost),Object.entries(r.it||{}).map(([k,v])=>[ITEMS[k].n,S.inv[k]||0,v]));
-    wr.push(rcpRow({key:'s_'+r.to,n:'합성 · '+to.n,eff:`피해 ${to.dmg} · 재료 무기는 사라져요`,own,need:own?[]:need,ok:!own&&synthOk(r),btns:own?'<span class="note">보유 중</span>':`<button class="btn sm${synthOk(r)?' pri':''}" data-act="synthW" data-i="${i}" ${synthOk(r)?'':'disabled'}>합성</button>`})) });
+    wr.push(rcpRow({key:'s_'+r.to,n:'합성 · '+to.n,eff:`피해 ${to.dmg} · 재료 무기는 사라져요`,own,need,ok:synthOk(r),btns:`${own?`<span class="note">보유 ${wCount(r.to)}</span>`:''}<button class="btn sm${synthOk(r)?' pri':''}" data-act="synthW" data-i="${i}" ${synthOk(r)?'':'disabled'}>${own?'하나 더 합성':'합성'}</button>`})) });
   /* 치료·생존 / 도구·장비 */
   const heal=[], tool=[], HEALP=['p_band','p_splint','p_suture','p_calm','p_filter','p_suppress'];
   for(const r of RECIPES){ if(r.camp||l<(r.lv||0)) continue; heal.push(rcpRow({key:'r_'+r.k,n:r.n,eff:`${r.d} · 보유 ${S.inv[r.k]||0}`,need:needOf(r.cost),btns:nBtns('craft',`data-k="${r.k}"`,n=>canPay(mul(r.cost,n)))})) }
@@ -6638,7 +6638,7 @@ async function petTake(id,how,fee){ closeModal(); const p=rt.players.get(id), P=
   if(Date.now()-(S.petRaidT||0)<10*60000) return toast(`다음 시도까지 ${mmss(10*60000-(Date.now()-(S.petRaidT||0)))}`); S.petRaidT=Date.now(); const k=P.k, nm=String(P.n||PETS[k].n).replace(/[<>]/g,'').slice(0,12), fx=[];
   const win=Math.random()<(how==='adopt'?clamp(.35+(ST('cha')-3)*.05,.1,.8):clamp(.18+(ST('agi')-3)*.04+(ST('luk')-3)*.02+gearV('plunder'),.05,.6));
   if(how==='adopt'){ const pay=win?fee:Math.round(fee/2); S.money=Math.max(0,(S.money||0)-pay); fx.push(`$-${pay}`) }
-  if(win){ S.pets=S.pets||{}; S.pets[k]=1; S.pet=k; S.petName=S.petName||{}; S.petName[k]=nm; S.petFrom=S.petFrom||{}; S.petFrom[k]=nameOf(id).slice(0,14);
+  if(win){ S.pets=S.pets||{}; if(S.pets[k]){ S.petN=S.petN||{}; S.petN[k]=(S.petN[k]||1)+1 } S.pets[k]=1; S.pet=k; S.petName=S.petName||{}; S.petName[k]=nm; S.petFrom=S.petFrom||{}; S.petFrom[k]=nameOf(id).slice(0,14);
     S.raidsOut=(S.raidsOut||[]).concat({id:'p'+Date.now().toString(36),target:id,kind:'pet',pet:k,how,t:Date.now()}).slice(-10); if(rt.db&&rt.myId){ try{ await rt.db.doc('raids/'+rt.myId).set({list:S.raidsOut}) }catch(e){} }
     feed(`${S.nick}님이 ${nameOf(id)}님의 펫 '${nm}'을(를) ${how==='adopt'?'강제로 입양했습니다':'훔쳤습니다'}`); fx.push(`${petE(k)} ${petLabel(k)} 합류`); markSave(); schedulePub(2000);
     return outcome({n:nameOf(id)+'의 캠프'},how==='adopt'?'데려왔다':'훔쳐 냈다',how==='adopt'?'돈을 던져 주자 그는 이를 갈며 목줄을 놓았다.':'그가 한눈판 사이 목줄을 풀었다. 그 애는 순순히 따라왔다.',fx,true) }
@@ -9174,7 +9174,7 @@ ACT.lvRw=el=>{ const l=+el.dataset.l, r=LVR.find(x=>x.l===l); if(!r||lvlOf(S.xp)
   if(r.$) S.money=(S.money||0)+r.$;
   for(const [k,n] of Object.entries(r.it||{})) S.inv[k]=(S.inv[k]||0)+n;
   S.res=S.res||{}; for(const [k,n] of Object.entries(r.r||{})) S.res[k]=(S.res[k]||0)+n;
-  if(r.w){ S.weapons[r.w]=1 }
+  if(r.w){ wGain(r.w) }
   if(r.g){ S.gear=S.gear||{}; if(!S.gear[r.g]) gainGear(r.g) }
   try{ sfx('level'); FXL.flash('rgba(212,175,55,.35)',500) }catch(e){}
   toast(`Lv.${l} 보상: ${lvrDesc(r)}`,true); if(l>=50) feed(`${S.nick}님이 Lv.${l} 보상을 받았습니다`);
@@ -9272,13 +9272,13 @@ renderChat=function(force){
   if(rt.tab!=='radio'){ softRenderNavOnly(); return }
   const log=$('chatlog'); if(!log) return;
   const rows=chatRows(); const sig=rows.length+':'+(rows.length?rows[rows.length-1].t:0)+':'+(S.hideFeed?1:0);
-  if(sig===chatSig&&!force&&log.dataset.init){ rqDraw(); return } chatSig=sig;
-  const first=!log.dataset.init, atBottom=first||log.scrollHeight-log.scrollTop-log.clientHeight<60, jump=first||rt.chatJump; rt.chatJump=0;
+  if(sig===chatSig&&!force&&log.__init){ rqDraw(); return } chatSig=sig;
+  const first=!log.__init, atBottom=first||log.scrollHeight-log.scrollTop-log.clientHeight<60, jump=first||rt.chatJump; rt.chatJump=0;
   let anc=null; if(!atBottom){ for(const c of log.children){ if(c.dataset&&c.dataset.k&&c.offsetTop+c.offsetHeight>log.scrollTop){ anc={k:c.dataset.k,off:c.offsetTop-log.scrollTop}; break } } }
   const prev=new Set([...log.querySelectorAll('[data-k]')].map(e=>e.dataset.k));
   const els=rows.length?rows.map(r=>{ const e=msgEl(r); e.dataset.k=chatKey(r); return e }):[msgEl({sys:true,t:Date.now(),x:rt.solo?'무전기가 조용하다. 공유 서버에 연결되지 않아 혼자 진행 중입니다.':'아직 아무도 무전을 보내지 않았다. 먼저 인사해 보자.'})];
   const fresh=first?[]:rows.filter(r=>!r.me&&!prev.has(chatKey(r)));
-  log.replaceChildren(...els); log.dataset.init='1';
+  log.replaceChildren(...els); log.__init=1;
   if(atBottom||jump){ log.scrollTop=log.scrollHeight; rt.chatNewN=0 }
   else { const a=anc&&[...log.children].find(c=>c.dataset&&c.dataset.k===anc.k); if(a) log.scrollTop=a.offsetTop-anc.off; rt.chatNewN=(rt.chatNewN||0)+fresh.filter(r=>!r.sys).length }
   const live=$('chatLive'); if(live&&fresh.length){ const r=fresh.filter(x=>!x.sys).pop(); if(r) live.textContent=`${r.n}: ${r.x}` }
@@ -9320,7 +9320,7 @@ function fitChat(first){ const card=document.querySelector('.chatcard'); if(!car
   const sc=document.querySelector('.content'); if(first&&sc) sc.scrollTop=0;
   const go=()=>{ const c=document.querySelector('.chatcard'); if(!c||rt.tab!=='radio') return; const nav=$('tabbar'), vh=(window.visualViewport&&visualViewport.height)||innerHeight;
     const navH=nav&&getComputedStyle(nav).display!=='none'?nav.getBoundingClientRect().height:0, sct=sc?sc.scrollTop:0, top=c.getBoundingClientRect().top+sct-(sc?sc.getBoundingClientRect().top:0);
-    const resH=(()=>{ const r=$('resBar'); return r&&getComputedStyle(r).position==='fixed'&&getComputedStyle(r).display!=='none'?r.getBoundingClientRect().height:0 })(); c.style.height=Math.max(180,Math.round(vh-top-navH-resH-10))+'px'; if(first){ if(sc) sc.scrollTop=0; const l=$('chatlog'); if(l) l.scrollTop=l.scrollHeight } };
+    const resH=(()=>{ const r=$('resBar'); return r&&getComputedStyle(r).position==='fixed'&&getComputedStyle(r).display!=='none'?r.getBoundingClientRect().height:0 })(); document.documentElement.style.setProperty('--chatH',Math.max(180,Math.round(vh-top-navH-resH-10))+'px'); c.style.height=''; if(first){ if(sc) sc.scrollTop=0; const l=$('chatlog'); if(l) l.scrollTop=l.scrollHeight } };
   go(); if(first){ requestAnimationFrame(()=>requestAnimationFrame(go)); setTimeout(go,150) } }
 const _renderBody51=renderBody; renderBody=function(){ const was=rt.__radioIn; _renderBody51.apply(this,arguments); const on=rt.tab==='radio'; document.body.classList.toggle('tab-radio',on); rt.__radioIn=on;
   if(on){ chatWire(); fitChat(!was); chatNewUi() } };
@@ -9953,8 +9953,7 @@ const _viewRoster64=viewRoster0; viewRoster0=function(){ const h=_viewRoster64.a
   const onH=C.querySelector('.rost-h:not(.off)'); if(onH) onH.insertAdjacentHTML('afterend',`<ul class="rhelp">
     <li><b>펫</b> 남의 펫을 뺏거나 데려올 수 있어요.</li><li><b>대원</b> 상대가 파견 보낸 대원을 습격하거나 꾀어낼 수 있어요.</li>
     <li><b>결투</b> 상대에게 일대일 결투를 신청해요. 이기면 상대를 수하로 만들고, 지면 내가 수하가 될 수 있어요.</li>
-    <li><b>격려</b> 상대의 생산 속도를 15분 동안 5% 올려 줘요. 하루 ${CHEER_DAY}번 (오늘 ${cheerLeft()}번 남음), 같은 사람에게는 30분에 한 번.</li>
-    <li><b>쪽지 · 선물</b> 말을 남기거나 가진 것·산 것을 보내요.</li></ul>`);
+    <li><b>격려</b> 상대의 생산 속도를 15분 동안 5% 올려 줘요. 하루 ${CHEER_DAY}번 (오늘 ${cheerLeft()}번 남음), 같은 사람에게는 30분에 한 번.</li></ul>`);
   const d=document.createElement('div'); d.append(C); return d.innerHTML };
 
 /* --- 탐험대: 수동 파견은 빼고 자동 파견만 · 인원은 내 대원 수 안에서 · 바로 보내기 --- */
@@ -10011,6 +10010,32 @@ body.party-on .topbar .res{display:none}
 const _viewHome67=viewHome; viewHome=function(){ return _viewHome67.apply(this,arguments).replace('<button class="btn" data-act="invOpen">','<button class="btn lg herob" data-act="invOpen">').replace('<button class="btn ghost" data-act="go" data-view="radio">','<button class="btn lg herob" data-act="go" data-view="radio">') };
 (()=>{ const st=document.createElement('style'); st.textContent=`.btn.herob{background:color-mix(in srgb,var(--accent) 60%,transparent);border-color:color-mix(in srgb,var(--accent) 70%,transparent);color:#fff;font-weight:700}
 .btn.herob:hover{background:color-mix(in srgb,var(--accent) 72%,transparent)}.btn.herob .ic{stroke:currentColor}`; document.head.append(st) })();
+
+/* p68: 본부 버튼 회색 · 채팅 카드 높이 고정 · 선물(장비·탈것) · 펫 중복 */
+const _viewRadio68=viewRadio; viewRadio=function(){ return _viewRadio68.apply(this,arguments).replace('<section class="pcard chatcard">','<section class="pcard chatcard fit">') };
+const _gainPet68=gainPet; gainPet=function(k){ S.pets=S.pets||{}; if(!k){ const all=Object.keys(PETS), left=all.filter(x=>!S.pets[x]); k=left.length&&Math.random()<.75?stPick(left):stPick(all) } if(!k||!PETS[k]) return null;
+  if(S.pets[k]){ S.petN=S.petN||{}; S.petN[k]=(S.petN[k]||1)+1; toast(`${PETS[k].n}이(가) 또 생겼어요 · 이제 ${S.petN[k]}마리 (선물·양도할 수 있어요)`,true); try{ feed(`${S.nick}님에게 ${PETS[k].n}이(가) 한 마리 더 생겼습니다`) }catch(e){} markSave(); return k }
+  return _gainPet68(k) };
+const _petLabel68=petLabel; petLabel=function(k){ const t=_petLabel68(k), n=(S.petN||{})[k]||1; return n>1?`${t} ×${n}`:t };
+GC_OWN.splice(4,0,['gear','장비'],['car','탈것']);
+const _gcRows68=gcRows; gcRows=function(){ const G=rt.gc, L=_gcRows68.apply(this,arguments); if(G.mode!=='own') return L;
+  if(G.cat==='gear') for(const k in S.gear||{}) if(S.gear[k]&&GEAR[k]) L.push({t:'g',k,n:GEAR[k].n,have:1,d:`${SLOTS[GEAR[k].slot]} · ${GEAR[k].d||''}${Object.values(S.equip||{}).includes(k)?' · 착용 중 (보내면 벗겨져요)':''}`});
+  if(G.cat==='car') for(const k in S.cars||{}) if(S.cars[k]&&VEH[k]) L.push({t:'v',k,n:VEH[k].n,have:1,d:`${VEH[k].d||''}${S.car===k?' · 타는 중 (보내면 내려요)':''}`});
+  return L };
+/* 가진 장비·탈것 보내기: 내 것에서 빼고 보낸다 */
+const _gcDraw68=gcDraw; gcDraw=function(){ const r=_gcDraw68.apply(this,arguments); const G=rt.gc, B=$('mbox'); if(!G||G.mode!=='own'||!['gear','car'].includes(G.cat)||!B) return r; const L=gcRows();
+  B.querySelectorAll('[data-gcs]').forEach(b=>b.onclick=()=>{ const it=L[+b.dataset.gcs]; if(!it) return; const m=(($('gcMsg')||{}).value||'').trim().slice(0,120), g={id:'g'+Date.now().toString(36)+ri(100,999),to:G.to,t:Date.now()}; if(m) g.m=m;
+    if(it.t==='g'){ if(!S.gear?.[it.k]) return; delete S.gear[it.k]; for(const s in S.equip||{}) if(S.equip[s]===it.k) S.equip[s]=''; S.hp=Math.min(S.hp,maxHp()); g.g=it.k }
+    else { if(!S.cars?.[it.k]) return; delete S.cars[it.k]; if(S.car===it.k) S.car=''; g.v=it.k }
+    S.gifts.push(g); S.gifts=S.gifts.slice(-30); addXp(2); sfx('send'); toast(`${nameOf(G.to)}님에게 ${it.n}을(를) 보냈어요.`,true); G.msg=''; markSave(); flushPub(); render(); gcDraw() }); return r };
+(()=>{ const st=document.createElement('style'); st.textContent=`.chatcard.fit{height:var(--chatH,auto)}
+.btn.herob{background:color-mix(in srgb,var(--muted) 60%,transparent)!important;border-color:color-mix(in srgb,var(--muted) 70%,transparent)!important;color:#fff!important}
+.btn.herob:hover{background:color-mix(in srgb,var(--muted) 72%,transparent)!important}`; document.head.append(st) })();
+
+/* 지도: 누를 때 생기던 큰 초점 테두리 제거 (선택 표시는 지점의 링으로 충분) */
+(()=>{ const st=document.createElement('style'); st.textContent=`svg :focus,svg :focus-visible,svg [tabindex]:focus,.citymap g:focus,.citymap g:focus-visible,.ptm g:focus{outline:none!important}
+svg [role=button],.citymap g{-webkit-tap-highlight-color:transparent}
+.citymap g.poi:focus-visible .pin,.citymap g:focus-visible circle{stroke:var(--accent);stroke-width:1.2px}`; document.head.append(st) })();
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
