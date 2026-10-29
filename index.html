@@ -9091,7 +9091,7 @@ function crewKick(o){ if(!o) return; const away=o.state==='away';
   if(away){ for(const m of S.missions||[]){ if(Array.isArray(m.crew)&&m.crew.includes(o.id)) m.crew=m.crew.filter(x=>x!==o.id) } S.missions=(S.missions||[]).filter(m=>m.crew&&m.crew.length);
     (S.exp||[]).forEach(e=>{ if(Array.isArray(e.crew)) e.crew=e.crew.filter(x=>x!==o.id) }) }
   S.crew=S.crew.filter(x=>x!==o);
-  if(away||Math.random()<.25) seed('kickedGrudge',{n:crewNm(o),st:o.st,away:away?1:0,loy:o.loy||30},20,60) }
+  const loy=o.loy==null?30:o.loy, gp=clamp((away?.35:.15)+(loy<30?.15:loy>=70?-.1:0),.05,.6); if(Math.random()<gp) seed('kickedGrudge',{n:crewNm(o),st:o.st,away:away?1:0,loy:o.loy||30},20,60) }
 FOL.kickedGrudge=c=>{ const n=c.n||'쫓겨난 대원', str=(c.st&&c.st.str)||4;
   return {t:'원한',mood:'threat',sfx:['knock'],b:[c.away?`${n}. 파견 나가 있던 사이 내가 내쫓은 사람이다. 무전으로 해고 소식을 들었다고 했다.`:`${n}. 자리 하나 때문에 내보냈던 사람이다.`,`캠프 철문 앞에 서 있다. 무기를 쥐고, 뒤에 낯선 얼굴 둘을 데리고.`,'"나한테 빚진 거, 오늘 받으러 왔어."'],o:[
     {n:'사과하고 몫을 나눠 준다',f:()=>{ const fx=folLose(.12); return {t:['고개를 숙이고 창고 문을 열었다. 그는 한참 나를 노려보다 자루를 짊어졌다.','"다음엔 사람을 이렇게 버리지 마."'],fx} }},
@@ -9320,7 +9320,7 @@ function fitChat(first){ const card=document.querySelector('.chatcard'); if(!car
   const sc=document.querySelector('.content'); if(first&&sc) sc.scrollTop=0;
   const go=()=>{ const c=document.querySelector('.chatcard'); if(!c||rt.tab!=='radio') return; const nav=$('tabbar'), vh=(window.visualViewport&&visualViewport.height)||innerHeight;
     const navH=nav&&getComputedStyle(nav).display!=='none'?nav.getBoundingClientRect().height:0, sct=sc?sc.scrollTop:0, top=c.getBoundingClientRect().top+sct-(sc?sc.getBoundingClientRect().top:0);
-    c.style.height=Math.max(180,Math.round(vh-top-navH-10))+'px'; if(first){ if(sc) sc.scrollTop=0; const l=$('chatlog'); if(l) l.scrollTop=l.scrollHeight } };
+    const resH=(()=>{ const r=$('resBar'); return r&&getComputedStyle(r).position==='fixed'&&getComputedStyle(r).display!=='none'?r.getBoundingClientRect().height:0 })(); c.style.height=Math.max(180,Math.round(vh-top-navH-resH-10))+'px'; if(first){ if(sc) sc.scrollTop=0; const l=$('chatlog'); if(l) l.scrollTop=l.scrollHeight } };
   go(); if(first){ requestAnimationFrame(()=>requestAnimationFrame(go)); setTimeout(go,150) } }
 const _renderBody51=renderBody; renderBody=function(){ const was=rt.__radioIn; _renderBody51.apply(this,arguments); const on=rt.tab==='radio'; document.body.classList.toggle('tab-radio',on); rt.__radioIn=on;
   if(on){ chatWire(); fitChat(!was); chatNewUi() } };
@@ -9990,6 +9990,27 @@ const _crewCard64=crewCard; crewCard=function(c,sel){ let h=_crewCard64(c,sel); 
 @media (max-width:560px){.pl.pl2{grid-template-columns:24px 10px 70px minmax(0,1fr)}.pl.pl2>.c-hp{grid-column:3;font-size:11.5px}.pl.pl2>.c-cr{grid-column:4;font-size:11.5px}}
 .pl .pl-a{display:flex;gap:6px;flex-wrap:wrap}
 .acrow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:6px 0}.acrow label{display:inline-flex;align-items:center;gap:6px;font-size:13px}.acrow input,.acrow select{min-height:36px;width:auto;min-width:64px;font-size:16px;padding:2px 8px;border:1px solid var(--line2);background:var(--panel-solid);color:var(--fg)}.acrow .note{font-size:11.5px}`; document.head.append(st) })();
+
+/* 자원 바를 화면 아래에 고정 · 가방 분류 탭은 줄바꿈 */
+function resDock(){ try{ const r=$('resBar'), tb=$('tabbar'); if(!r) return; const tbH=tb&&getComputedStyle(tb).display!=='none'?tb.getBoundingClientRect().height:0;
+  document.documentElement.style.setProperty('--tabH',Math.round(tbH)+'px'); document.documentElement.style.setProperty('--resH',Math.round(r.getBoundingClientRect().height)+'px') }catch(e){} }
+const _renderRes66=renderRes; renderRes=function(){ const x=_renderRes66.apply(this,arguments); resDock(); return x };
+addEventListener('resize',()=>setTimeout(resDock,50)); setTimeout(resDock,500);
+(()=>{ const st=document.createElement('style'); st.textContent=`
+.topbar .res{position:fixed;left:0;right:var(--navw,0px);bottom:var(--tabH,0px);z-index:19;margin:0;padding-top:8px;padding-bottom:8px;background:color-mix(in srgb,var(--panel-solid,var(--bg)) 94%,transparent);border-top:1px solid var(--line2);box-shadow:0 -6px 18px -12px rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:right .25s ease}
+@media (min-width:761px){.topbar .res{padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}}
+.view{padding-bottom:calc(var(--resH,48px) + var(--tabH,0px) + 28px)!important}
+body.party-on .topbar .res{display:none}
+.encback{bottom:calc(var(--tabH,0px) + var(--resH,48px) + 12px)!important}#pBack{bottom:calc(var(--tabH,0px) + var(--resH,48px) + 12px)!important}
+.invtabs2{flex-wrap:wrap!important;overflow:visible!important;mask-image:none!important;-webkit-mask-image:none!important;padding:4px 0 8px!important}
+.invtabs2 .chipb{user-select:none;-webkit-user-select:none}
+#invList .ivr{display:grid!important;justify-content:stretch;flex-wrap:nowrap}
+@media (max-width:420px){.ivr{grid-template-columns:minmax(0,1fr) 14px!important}.ivr .ivn{grid-column:1}.ivr small{grid-column:1!important;text-align:left!important}.ivr i{grid-column:2!important;grid-row:1/3!important}}`; document.head.append(st) })();
+
+/* 본부 첫 카드: 인벤토리·무전실도 버튼으로 (강조색 60% 채움) */
+const _viewHome67=viewHome; viewHome=function(){ return _viewHome67.apply(this,arguments).replace('<button class="btn" data-act="invOpen">','<button class="btn lg herob" data-act="invOpen">').replace('<button class="btn ghost" data-act="go" data-view="radio">','<button class="btn lg herob" data-act="go" data-view="radio">') };
+(()=>{ const st=document.createElement('style'); st.textContent=`.btn.herob{background:color-mix(in srgb,var(--accent) 60%,transparent);border-color:color-mix(in srgb,var(--accent) 70%,transparent);color:#fff;font-weight:700}
+.btn.herob:hover{background:color-mix(in srgb,var(--accent) 72%,transparent)}.btn.herob .ic{stroke:currentColor}`; document.head.append(st) })();
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
