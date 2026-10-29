@@ -10064,8 +10064,8 @@ const JOB_TEMPLATE=`=== 이벤트: 시체 수습 알바
 > 이름을 하나씩 불러 준다
   결과: 관리인이 처음으로 웃었다. | 정신 5 | 끝
 `;
-const JOB_GUIDE=`[알바 양식 설명] — 이벤트 양식과 같고, 위쪽에 아래 줄들이 더 있어요
-발생: 알바              ← 이 줄이 있으면 '알바 > 게시판 의뢰'에 올라가요 (무작위로 뜨지 않아요)
+const JOB_GUIDE=`[알바 양식 설명] — '=== 알바: 제목'으로 시작해요. 장면·선택지 쓰는 법은 이벤트와 같고, 위쪽에 아래 줄들이 더 있어요
+발생: 알바              ← (생략 가능) 「글로 알바 넣기」 창에서 넣으면 자동으로 알바가 돼요
 일당: 80                ← 끝까지 하면 받는 달러
 경험치: 20              ← 끝까지 하면 받는 XP
 보상 아이템: 붕대 1      ← (선택) 끝내면 받는 아이템과 개수
@@ -10092,6 +10092,28 @@ const _cevToText70=cevToText; cevToText=function(e){ let s=_cevToText70(e); if(!
   const lines=[`발생: 알바`,`일당: ${J.pay}`,`경험치: ${J.xp}`,`보상 아이템: ${J.it?ITEMS[J.it].n+' '+J.iq:''}`,`조건: ${sn?sn+' '+J.sv:''}`,`필요 아이템: ${J.need?ITEMS[J.need].n+' '+J.nq:''}`,`참가비: ${J.cost}`,`체력 소모: ${J.hp}`,`하루 횟수: ${J.daily}`].join('\n');
   return s.replace(/^발생:.*$/m,lines) };
 const _cevTextModal70=cevTextModal; cevTextModal=function(){ _cevTextModal70.apply(this,arguments); const tpl=$('ctTpl'); if(tpl&&!$('ctJob')){ tpl.insertAdjacentHTML('afterend','<button class="btn" id="ctJob" type="button">알바 양식 넣기</button>'); $('ctJob').onclick=()=>{ const T=$('ctTx'); T.value=JOB_GUIDE+'\n\n'+JOB_TEMPLATE; T.dispatchEvent(new Event('input')); $('ctChk')&&$('ctChk').click() } } };
+
+/* p71: 알바는 이벤트와 따로 — 「글로 알바 넣기」 창 */
+const _cevParse71=cevParse; cevParse=function(txt){ if(!rt.jobTextMode) return _cevParse71(txt);
+  const src=String(txt||'').replace(/\r/g,'').replace(/^===\s*알바\s*[:：]/gm,'=== 이벤트:');
+  const fixed=src.split(/(?=^===\s*이벤트\s*[:：])/m).map(p=>{ if(!/^===\s*이벤트/.test(p)) return p; const head=p.split(/^---\s*\d+/m)[0]; return /^발생\s*[:：]/m.test(head)?p.replace(/^발생\s*[:：].*$/m,'발생: 알바'):p.replace(/\n/,'\n발생: 알바\n') }).join('');
+  const r=_cevParse71(fixed); r.list.forEach(x=>{ if(!x.e.trig||x.e.trig.k!=='job'){ x.e.trig={k:'job'}; x.e.job=jobClean(x.e.job||{}) } }); return r };
+function jobTextModal(){ rt.jobTextMode=true; cevTextModal(); const B=$('mbox'); if(!B) return;
+  const h=B.querySelector('h2'); if(h) h.textContent='글로 알바 넣기'; const ey=B.querySelector('.eyebrow'); if(ey) ey.innerHTML='ADMIN <span class="dash"></span> 알바';
+  const note=B.querySelector('p.note'); if(note) note.textContent='메모장에서 알바 양식대로 쓴 글을 통째로 붙여 넣으세요. 여기서 넣은 것은 모두 「알바 > 게시판 의뢰」에만 올라가요 (무작위 이벤트로 뜨지 않아요). 여러 개를 한 번에 넣을 수 있어요.';
+  const T=$('ctTx'); if(T) T.placeholder='=== 알바: 제목 으로 시작하는 글을 붙여 넣으세요';
+  const tpl=$('ctTpl'); if(tpl){ tpl.textContent='알바 양식 예시 넣기'; tpl.onclick=()=>{ T.value=JOB_TEMPLATE.replace(/^=== 이벤트:/m,'=== 알바:'); $('ctChk').click() } }
+  const gd=$('ctGuide'); if(gd){ gd.textContent='알바 양식 설명'; gd.onclick=()=>{ T.value=JOB_GUIDE+'\n\n'+JOB_TEMPLATE.replace(/^=== 이벤트:/m,'=== 알바:'); $('ctChk').click() } }
+  const jb=$('ctJob'); if(jb) jb.remove();
+  const out=$('ctOut'); if(out){ const L=(rt.cev||[]).filter(e=>e.trig&&e.trig.k==='job'); out.textContent=`알바 글로 내보내기 (${L.length})`; out.onclick=()=>{ T.value=L.map(e=>cevToText(e).replace(/^=== 이벤트:/m,'=== 알바:')).join('\n'); $('ctChk').click() } }
+  const bk=$('ctBack'); if(bk){ bk.textContent='닫기'; bk.onclick=()=>{ rt.jobTextMode=false; rt.modalLock=false; closeModal() } }
+  const sv=$('ctSave'); if(sv){ const o=sv.onclick; sv.onclick=async()=>{ await o(); toast('알바 게시판에 반영했어요.') } } }
+ACT.jobText=()=>jobTextModal();
+new MutationObserver(()=>{ if($('modal').hidden) rt.jobTextMode=false }).observe($('modal'),{attributes:true,attributeFilter:['hidden']});
+/* 이벤트 창의 「알바 양식 넣기」 버튼은 없애고, 편집기와 알바 화면에 「글로 알바 넣기」를 따로 둔다 */
+const _cevTextModal71=cevTextModal; cevTextModal=function(){ _cevTextModal71.apply(this,arguments); const jb=$('ctJob'); if(jb) jb.remove() };
+const _cevOpen71=cevOpen; cevOpen=function(){ _cevOpen71.apply(this,arguments); const box=$('mbox'); if(!box||!rt.isAdmin) return; const t=box.querySelector('[data-act=cevText]'); if(t&&!box.querySelector('[data-act=jobText]')) t.insertAdjacentHTML('afterend',`<button class="btn" data-act="jobText" type="button">💼 글로 알바 넣기 (알바 양식)</button>`) };
+const _viewJobs71=viewJobs; viewJobs=function(){ const h=_viewJobs71.apply(this,arguments); return rt.isAdmin?`<div class="row" style="justify-content:flex-end;margin:0 0 8px"><button class="btn sm" data-act="jobText" type="button">💼 글로 알바 넣기 (관리자)</button></div>`+h:h };
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
