@@ -7466,7 +7466,7 @@ const _crewCard9=crewCard; crewCard=function(c,sel){ crewInfo2(c); let h=_crewCa
   return h };
 const LOVE_OK=['어깨를 두드려 줬다. 그가 오랜만에 웃었다.','아껴 둔 초콜릿을 나눠 줬다.','밤새 이야기를 들어 줬다.','다친 손을 다시 감아 줬다.','이름을 불러 줬다. 별명 말고, 진짜 이름으로.'];
 const LOVE_NO=['칭찬이 어색하게 나왔다.','바쁜 척 말을 끊어 버렸다.','선물이 하필 그가 싫어하는 거였다.','"됐어요." 그가 고개를 돌렸다.'];
-ACT.crewLove=el=>{ const c=crewById(el.dataset.id); if(!c||c.state==='dead'||c.state==='away') return; crewInfo2(c); if(Date.now()<(c.loveT||0)) return; c.loveT=Date.now()+3*60000;
+ACT.crewLove=el=>{ const c=crewById(el.dataset.id); if(!c||c.state==='dead') return; crewInfo2(c); if(Date.now()<(c.loveT||0)) return; c.loveT=Date.now()+3*60000;
   const p=clamp(.55+(ST('cha')-3)*.05+c.aff/400,.2,.92), fx=[]; let ok2=Math.random()<p;
   if(ok2){ const a=ri(3,7), b=ri(2,5); cAdd(c,'loy',a); cAdd(c,'aff',b); fx.push(`충성도 +${a}`,`친밀도 +${b}`); hx('love') } else { const a=ri(2,5), h=ri(3,8); cAdd(c,'loy',-a); cAdd(c,'aff',-1); S.hp=Math.max(1,S.hp-h); fx.push(`충성도 -${a}`,'친밀도 -1',`체력 -${h}`) }
   markSave(); outcome({n:crewNm(c)},ok2?`${crewNm(c)}이(가) 만족했다`:`${crewNm(c)}이(가) 실망했다`,`${ok2?stPick(LOVE_OK):stPick(LOVE_NO)}\n"${crewSay(c,ok2?'ok':'bad')}"`,fx,ok2) };
@@ -9023,7 +9023,7 @@ const _crewCard44=crewCard; crewCard=function(c,sel){ let h=_crewCard44(c,sel); 
   return h };
 const _crewLove44=ACT.crewLove; ACT.crewLove=el=>{ const c=crewById(el.dataset.id); if(!c) return; if(isKid(c)) return ACT.crewPlay(el); crewInfo2(c); const b=c.loy; _crewLove44(el); if(c.loy!==b) loveFx(c.loy>b) };
 const _crewAsk44=crewAsk; crewAsk=function(c){ if(isKid(c)) return; return _crewAsk44(c) };
-ACT.crewPlay=el=>{ const c=crewById(el.dataset.id); if(!c||c.state==='dead'||c.state==='away') return; crewInfo2(c); if(loveCnt()>=3) return toast('놀아 주기·애정 주기는 하루 세 번까지예요.'); if(Date.now()<(c.loveT||0)) return;
+ACT.crewPlay=el=>{ const c=crewById(el.dataset.id); if(!c||c.state==='dead') return; crewInfo2(c); if(loveCnt()>=3) return toast('놀아 주기·애정 주기는 하루 세 번까지예요.'); if(Date.now()<(c.loveT||0)) return;
   c.loveT=Date.now()+3*60000; S.loveDay.n++; const p=clamp(.62+(ST('cha')-3)*.04+c.aff/500,.25,.93), ok=Math.random()<p, fx=[];
   if(ok){ const a=ri(2,5), b=ri(2,4); cAdd(c,'loy',a); cAdd(c,'aff',b); mindAdd(3); fx.push(`충성도 +${a}`,`친밀도 +${b}`,'정신 +3') } else { const a=ri(1,3); cAdd(c,'loy',-a); fx.push(`충성도 -${a}`) }
   markSave(); outcome({n:crewNm(c)},ok?`${crewNm(c)}이(가) 신났다`:`${crewNm(c)}이(가) 시무룩해졌다`,`${ok?stPick(PLAY_OK):stPick(PLAY_NO)}\n"${crewSay(c,ok?'ok':'bad')}"`,fx,ok); loveFx(ok) };
@@ -9882,6 +9882,111 @@ const _crewSwap62=crewSwapNext; crewSwapNext=function(){ const r=_crewSwap62.app
   const note=$('mbox').querySelector('.cmpwrap'); if(note&&!$('mbox').querySelector('.wknote')) note.insertAdjacentHTML('beforebegin',`<p class="note wknote">능력치 합이 가장 낮은 대원(${mn})에 <b>가장 약함</b> 표시를 했어요.</p>`) }catch(e){} return r };
 (()=>{ const st=document.createElement('style'); st.textContent=`.cmp tr.weakest{background:color-mix(in srgb,var(--blood) 9%,transparent);outline:1px solid color-mix(in srgb,var(--blood) 45%,transparent)}.mbox:has(.cmp){width:min(680px,100%)}.cmp td .btn{white-space:nowrap}
 .cmp .wk{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:var(--blood);padding:1px 6px;border-radius:9px;margin-right:4px;vertical-align:middle}`; document.head.append(st) })();
+
+/* ================= p63: 알바 보수순 정렬 · 지원 사격 묶어 쏘기(레벨·힘 반영) · 약한 영입 자동 거절 ================= */
+/* --- 1. 알바: 보수 높은 순 --- */
+const _viewJobs63=viewJobs; viewJobs=function(){ const h=_viewJobs63.apply(this,arguments); const tp=document.createElement('template'); tp.innerHTML=h; const on=rt.jobSort==='pay';
+  tp.content.querySelectorAll('.sec').forEach(sec=>{ const h2=sec.querySelector('.sec-head h2'); if(!h2||!/일반 알바|특수 행동 알바/.test(h2.textContent)) return;
+    h2.insertAdjacentHTML('afterend',`<button type="button" class="chipb jsort${on?' on':''}" data-act="jobSort" aria-pressed="${on}">${on?'보수 높은 순 ✓':'보수 높은 순'}</button>`);
+    if(on){ const g=sec.querySelector('.grid'); if(!g) return; const pay=c=>+(((c.querySelector('.tag.num')||{}).textContent||'').replace(/[^\d]/g,''))||0; [...g.children].sort((a,b)=>pay(b)-pay(a)).forEach(c=>g.append(c)) } });
+  const d=document.createElement('div'); d.append(tp.content); return d.innerHTML };
+ACT.jobSort=()=>{ rt.jobSort=rt.jobSort==='pay'?'':'pay'; render() };
+
+/* --- 2. 지원 사격: 고철 8 × n발을 한 번에 · 레벨과 힘이 피해에 반영 --- */
+const SUP_CD2=3000, SUP_MAX=20;
+function supShot(){ return Math.round(20*raidMult()*(1+lvlOf(S.xp)*.02)*(1+Math.max(0,EST('str')-3)*.03)) }
+function supCnt(){ return ((S.supN||{})[raidId()])||0 }
+function supBtnHtml(){ const n=clamp(S.supMul|0||1,1,SUP_MAX), left=SUP_CD2-(Date.now()-(rt.supT||0)), can=Math.min(n,Math.floor((S.res.scrap||0)/8));
+  return `<span class="supwrap"><button class="btn sm${left>0?' supcd':''}" data-act="support2" ${can<1||left>0?'disabled':''}>${left>0?`재장전 ${(left/1000).toFixed(1)}초`:`지원 사격 ×${n} · 고철 ${8*n}`}</button><select id="supN" data-act-change="supMul" aria-label="한 번에 쏠 발 수">${[1,2,3,5,10,20].map(v=>`<option value="${v}"${v===n?' selected':''}>×${v}</option>`).join('')}</select><span class="supcnt num">지원 ${supCnt()}회</span><small class="supinfo num">1발 ${supShot()} 피해 (Lv·힘 반영)</small></span>` }
+const _raidCard63=raidCard; raidCard=function(){ return _raidCard63.apply(this,arguments).replace(/<button class="btn sm" data-act="support"[^>]*>[^<]*<\/button>/,supBtnHtml()) };
+ACT.supMul=el=>{ S.supMul=clamp(+el.value||1,1,SUP_MAX); markSave(); const w=el.closest('.supwrap'); if(w) w.outerHTML=supBtnHtml() };
+ACT.support2=()=>{ const now=Date.now(); if(now-(rt.supT||0)<SUP_CD2) return toast(`재장전 중 · ${((SUP_CD2-(now-(rt.supT||0)))/1000).toFixed(1)}초`); if(raidTotal()>=raidHp()) return;
+  const n=clamp(S.supMul|0||1,1,SUP_MAX), k=Math.min(n,Math.floor((S.res.scrap||0)/8)); if(k<1) return toast('고철이 부족합니다 (1발에 8).');
+  rt.supT=now; S.res.scrap-=8*k; const d=supShot()*k; S.raid.dmg+=d; addXp(k); S.supN=S.supN||{}; const rid=raidId(); S.supN[rid]=(S.supN[rid]||0)+k;
+  toast(`지원 사격 ${k}발: ${fmt(d)} 피해${k<n?` (고철이 모자라 ${k}발만)`:''}`); sfx('gunshot'); try{ FXL.flash('rgba(255,220,120,.35)',220) }catch(e){}
+  const bar=$('raidBar'); if(bar){ const r=bar.getBoundingClientRect(), x=document.createElement('span'); x.className='supnum'; x.textContent=`-${fmt(d)}`; x.style.left=(r.left+r.width*.5)+'px'; x.style.top=(r.top-6)+'px'; document.body.append(x); setTimeout(()=>x.remove(),1200) }
+  markSave(); schedulePub(5000); render() };
+/* 재장전 표시·횟수: 바뀔 때만 글자를 고친다 (깜빡임 방지) */
+setInterval(()=>{ const b=document.querySelector('[data-act=support2]'); if(!b) return; const left=SUP_CD2-(Date.now()-(rt.supT||0)), n=clamp(S.supMul|0||1,1,SUP_MAX), can=Math.min(n,Math.floor((S.res.scrap||0)/8));
+  const t=left>0?`재장전 ${(left/1000).toFixed(1)}초`:`지원 사격 ×${n} · 고철 ${8*n}`; if(b.textContent!==t) b.textContent=t; b.classList.toggle('supcd',left>0); const dis=can<1||left>0; if(b.disabled!==dis) b.disabled=dis;
+  const c=b.parentElement&&b.parentElement.querySelector('.supcnt'), ct=`지원 ${supCnt()}회`; if(c&&c.textContent!==ct) c.textContent=ct },200);
+/* 난이도: 레벨·힘 보정과 묶어 쏘기로 늘어난 화력만큼 습격 체력을 올린다 */
+const _raidHp63=raidHp; raidHp=function(rid){ return Math.round(_raidHp63(rid)*1.6) };
+
+/* --- 3. 정원 초과 영입: 지금 대원보다 약하면 자동으로 영입하지 않기 --- */
+const crewSum=x=>['str','agi','end','per','cha'].reduce((a,k)=>a+(((x||{}).st||{})[k]||0),0);
+const _crewSwap63=crewSwapNext; crewSwapNext=function(){ const Q=rt.crewQ||[], it=Q[0];
+  if(it&&it.nc&&S.autoNoWeak){ const all=crewAlive(); if(all.length){ const mn=Math.min(...all.map(crewSum)), s=crewSum(it.nc); if(s<=mn){ Q.shift(); toast(`${it.nc.name}(능력치 합 ${s})은(는) 지금 가장 약한 대원(${mn})보다 낫지 않아 영입하지 않았어요.`); try{ slog(`${it.nc.name}을(를) 자동으로 돌려보냈다 (능력치 합 ${s} ≤ ${mn})`) }catch(e){} if(Q.length) setTimeout(()=>whenFree(crewSwapNext),300); return } } }
+  const r=_crewSwap63.apply(this,arguments); const no=$('swNo'); if(no&&!$('awChk')) no.closest('.row').insertAdjacentHTML('beforebegin',`<label class="awrow"><input type="checkbox" id="awChk" data-act-change="autoWeak" ${S.autoNoWeak?'checked':''}> 앞으로 정원이 찼을 때, 지금 대원보다 약한 사람은 자동으로 영입하지 않기</label>`);
+  return r };
+ACT.autoWeak=el=>{ S.autoNoWeak=!!el.checked; markSave(); toast(S.autoNoWeak?'약한 사람은 자동으로 영입하지 않아요.':'약한 사람도 비교 창으로 물어볼게요.') };
+const _viewCrew63=viewCrew; viewCrew=function(){ const h=_viewCrew63.apply(this,arguments); const box=`<label class="awrow awcrew"><input type="checkbox" data-act-change="autoWeak" ${S.autoNoWeak?'checked':''}> 정원이 찼을 때 지금 대원보다 약한 새 사람은 자동으로 영입하지 않기 <small>(가장 약한 대원보다 능력치 합이 높을 때만 비교 창을 띄워요)</small></label>`;
+  const i=h.indexOf('<section class="pcard autoc"'); return i>=0?h.slice(0,i)+box+h.slice(i):box+h };
+(()=>{ const st=document.createElement('style'); st.textContent=`
+.jsort{margin-left:auto}.sec-head:has(.jsort){display:flex;align-items:center;gap:10px;flex-wrap:wrap}.sec-head:has(.jsort) p{flex-basis:100%;order:3;margin:0}
+.supwrap{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}.supwrap select{min-height:34px;padding:2px 6px;border:1px solid var(--line2);background:var(--panel-solid);color:var(--fg);font:inherit;font-size:13px}
+.btn[data-act=support2]{min-width:11.5em;justify-content:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+.btn.supcd[data-act=support2]{opacity:1!important;color:var(--warn)!important;border-color:var(--warn)!important}
+.supwrap .supcnt{display:inline-block;min-width:5em;font-size:12px;color:var(--muted)}.supwrap .supinfo{flex-basis:100%;font-size:11px;color:var(--muted)}
+.awrow{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45;padding:8px 10px;border:1px dashed var(--line2);margin:4px 0}.awrow input{margin-top:3px;flex:none;width:18px;height:18px}.awrow small{color:var(--muted);display:block}
+.awcrew{margin:0 0 12px}`; document.head.append(st) })();
+
+/* ================= p64: 생존자 명단 정리 · 격려 하루 3번 · 자동 파견만 · 파견 중 대원 돌보기 ================= */
+/* --- 격려: 하루 3번 --- */
+const CHEER_DAY=3;
+const cheerLeft=()=>{ const d=new Date().toDateString(); if(!S.cheerDay||S.cheerDay.d!==d) S.cheerDay={d,n:0}; return Math.max(0,CHEER_DAY-S.cheerDay.n) };
+const _cheer64=ACT.cheer; ACT.cheer=el=>{ if(cheerLeft()<=0) return toast(`격려는 하루 ${CHEER_DAY}번까지예요. 내일 다시 할 수 있어요.`); const n0=S.cheers.length, l0=S.cheers[S.cheers.length-1]; _cheer64(el); if(S.cheers.length!==n0||S.cheers[S.cheers.length-1]!==l0){ S.cheerDay.n++; markSave() } };
+
+/* --- 생존자 명단: 레벨 / 이름·정보 / 체력 / 대원 · 버튼은 펫·대원·결투·격려·쪽지·선물 --- */
+const RB_ORDER={petPick:0,raidPick:1,duelReq:2,cheer:3,note:4,gift:5};
+const _viewRoster64=viewRoster0; viewRoster0=function(){ const h=_viewRoster64.apply(this,arguments); const tp=document.createElement('template'); tp.innerHTML=h; const C=tp.content;
+  C.querySelectorAll('.pl').forEach(pl=>{ pl.classList.add('pl2'); const ss=[...pl.querySelectorAll(':scope > .pl-s')], nm=pl.querySelector(':scope > .nm'), a=pl.querySelector(':scope > .pl-a');
+    const lv=ss.find(x=>/^Lv\./.test(x.textContent.trim())), hp=ss.find(x=>/체력/.test(x.textContent)), cr=ss.find(x=>/대원/.test(x.textContent));
+    ss.forEach(x=>{ if(x!==lv&&x!==hp&&x!==cr) x.remove() });
+    if(lv&&nm) nm.before(lv); if(lv) lv.classList.add('c-lv'); if(hp){ hp.classList.add('c-hp'); nm&&nm.after(hp) } if(cr){ cr.classList.add('c-cr'); (hp||nm)&&(hp||nm).after(cr) }
+    if(a){ const bs=[...a.children]; bs.sort((x,y)=>((RB_ORDER[x.dataset&&x.dataset.act]??9)-(RB_ORDER[y.dataset&&y.dataset.act]??9))); a.append(...bs);
+      const cb=a.querySelector('[data-act=cheer]'); if(cb){ const left=cheerLeft(); cb.innerHTML=`격려 <small class="num">${left}/${CHEER_DAY}</small>`; if(left<=0) cb.disabled=true } } });
+  [...C.querySelectorAll('p.muted')].filter(p=>/^격려는/.test(p.textContent.trim())).forEach(p=>p.remove());
+  const onH=C.querySelector('.rost-h:not(.off)'); if(onH) onH.insertAdjacentHTML('afterend',`<ul class="rhelp">
+    <li><b>펫</b> 남의 펫을 뺏거나 데려올 수 있어요.</li><li><b>대원</b> 상대가 파견 보낸 대원을 습격하거나 꾀어낼 수 있어요.</li>
+    <li><b>결투</b> 상대에게 일대일 결투를 신청해요. 이기면 상대를 수하로 만들고, 지면 내가 수하가 될 수 있어요.</li>
+    <li><b>격려</b> 상대의 생산 속도를 15분 동안 5% 올려 줘요. 하루 ${CHEER_DAY}번 (오늘 ${cheerLeft()}번 남음), 같은 사람에게는 30분에 한 번.</li>
+    <li><b>쪽지 · 선물</b> 말을 남기거나 가진 것·산 것을 보내요.</li></ul>`);
+  const d=document.createElement('div'); d.append(C); return d.innerHTML };
+
+/* --- 탐험대: 수동 파견은 빼고 자동 파견만 · 인원은 내 대원 수 안에서 · 바로 보내기 --- */
+autoCrewHtml=function(){ const A=autoCfg(), L=S.autoLog||[], alive=crewAlive(), idle=alive.filter(c=>c.state==='idle'), maxN=Math.max(1,alive.length); A.size=clamp(A.size|0||1,1,maxN);
+  const ok=idle.filter(c=>c.hp>=A.hp).length;
+  return `<section class="pcard autoc"><div class="pc-h">${icon('signal')}<h3>자동 파견</h3><button class="btn sm${A.on?' pri':''}" data-act="autoCrew" data-k="on" aria-pressed="${A.on}">${A.on?'켜짐':'꺼짐'}</button></div>
+    <p class="note">켜 두면 쉬는 대원을 알아서 짝지어 보내고, 돌아오면 보고를 받아 다시 보내요. 꺼 두어도 아래 '지금 바로 보내기'로 한 번 보낼 수 있어요.</p>
+    <div class="row qn"><span class="note">찾을 것</span>${needList().map(([k,n])=>`<button class="chipb${A.need===k?' on':''}" data-act="autoCrew" data-k="need" data-v="${k}">${esc(n)}</button>`).join('')}</div>
+    <div class="acrow"><label>한 번에 보낼 인원 <input type="number" min="1" max="${maxN}" value="${A.size}" data-act-change="autoSize" aria-label="한 번에 보낼 인원"> 명</label><span class="note">지금 대원 ${alive.length}명 · 쉬는 대원 ${idle.length}명</span></div>
+    <div class="acrow"><label>체력이 <select data-act-change="autoHp" aria-label="보낼 대원의 최소 체력">${[[0,'상관없이'],[30,'30 이상'],[50,'50 이상'],[70,'70 이상']].map(([v,n])=>`<option value="${v}"${A.hp===v?' selected':''}>${n}</option>`).join('')}</select> 인 대원만 보내요</label><span class="note">체력은 대원 카드의 빨간 막대(0~100)예요. 다친 대원을 쉬게 하려면 높게 고르세요.</span></div>
+    <div class="row"><button class="btn pri" data-act="autoSendNow" ${ok?'':'disabled'}>${ok?`알맞은 대원 ${ok}명 지금 바로 보내기 (${A.size}명씩)`:'보낼 수 있는 쉬는 대원이 없어요'}</button></div>
+    ${L.length?`<details class="fold"><summary>자동 파견 기록 ${L.length}</summary><ul class="autolog">${L.slice(0,8).map(x=>`<li class="${x.bad?'bad':''}"><b>${hhmm(x.t)} · ${esc(MAP[x.node]?.n||'')}</b> <span>${esc(x.fx.join(', ')||'빈손')}</span>${x.sum?`<small>${esc(x.sum)}</small>`:''}</li>`).join('')}</ul></details>`:''}</section>` };
+ACT.autoSize=el=>{ const A=autoCfg(); A.size=clamp(Math.floor(+el.value)||1,1,Math.max(1,crewAlive().length)); markSave(); render() };
+ACT.autoHp=el=>{ const A=autoCfg(); A.hp=clamp(+el.value||0,0,90); markSave(); render() };
+ACT.autoSendNow=()=>{ const A=autoCfg(), was=A.on, n0=(S.missions||[]).reduce((a,m)=>a+m.crew.length,0); A.on=true; rt.acT=0; try{ autoCrewTick(true) } finally{ A.on=was } const n1=(S.missions||[]).reduce((a,m)=>a+m.crew.length,0);
+  toast(n1>n0?`대원 ${n1-n0}명을 ${(needList().find(x=>x[0]===A.need)||['',''])[1]} 찾으러 보냈어요.`:'보낼 수 있는 대원이나 갈 곳이 없어요.',n1>n0); markSave(); render() };
+const _viewCrew64=viewCrew; viewCrew=function(){ let h=_viewCrew64.apply(this,arguments);
+  h=h.replace(/<div class="sec"><div class="sec-head"><h2>파견<\/h2>[\s\S]*?(?=<div class="sec"><div class="sec-head"><h2>대원<\/h2>)/,'');
+  return h };
+/* 파견 중이어도 애정 주기·놀아 주기·선물 */
+const _crewCard64=crewCard; crewCard=function(c,sel){ let h=_crewCard64(c,sel); if(!c||c.state==='dead') return h;
+  h=h.replace(/<button class="btn sm[^"]*" data-act="crewSel"[^>]*>[^<]*<\/button>/,'');
+  if(c.state==='away'&&!/data-act="crew(Love|Play|Gift)"/.test(h)){ const left=3-loveCnt(), kid=isKid(c);
+    const btn=(kid?`<button class="btn sm" data-act="crewPlay" data-id="${c.id}" ${left<=0||Date.now()<(c.loveT||0)?'disabled':''}>놀아 주기 <small class="num">${Math.max(0,left)}/3</small></button>`:`<button class="btn sm" data-act="crewLove" data-id="${c.id}" ${left<=0||Date.now()<(c.loveT||0)?'disabled':''}>애정 주기 <small class="num">${Math.max(0,left)}/3</small></button>`)+`<button class="btn sm" data-act="crewGift" data-id="${c.id}">선물</button>`;
+    const i=h.lastIndexOf('<div class="row">'); h=i>=0?h.slice(0,i+17)+btn+h.slice(i+17):h.replace(/<\/div>$/,`<div class="row">${btn}</div></div>`) }
+  return h };
+(()=>{ const st=document.createElement('style'); st.textContent=`
+.rhelp{list-style:none;margin:0 0 10px;padding:8px 12px;border-left:3px solid var(--accent);background:var(--accent-soft,transparent);display:grid;gap:3px;font-size:12.5px;line-height:1.5}.rhelp b{display:inline-block;min-width:4.5em;color:var(--accent)}
+.pl.pl2{display:grid;grid-template-columns:24px 10px 52px minmax(160px,1fr) 100px 70px 340px;align-items:center;column-gap:10px}
+.pl.pl2>.pl-s{display:block!important;white-space:nowrap}.pl.pl2>.c-lv{font-weight:700}
+.pl.pl2>.pl-a{grid-column:auto!important;justify-content:flex-end}
+@media (max-width:1100px){.pl.pl2{grid-template-columns:24px 10px 52px minmax(0,1fr) 96px 70px}.pl.pl2>.pl-a{grid-column:1/-1!important}}
+@media (max-width:560px){.pl.pl2{grid-template-columns:24px 10px 70px minmax(0,1fr)}.pl.pl2>.c-hp{grid-column:3;font-size:11.5px}.pl.pl2>.c-cr{grid-column:4;font-size:11.5px}}
+.pl .pl-a{display:flex;gap:6px;flex-wrap:wrap}
+.acrow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:6px 0}.acrow label{display:inline-flex;align-items:center;gap:6px;font-size:13px}.acrow input,.acrow select{min-height:36px;width:auto;min-width:64px;font-size:16px;padding:2px 8px;border:1px solid var(--line2);background:var(--panel-solid);color:var(--fg)}.acrow .note{font-size:11.5px}`; document.head.append(st) })();
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
