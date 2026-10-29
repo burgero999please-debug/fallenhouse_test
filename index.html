@@ -1602,6 +1602,8 @@ void main(){
 
 /* ================= 화면 구성 ================= */
 const IC={
+  coin:'<circle cx="12" cy="12" r="8.5"/><path d="M14.6 9.3c-.5-.8-1.4-1.3-2.6-1.3-1.5 0-2.6.8-2.6 2s1 1.7 2.6 2 2.6.9 2.6 2.1-1.1 2-2.6 2c-1.2 0-2.2-.5-2.7-1.4M12 6.3V8M12 16.1v1.6"/>',
+  clip:'<rect x="5.5" y="4.5" width="13" height="16" rx="1.5"/><path d="M9 4.5V3h6v1.5M8.5 10h7M8.5 13.5h7M8.5 17h4"/>',
   gear:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
   help:'<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.6"/><circle cx="12" cy="16.6" r=".9" fill="currentColor"/>',
   signal:'<circle cx="12" cy="12" r="2"/><path d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>',
@@ -1633,7 +1635,7 @@ const icon=k=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${IC[k]||'
 const NAV=[
   {g:'캠프 운영'},
   {k:'home',n:'캠프 본부',s:'본부',ic:'signal',eb:'BASE CONTROL',big:'BASE',sub:()=>`어서 와요, ${S.nick}. 오늘도 같은 주파수를 열어 두었어요.`},
-  {k:'work',lv:5,n:'작업 배치',s:'작업',ic:'hand',eb:'FIELD WORK',big:'FIELD',sub:()=>'일꾼을 배치해 두면 접속하지 않은 동안에도 자원이 쌓입니다.'},
+  {k:'work',lv:5,n:'작업 배치',s:'작업',ic:'clip',eb:'FIELD WORK',big:'FIELD',sub:()=>'일꾼을 배치해 두면 접속하지 않은 동안에도 자원이 쌓입니다.'},
   {k:'build',lv:5,n:'시설 관리',s:'시설',ic:'home',eb:'FACILITIES',big:'FORT',sub:()=>'시설을 올리면 생산량과 보관 한도, 방어력이 함께 오릅니다.'},
   {k:'char',n:'내 캐릭터',s:'캐릭터',ic:'people',eb:'CHARACTER',big:'SELF',sub:()=>'스탯을 배분하고 특수품을 사용합니다.'},
   {k:'craft',lv:3,n:'작업대',s:'제작',ic:'wrench',eb:'WORKBENCH',big:'BENCH',sub:()=>campOpen()?'모은 자원으로 작전 물품을 만들고 새 생존자를 부릅니다.':'주운 것들로 무기와 붕대를 만듭니다.'},
@@ -1644,7 +1646,7 @@ const NAV=[
   {k:'ops',n:'야간 작전',s:'작전',ic:'cross',eb:'NIGHT OPERATIONS',big:'NIGHT',sub:()=>'습격 무리를 함께 막고, 검문소를 지키고, 버려진 차에 시동을 겁니다.'},
   {k:'codex',n:'도감',s:'도감',ic:'book',eb:'ARCHIVE',big:'RELIC',sub:()=>'잔해·무기·제작·이벤트·칭호·펫·요리. 모은 만큼 기록됩니다.'},
   {g:'교신'},
-  {k:'shop',n:'상점',s:'상점',ic:'mail',eb:'TRADING POST',big:'TRADE',sub:()=>'달러로 물자와 특수품을 사고, 남는 자원을 팝니다.'},
+  {k:'shop',n:'상점',s:'상점',ic:'coin',eb:'TRADING POST',big:'TRADE',sub:()=>'달러로 물자와 특수품을 사고, 남는 자원을 팝니다.'},
   {k:'jobs',n:'알바',s:'알바',ic:'hand',eb:'PART-TIME JOBS',big:'WORK',sub:()=>'짧은 미니게임으로 달러를 벌어요. 포지션 알바와 게시판 의뢰도 있어요.'},
   {k:'radio',n:'무전실',s:'무전',ic:'chat',eb:'RADIO ROOM',big:'RADIO',sub:()=>'같은 주파수의 생존자들과 이야기합니다. 캠프 소식도 여기로 들어옵니다.'},
   {k:'roster',n:'생존자 명단',s:'명단',ic:'people',eb:'SURVIVORS',big:'CREW',sub:()=>'함께 버티는 사람들. 격려와 선물로 서로를 돕습니다.'},
@@ -3009,7 +3011,7 @@ function mapSvg(){
     me=`<g id="mapMe" transform="translate(${a.x+(b.x-a.x)*p} ${a.y+(b.y-a.y)*p})"><circle r="${16*u}" class="me-halo"/><circle r="${6.5*u}" class="me-dot"/></g>` }
   else { const n=MAP[S.pos]; me=`<g transform="translate(${n.x} ${n.y})"><circle r="${18*u}" class="me-halo"/><circle r="${6.5*u}" class="me-dot"/></g>` }
   const pm=rt.party&&rt.party.on?partyDots(4*u):'';
-  requestAnimationFrame(()=>{ const mb=document.querySelector('.mapbox'); if(mb&&mb.clientWidth&&Math.abs((rt.mapPx||0)-mb.clientWidth)>40){ rt.mapPx=mb.clientWidth; if(rt.tab==='map'&&$('modal').hidden&&!inputFocused()) render() } });
+  requestAnimationFrame(()=>{ const mb=document.querySelector('.mapbox'); let ew=mb?mb.clientWidth:0; try{ const sv=mb&&mb.querySelector('svg'), vb=sv&&sv.viewBox&&sv.viewBox.baseVal, r=sv&&sv.getBoundingClientRect(); if(vb&&vb.width&&r&&r.width&&r.height) ew=Math.round(vb.width*Math.min(r.width/vb.width,r.height/vb.height)) }catch(e){} if(mb&&ew&&Math.abs((rt.mapPx||0)-ew)>24){ rt.mapPx=ew; if(rt.tab==='map'&&$('modal').hidden&&!inputFocused()) render() } });
   return `<svg class="citymap nav" id="cityMap" viewBox="${vb.join(' ')}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${CITY} 지도">${mapBase()}${route}${dl}${nodes}${crewMarks(u)}${recMarks(u)}${me}${pm}</svg>`;
 }
 function legend(){
@@ -6654,7 +6656,7 @@ const _viewHome6=viewHome; viewHome=function(){ return _viewHome6().replace('<di
 const _mapSvg6=mapSvg; mapSvg=function(){ const h=_mapSvg6(); const k=S.pet; if(!k||!PETS[k]) return h; const m=h.match(/viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+)/); const u=m?(+m[3])/(rt.mapPx||Math.min(innerWidth-32,700)):.15;
   return h.replace(/(class="me-dot"\/>)(<\/g>)/,`$1<g class="mpetw" transform="translate(${(-14*u).toFixed(2)} ${(10*u).toFixed(2)})"><text class="mpet" style="font-size:${(17*u).toFixed(2)}px" text-anchor="middle">${petE(k)}</text></g>$2`) };
 (function petRoam(){ let el=null, tx=0, ty=0, t=0;
-  setInterval(()=>{ try{ const on=S&&S.pet&&PETS[S.pet]&&rt.tab==='home'&&!document.hidden&&$('modal').hidden; const v=$('view');
+  setInterval(()=>{ try{ const on=S&&S.pet&&PETS[S.pet]&&rt.tab!=='map'&&!rt.party&&!document.hidden&&$('modal').hidden; const v=$('view');
     if(!on||!v){ if(el){ el.remove(); el=null } return }
     if(!el){ el=document.createElement('button'); el.type='button'; el.className='petroam'; el.setAttribute('aria-label','펫'); el.onclick=()=>petPoke(el); document.body.append(el); const r=v.getBoundingClientRect(); tx=r.left+r.width*.5; ty=Math.min(innerHeight-60,r.top+260) ; el.style.transform=`translate(${tx}px,${ty}px)` }
     const pe=petE(S.pet); if(el.dataset.e!==pe){ el.dataset.e=pe; el.innerHTML=`<span class="pe">${pe}</span>` } const r=v.getBoundingClientRect(); const now=Date.now();
@@ -9953,7 +9955,7 @@ const _viewRoster64=viewRoster0; viewRoster0=function(){ const h=_viewRoster64.a
   const onH=C.querySelector('.rost-h:not(.off)'); if(onH) onH.insertAdjacentHTML('afterend',`<ul class="rhelp">
     <li><b>펫</b> 남의 펫을 뺏거나 데려올 수 있어요.</li><li><b>대원</b> 상대가 파견 보낸 대원을 습격하거나 꾀어낼 수 있어요.</li>
     <li><b>결투</b> 상대에게 일대일 결투를 신청해요. 이기면 상대를 수하로 만들고, 지면 내가 수하가 될 수 있어요.</li>
-    <li><b>격려</b> 상대의 생산 속도를 15분 동안 5% 올려 줘요. 하루 ${CHEER_DAY}번 (오늘 ${cheerLeft()}번 남음), 같은 사람에게는 30분에 한 번.</li></ul>`);
+    <li><b>격려</b> 상대의 생산 속도를 15분 동안 5% 올려 줘요. 하루 ${CHEER_DAY}번 <b class="rleft">(오늘 ${cheerLeft()}번 남음)</b>, 같은 사람에게는 30분에 한 번.</li></ul>`);
   const d=document.createElement('div'); d.append(C); return d.innerHTML };
 
 /* --- 탐험대: 수동 파견은 빼고 자동 파견만 · 인원은 내 대원 수 안에서 · 바로 보내기 --- */
@@ -10036,6 +10038,60 @@ const _gcDraw68=gcDraw; gcDraw=function(){ const r=_gcDraw68.apply(this,argument
 (()=>{ const st=document.createElement('style'); st.textContent=`svg :focus,svg :focus-visible,svg [tabindex]:focus,.citymap g:focus,.citymap g:focus-visible,.ptm g:focus{outline:none!important}
 svg [role=button],.citymap g{-webkit-tap-highlight-color:transparent}
 .citymap g.poi:focus-visible .pin,.citymap g:focus-visible circle{stroke:var(--accent);stroke-width:1.2px}`; document.head.append(st) })();
+
+/* p70: 알바도 글 양식으로 입력 · 명단 강조 */
+(()=>{ const st=document.createElement('style'); st.textContent=`.rhelp b.rleft{display:inline;min-width:0;color:var(--fg);font-weight:800}`; document.head.append(st) })();
+const JOB_TEMPLATE=`=== 이벤트: 시체 수습 알바
+태그: 게시판 의뢰
+레벨: 3
+발생: 알바
+일당: 80
+경험치: 20
+보상 아이템: 붕대 1
+조건: 힘 4
+필요 아이템:
+참가비: 0
+체력 소모: 5
+하루 횟수: 2
+
+--- 1
+분위기: 긴장
+묘지 관리인이 삽을 건넨다. "오늘 묻을 사람이 열둘이야."
+
+> 묵묵히 삽을 든다 [힘]
+  성공: 해가 질 때까지 열두 자리를 팠다. | XP 5 | 끝
+  실패: 손바닥이 다 까졌다. 관리인이 반만 쳐 줬다. | 체력 -5 | 끝
+> 이름을 하나씩 불러 준다
+  결과: 관리인이 처음으로 웃었다. | 정신 5 | 끝
+`;
+const JOB_GUIDE=`[알바 양식 설명] — 이벤트 양식과 같고, 위쪽에 아래 줄들이 더 있어요
+발생: 알바              ← 이 줄이 있으면 '알바 > 게시판 의뢰'에 올라가요 (무작위로 뜨지 않아요)
+일당: 80                ← 끝까지 하면 받는 달러
+경험치: 20              ← 끝까지 하면 받는 XP
+보상 아이템: 붕대 1      ← (선택) 끝내면 받는 아이템과 개수
+조건: 힘 4              ← (선택) 이 스탯이 이 값 이상이어야 시작 가능 (힘/민첩/감각/매력/체력)
+필요 아이템: 붕대 1      ← (선택) 시작할 때 사라지는 아이템
+참가비: 10              ← (선택) 시작할 때 내는 달러
+체력 소모: 5            ← (선택) 시작할 때 깎이는 체력
+하루 횟수: 2            ← 하루에 몇 번 할 수 있는지
+그 아래 --- 1 부터는 이벤트와 똑같이 장면·선택지·결과를 써요.`;
+function jobLines(b){ const J={}; let isJob=false; const keep=[]; let inStep=false;
+  for(const l of b.split('\n')){ const t=l.trim(); if(/^---\s*\d+/.test(t)) inStep=true; let m;
+    if(!inStep){ if(/^발생\s*[:：]\s*알바/.test(t)){ isJob=true; continue }
+      if((m=t.match(/^일당\s*[:：]\s*(\d+)/))){ J.pay=+m[1]; continue } if((m=t.match(/^(경험치|XP)\s*[:：]\s*(\d+)/i))){ J.xp=+m[2]; continue }
+      if((m=t.match(/^보상\s*아이템\s*[:：]\s*(.*)$/))){ const q=m[1].trim().match(/^(.+?)\s+(\d+)$/)||(m[1].trim()?[0,m[1].trim(),1]:null); if(q){ J.it=byName(ITEMS,q[1]); J.iq=+q[2] } continue }
+      if((m=t.match(/^조건\s*[:：]\s*(.*)$/))){ const q=m[1].trim().match(/^(힘|민첩|감각|매력|체력)\s*(\d+)/); if(q){ J.st=CEVT.stat[q[1]]||''; J.sv=+q[2] } continue }
+      if((m=t.match(/^필요\s*아이템\s*[:：]\s*(.*)$/))){ const q=m[1].trim().match(/^(.+?)\s+(\d+)$/)||(m[1].trim()?[0,m[1].trim(),1]:null); if(q){ J.need=byName(ITEMS,q[1]); J.nq=+q[2] } continue }
+      if((m=t.match(/^참가비\s*[:：]\s*(\d+)/))){ J.cost=+m[1]; continue } if((m=t.match(/^체력\s*소모\s*[:：]\s*(\d+)/))){ J.hp=+m[1]; continue } if((m=t.match(/^하루\s*횟수\s*[:：]\s*(\d+)/))){ J.daily=+m[1]; continue } }
+    keep.push(l) }
+  return {isJob,J,text:keep.join('\n')} }
+const _cevParse70=cevParse; cevParse=function(txt){ const src=String(txt||'').replace(/\r/g,''); const parts=src.split(/(?=^===\s*이벤트\s*[:：])/m), jobs={};
+  const cleaned=parts.map(p=>{ if(!/^===\s*이벤트/.test(p)) return p; const title=(p.split('\n')[0].replace(/^===\s*이벤트\s*[:：]\s*/,'')||'').trim(); const r=jobLines(p); if(r.isJob) jobs[title]=r.J; return r.text }).join('');
+  const out=_cevParse70(cleaned); out.list.forEach(x=>{ const J=jobs[x.e.t]; if(J){ x.e.trig={k:'job'}; x.e.job=jobClean(J) } }); return out };
+const _cevToText70=cevToText; cevToText=function(e){ let s=_cevToText70(e); if(!e||!e.trig||e.trig.k!=='job') return s; const J=jobClean(e.job), sn=J.st?Object.keys(CEVT.stat).find(k=>CEVT.stat[k]===J.st):'';
+  const lines=[`발생: 알바`,`일당: ${J.pay}`,`경험치: ${J.xp}`,`보상 아이템: ${J.it?ITEMS[J.it].n+' '+J.iq:''}`,`조건: ${sn?sn+' '+J.sv:''}`,`필요 아이템: ${J.need?ITEMS[J.need].n+' '+J.nq:''}`,`참가비: ${J.cost}`,`체력 소모: ${J.hp}`,`하루 횟수: ${J.daily}`].join('\n');
+  return s.replace(/^발생:.*$/m,lines) };
+const _cevTextModal70=cevTextModal; cevTextModal=function(){ _cevTextModal70.apply(this,arguments); const tpl=$('ctTpl'); if(tpl&&!$('ctJob')){ tpl.insertAdjacentHTML('afterend','<button class="btn" id="ctJob" type="button">알바 양식 넣기</button>'); $('ctJob').onclick=()=>{ const T=$('ctTx'); T.value=JOB_GUIDE+'\n\n'+JOB_TEMPLATE; T.dispatchEvent(new Event('input')); $('ctChk')&&$('ctChk').click() } } };
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
