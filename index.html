@@ -1841,8 +1841,8 @@ function campCard(){
     <div class="me-row"><span class="me-ic">${icon('bolt')}</span><div><b>${esc(S.nick)}</b><div class="muted">${routeOf(S.route)?esc(routeOf(S.route).n)+' · ':''}일꾼 ${S.workers}명${S.fame?` · 명성 ${S.fame}`:''} · <button class="linkbtn inl" data-act="intro">그날 밤 다시 보기</button></div></div><button class="iconbtn" data-act="rename" aria-label="이름 바꾸기">${icon('edit')}</button></div>
     <div class="lvbox"><div class="row spread"><span class="lv">Lv.${l}<small>캠프</small></span><span class="muted">다음 레벨까지 ${Math.ceil(hi-S.xp)} XP</span></div>
       <div class="row spread muted"><span>경험치</span><span class="num">${Math.floor(S.xp-lo)} / ${hi-lo}</span></div><div class="bar thin"><i style="width:${p*100}%"></i></div></div>
-    <div class="stats"><div><span class="label">시설 단계</span><b class="num">${fac}</b></div><div><span class="label">도감</span><b class="num">${col}/20</b></div><div><span class="label">대원</span><b class="num">${crewAlive().length}</b></div><div><span class="label">누적 처치</span><b class="num">${fmt(S.kills)}</b></div></div>
-    <button class="linkbtn" data-act="go" data-view="work">작업 배치로 ${icon('arrow')}</button></section>`;
+    <div class="stats"><div><span class="label">시설 단계</span><b class="num">${fac}</b></div><div><span class="label">도감</span><b class="num">${col}/${Object.keys(COL).length}</b></div><div><span class="label">대원</span><b class="num">${crewAlive().length}</b></div><div><span class="label">누적 처치</span><b class="num">${fmt(S.kills)}</b></div></div>
+    ${typeof homeEnhHtml==='function'?homeEnhHtml():''}<button class="linkbtn" data-act="go" data-view="work">작업 배치로 ${icon('arrow')}</button></section>`;
 }
 function evBar(){
   const e=curEv(), t=EV_TAG[e.def.tag];
@@ -10715,7 +10715,7 @@ rollCol=function(rar){ let r=Math.random(), tier=0; for(let i=0;i<4;i++){ if(r<r
 const _gearV84=gearV; gearV=function(k){ let v=_gearV84(k); try{ if(k==='gather'&&setDone(4)) v+=.08; else if(k==='human'&&setDone(5)) v+=.15; else if(k==='atk'&&setDone(6)) v+=.05; else if(k==='def'&&setDone(7)) v+=.06; else if(k==='xp'&&setDone(7)) v+=.05 }catch(e){} return v };
 
 /* --- 4. 무기 강화: 다른 무기를 재료로 합쳐 +1 · 성공률 · 조사에서 얻는 강화 도구 --- */
-ITEMS.whet={n:'숫돌',d:'무기 강화 성공률 +10%p (강화할 때 골라서 사용)',use:null};
+ITEMS.hone={n:'강화석',d:'무기 강화 성공률 +10%p (강화할 때 골라서 사용)',use:null};
 ITEMS.toolkit={n:'정밀 공구 세트',d:'무기 강화 성공률 +20%p (강화할 때 골라서 사용)',use:null};
 ITEMS.wax={n:'보호 오일',d:'무기 강화에 실패해도 단계가 떨어지지 않게 막아 준다',use:null};
 const ENH_MAX=10, ENH_P=[.9,.82,.72,.62,.52,.42,.33,.25,.18,.12];
@@ -10723,7 +10723,7 @@ const wLv=k=>Math.min(ENH_MAX,((S.wLv||{})[k])|0);
 const wEnhAtk=w=>{ const l=wLv(w.k); return l?Math.round(l*(1.5+w.dmg*.6)):0 };
 const _pAtk84=pAtk; pAtk=function(power){ return _pAtk84.apply(this,arguments)+Math.round(wEnhAtk(curWeapon())*(power?1.8:1)) };
 function enhMats(tk){ const L=[]; for(const w of MELEE){ if(w.k==='fist') continue; const n=wCount(w.k); if(!n) continue; let use=n; if(S.weapon===w.k) use--; if(w.k===tk) use=Math.min(use,n-1); if(use>0) L.push({w,use,same:w.k===tk}) } return L }
-function enhChance(tk,mk,boost){ const t=weaponOf(tk), m=weaponOf(mk), l=wLv(tk); let p=ENH_P[l]||0; if(mk===tk) p+=.12; else p+=clamp((m.dmg-t.dmg)*.05,-.25,.15)+wLv(mk)*.02; if(boost.whet) p+=.1; if(boost.toolkit) p+=.2; return clamp(p,.03,.97) }
+function enhChance(tk,mk,boost){ const t=weaponOf(tk), m=weaponOf(mk), l=wLv(tk); let p=ENH_P[l]||0; if(mk===tk) p+=.12; else p+=clamp((m.dmg-t.dmg)*.05,-.25,.15)+wLv(mk)*.02; if(boost.hone) p+=.1; if(boost.toolkit) p+=.2; return clamp(p,.03,.97) }
 ACT.wEnh=el=>{ const tk=(el&&el.dataset.k)||rt.enhT||S.weapon; rt.enhT=tk; rt.enhB=rt.enhB||{}; const own=MELEE.filter(w=>w.k!=='fist'&&S.weapons[w.k]);
   if(!own.length) return toast('강화할 무기가 없어요.');
   if(!S.weapons[tk]||tk==='fist'){ rt.enhT=own[0].k; return ACT.wEnh() }
@@ -10734,21 +10734,21 @@ ACT.wEnh=el=>{ const tk=(el&&el.dataset.k)||rt.enhT||S.weapon; rt.enhT=tk; rt.en
     <label class="field">강화할 무기<select id="enT">${own.map(w=>`<option value="${w.k}"${w.k===tk?' selected':''}>${esc(w.n)}${wLv(w.k)?` +${wLv(w.k)}`:''}</option>`).join('')}</select></label>
     <div class="enhst"><b>${esc(t.n)} <span class="num">+${l}</span></b><span>지금 강화 보너스 공격 +${wEnhAtk(t)}</span>${l<ENH_MAX?`<span>다음 단계 공격 +${nx}</span>`:'<span>최고 단계예요</span>'}</div>
     ${l>=ENH_MAX?'':mats.length?`<label class="field">재료로 쓸 무기<select id="enM">${mats.map(x=>`<option value="${x.w.k}"${x.w.k===rt.enhM?' selected':''}>${esc(x.w.n)}${wLv(x.w.k)?` +${wLv(x.w.k)}`:''}${x.same?' (같은 무기)':''} · ${x.use}개</option>`).join('')}</select></label>
-      <div class="enhb">${['whet','toolkit','wax'].map(k=>`<label class="${have(k)?'':'off'}"><input type="checkbox" data-eb="${k}" ${B[k]?'checked':''} ${have(k)?'':'disabled'}> ${esc(ITEMS[k].n)} <small>${(S.inv[k]||0)}개 · ${esc(ITEMS[k].d)}</small></label>`).join('')}</div>
+      <div class="enhb">${['hone','toolkit','wax'].map(k=>`<label class="${have(k)?'':'off'}"><input type="checkbox" data-eb="${k}" ${B[k]?'checked':''} ${have(k)?'':'disabled'}> ${esc(ITEMS[k].n)} <small>${(S.inv[k]||0)}개 · ${esc(ITEMS[k].d)}</small></label>`).join('')}</div>
       <div class="enhp"><span>성공률</span><b class="num">${Math.round(p*100)}%</b><small>${l>=4&&!B.wax?'실패하면 40% 확률로 한 단계 떨어져요':'실패해도 단계는 그대로예요'}</small></div>
       <div class="row"><button class="btn pri" id="enGo">강화하기</button><button class="btn" data-act="closeModal">닫기</button></div>`:'<p class="muted">재료로 쓸 무기가 없어요. 같은 무기를 하나 더 얻거나 다른 무기를 모아 오세요. (장착 중인 무기는 재료로 쓸 수 없어요)</p><div class="row"><button class="btn" data-act="closeModal">닫기</button></div>'}
-    <p class="note">숫돌·정밀 공구 세트·보호 오일은 지도 조사와 특수 조사에서 가끔 나와요.</p>`);
+    <p class="note">강화석·정밀 공구 세트·보호 오일은 지도 조사와 특수 조사에서 가끔 나와요.</p>`);
   $('enT').onchange=e=>{ rt.enhT=e.target.value; rt.enhM=null; ACT.wEnh() };
   if($('enM')) $('enM').onchange=e=>{ rt.enhM=e.target.value; ACT.wEnh() };
   $('mbox').querySelectorAll('[data-eb]').forEach(i=>i.onchange=()=>{ B[i.dataset.eb]=i.checked; ACT.wEnh() });
   if($('enGo')) $('enGo').onclick=()=>{ const mk=rt.enhM; if(!mk) return; const l0=wLv(tk); if(l0>=ENH_MAX) return; if(!wTake(mk)) return; const pp=enhChance(tk,mk,B);
-    const usedWax=!!(B.wax&&have('wax')); ['whet','toolkit','wax'].forEach(k=>{ if(B[k]&&have(k)){ S.inv[k]--; } }); rt.enhB={};
+    const usedWax=!!(B.wax&&have('wax')); ['hone','toolkit','wax'].forEach(k=>{ if(B[k]&&have(k)){ S.inv[k]--; } }); rt.enhB={};
     S.wLv=S.wLv||{}; if(mk!==tk&&S.wLv[mk]&&!wCount(mk)) delete S.wLv[mk];
     let msg; if(Math.random()<pp){ S.wLv[tk]=l0+1; sfx('level'); try{ FXL.flash('rgba(255,210,90,.35)',300) }catch(e){} msg=`강화 성공! ${t.n} +${l0+1} (공격 +${wEnhAtk(t)})`; hx&&hx('wEnh'); if(l0+1>=7) feed(`${S.nick}님이 「${t.n}」을(를) +${l0+1}까지 강화했습니다`) }
     else { const drop=l0>=4&&!usedWax&&Math.random()<.4; if(drop) S.wLv[tk]=l0-1; sfx('hurt'); msg=drop?`강화 실패… ${t.n}이(가) +${l0-1}로 떨어졌어요.`:`강화 실패. ${t.n}은(는) +${l0} 그대로예요.` }
     toast(msg,true); slog(msg); markSave(); render(); ACT.wEnh() } };
 /* 강화 도구는 조사에서 */
-const _scanOnce84=scanOnce; scanOnce=function(z,at){ const r=_scanOnce84.apply(this,arguments); try{ const x=Math.random(); const k=x<.035?'whet':x<.045?'toolkit':x<.052?'wax':null; if(k){ S.inv[k]=(S.inv[k]||0)+1; toast(`${ITEMS[k].n}을(를) 주웠다 · 무기 강화에 써요`,true); slog(`${ITEMS[k].n} 획득`) } }catch(e){} return r };
+const _scanOnce84=scanOnce; scanOnce=function(z,at){ const r=_scanOnce84.apply(this,arguments); try{ const x=Math.random(); const k=x<.035?'hone':x<.045?'toolkit':x<.052?'wax':null; if(k){ S.inv[k]=(S.inv[k]||0)+1; toast(`${ITEMS[k].n}을(를) 주웠다 · 무기 강화에 써요`,true); slog(`${ITEMS[k].n} 획득`) } }catch(e){} return r };
 /* 내 캐릭터: 무기 칸에 강화 버튼과 +단계 표시 */
 function enhDeco(h){ if(h.indexOf('data-col="weapons"')<0) return h; const tp=document.createElement('template'); tp.innerHTML=h; const C=tp.content;
   const sec=C.querySelector('[data-col="weapons"]'); if(sec){ const sm=sec.querySelector('summary'); if(sm&&!sec.querySelector('.enhrow')) sm.insertAdjacentHTML('afterend',`<div class="enhrow"><span>무기 강화 · 다른 무기를 재료로 합쳐 +1 (최대 +${ENH_MAX})</span><button class="btn sm pri" data-act="wEnh">무기 강화</button></div>`);
@@ -10867,6 +10867,22 @@ const _gearV87=gearV; gearV=function(k){ let v=_gearV87(k); try{ if(k==='heal') 
 const _evM87=evM; evM=function(k){ let v=_evM87(k); try{ if(k==='enc') v*=Math.max(.5,1-.03*(S.bld.tower||0)) }catch(e){} return v };
 const _enhChance87=enhChance; enhChance=function(tk,mk,boost){ return clamp(_enhChance87(tk,mk,boost)+.02*((S.bld||{}).forge||0),.03,.97) };
 const _affAdd87=affAdd; affAdd=function(k,n){ return _affAdd87.call(this,k,n>0?Math.round(n*(1+.1*((S.bld||{}).kennel||0))):n) };
+
+/* ================= p88: 본부 '나의 캠프'에 무기 강화 바로 가기 ================= */
+function homeEnhHtml(){ const w=curWeapon(), l=w.k==='fist'?0:wLv(w.k), tools=['hone','toolkit','wax'].reduce((a,k)=>a+(S.inv[k]||0),0);
+  return `<div class="homeenh"><span class="he-w">⚔ <b>${esc(w.n)}${l?` <em>+${l}</em>`:''}</b><small>${w.k==='fist'?'장착한 무기가 없어요':`강화 보너스 공격 +${wEnhAtk(w)}`}${tools?` · 강화 도구 ${tools}개`:''}</small></span><button class="btn sm pri" data-act="wEnh" data-k="${w.k==='fist'?'':w.k}">무기 강화</button></div>` }
+(()=>{ const st=document.createElement('style'); st.textContent=`.homeenh{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line2);padding:10px 12px;margin:12px 0}.homeenh .he-w{flex:1;min-width:0;display:grid;gap:2px}.homeenh em{font-style:normal;color:var(--warn);font-weight:800}.homeenh small{color:var(--muted);font-size:12px}`; document.head.append(st) })();
+
+/* ================= p89: 무기 내구 — 30% 남으면 알림 · 0이 된 뒤 두 번 더 쓰면 부서져 사라짐 ================= */
+wear=function(w,n){ const m=WSP(w).dur; if(!m||!w||w.k==='fist') return; S.wd=S.wd||{}; S.wBrk=S.wBrk||{}; const b=wDur(w);
+  if(b<=0){ S.wBrk[w.k]=(S.wBrk[w.k]||0)+1; if(S.wBrk[w.k]>=2) return wDestroy(w); toast(`${w.n}이(가) 부서지기 직전이다! 한 번 더 쓰면 사라진다.`,true); sfx('bang'); return }
+  S.wd[w.k]=Math.max(0,b-n); S.wBrk[w.k]=0;
+  if(S.wd[w.k]<=0){ toast(`${w.n}의 내구도가 0이 됐다. 위력이 크게 떨어지고, 수리하지 않고 두 번 더 쓰면 부서진다.`,true); slog(`${w.n} 내구도 0`); sfx('bang') }
+  else if(b>m*.3&&S.wd[w.k]<=m*.3){ toast(`${w.n} 내구도 ${Math.round(S.wd[w.k]/m*100)}% 남음 · 수리해 주세요 (생존 화면 무기 칸)`,true); slog(`${w.n} 내구도 30% 이하`) } };
+function wDestroy(w){ const k=w.k; S.wBrk[k]=0; delete S.wd[k]; if(S.wLv) delete S.wLv[k];
+  if((S.wExtra||{})[k]>0){ S.wExtra[k]--; toast(`${w.n}이(가) 부서져 없어졌다. 예비로 가진 ${w.n}을(를) 꺼내 들었다. (강화 단계는 사라짐)`,true) }
+  else { delete S.weapons[k]; if(S.weapon===k) S.weapon='fist'; toast(`${w.n}이(가) 완전히 부서져 없어졌다.`,true) }
+  slog(`${w.n} 파괴`); sfx('bang'); try{ FXL.shake(6,300) }catch(e){} markSave(); try{ render() }catch(e){} }
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
