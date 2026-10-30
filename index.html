@@ -8834,7 +8834,7 @@ ACT.recLeave=el=>{ const r=rt.rq[el.dataset.id]; if(!r||r.by===rt.myId) return; 
 async function rqGo(r){ if(r.closed) return; r.closed=1; rqSend({rq:'go',pid:r.pid,mem:r.mem}); rqDraw(); await partyOpen(r.pid,rt.myId); toast(`동행 출발! ${r.mem.length}명`,true) }
 const _onInvite43=onInvite; onInvite=function(m){ const d=m.data||{}; if(!d.rq||typeof d.pid!=='string'||!/^pt-[a-z0-9]{4,30}$/.test(d.pid)) return _onInvite43(m);
   let r=rt.rq[d.pid];
-  if(d.rq==='open'){ if(m.isMe) return; rt.rq[d.pid]=r={pid:d.pid,by:m.by,nick:String(d.nick||'생존자').slice(0,20),lvl:clamp(d.lvl|0,1,999),zone:String(d.zone||'').slice(0,20),until:Math.min(+d.until||0,Date.now()+RQ_MS+5000),mem:[m.by],names:{[m.by]:String(d.nick||'').slice(0,20)}};
+  if(d.rq==='open'){ if(m.isMe) return; if(r){ if(!r.closed){ r.until=Math.min(+d.until||r.until,Date.now()+RQ_MS+5000); if(Array.isArray(d.mem)) r.mem=d.mem.filter(x=>typeof x==='string').slice(0,P_SIZE); if(d.names&&typeof d.names==='object') for(const k in d.names) r.names[k]=String(d.names[k]).slice(0,20); rqDraw() } return } rt.rq[d.pid]=r={pid:d.pid,by:m.by,nick:String(d.nick||'생존자').slice(0,20),lvl:clamp(d.lvl|0,1,999),zone:String(d.zone||'').slice(0,20),until:Math.min(+d.until||0,Date.now()+RQ_MS+5000),mem:[m.by],names:{[m.by]:String(d.nick||'').slice(0,20)}}; if(Array.isArray(d.mem)) r.mem=[m.by,...d.mem.filter(x=>typeof x==='string'&&x!==m.by)].slice(0,P_SIZE); if(d.names&&typeof d.names==='object') for(const k in d.names) r.names[k]=String(d.names[k]).slice(0,20);
     if(!rt.party&&rt.tab!=='radio'){ sfx('invite'); msgCard(`<div class="mc-h"><span class="mc-ic">${icon('people')}</span><b>임시 동행 모집</b></div><p><b>${esc(r.nick)}</b> (Lv.${r.lvl})님이 같이 움직일 사람을 찾아요. 선착순 3명.</p><div class="row"><button class="btn sm pri" data-act="recJoin" data-id="${esc(d.pid)}">참가하기</button><button class="btn sm ghost" data-act="go" data-view="radio">무전실</button></div>`,'inv rq-'+d.pid,30000) } rqDraw(); return }
   if(!r) return;
   if(d.rq==='join'&&d.to===rt.myId&&r.by===rt.myId){ if(r.closed||Date.now()>r.until||r.mem.length>=P_SIZE){ rqSend({rq:'no',pid:r.pid,to:m.by}); return } if(!r.mem.includes(m.by)){ r.mem.push(m.by); r.names[m.by]=String(d.nick||nameOf(m.by)).slice(0,20) }
@@ -8845,6 +8845,7 @@ const _onInvite43=onInvite; onInvite=function(m){ const d=m.data||{}; if(!d.rq||
   if(d.rq==='cancel'&&m.by===r.by){ r.closed=1; document.querySelectorAll('#msgs .msgc.rq-'+r.pid).forEach(e=>e.remove()); rqDraw(); return }
   if(d.rq==='go'&&m.by===r.by){ r.closed=1; document.querySelectorAll('#msgs .msgc.rq-'+r.pid).forEach(e=>e.remove()); const mem=Array.isArray(d.mem)?d.mem:[]; rqDraw(); if(mem.includes(rt.myId)&&!rt.party){ toast('동행 출발! 동행 방에 들어갑니다.',true); partyOpen(r.pid,r.by) } return } };
 setInterval(()=>{ try{ const now=Date.now(); for(const k in rt.rq){ const r=rt.rq[k];
+    if(r.by===rt.myId&&!r.closed&&now<r.until&&now-(r.reT||r.t0||0)>12000){ if(!r.t0) r.t0=now; else { r.reT=now; rqSend({rq:'open',pid:r.pid,nick:r.nick,lvl:r.lvl,zone:r.zone,until:r.until,mem:r.mem,names:r.names}) } }
     if(r.by===rt.myId&&!r.closed&&now>=r.until){ if(r.mem.length>=2) rqGo(r); else { r.closed=1; rqSend({rq:'cancel',pid:r.pid}); toast('3분 동안 아무도 오지 않아 모집을 닫았어요.'); rqDraw() } }
     if(now>r.until+60000) delete rt.rq[k] }
   document.querySelectorAll('[data-rq-left]').forEach(e=>{ const r=rt.rq[e.dataset.rqLeft]; if(r) e.textContent=mmss(Math.max(0,r.until-now)) }) }catch(e){} },1000);
@@ -11145,6 +11146,27 @@ const _cevTextModal95=cevTextModal; cevTextModal=function(){ const r=_cevTextMod
     $('ctPrev').insertAdjacentHTML('afterbegin',`<p class="okc">${n}개를 새 내용으로 고쳤어요${same?` (${same}개는 바뀐 게 없어 그대로)`:''}.</p>`) };
   return r };
 (()=>{ const st=document.createElement('style'); st.textContent=`.ctupdnote{margin:6px 0;font-size:12.5px}.ctmatch{margin:4px 0 0;color:var(--accent)}`; document.head.append(st) })();
+
+/* ================= p98: 관리자 — 이벤트 내보내기를 일반/T/M/B별로 ================= */
+rt.exPos=rt.exPos||'A';
+const exPosOf=e=>{ const p=posArr(e.pos); return p.length?p:['N'] };
+function exList(job){ const L=(rt.cev||[]).filter(e=>e.id!=='_ann'&&(job==null||((e.trig&&e.trig.k==='job')===job))); const f=rt.exPos; return f==='A'?L:L.filter(e=>exPosOf(e).includes(f)) }
+function exChips(job,id){ const all=(rt.cev||[]).filter(e=>e.id!=='_ann'&&(job==null||((e.trig&&e.trig.k==='job')===job))), c=k=>k==='A'?all.length:all.filter(e=>exPosOf(e).includes(k)).length;
+  return `<div class="expos" id="${id}"><span class="note">내보낼 포지션</span>${[['A','전체'],['N','일반'],['T','T'],['M','M'],['B','B']].map(([k,n])=>`<button type="button" class="chipb${rt.exPos===k?' on':''}" data-expos="${k}">${n} <small class="num">${c(k)}</small></button>`).join('')}</div>` }
+function ctExSetup(){ const out=$('ctOut'); if(!out) return; const job=!!rt.jobTextMode; const old=$('ctExPos'); if(old) old.remove();
+  const sync=()=>{ const n=exList(job).length, k=rt.exPos; out.textContent=[k==='A'?'전체':k==='N'?'일반':k, job?'알바':'', '글로 내보내기'].filter(Boolean).join(' ')+` (${n}개)`; const ch=$('ctExPos'); if(ch) ch.outerHTML=exChips(job,'ctExPos'); bind() };
+  const bind=()=>{ document.querySelectorAll('#ctExPos [data-expos]').forEach(b=>b.onclick=()=>{ rt.exPos=b.dataset.expos; sync() }) };
+  out.closest('.row').insertAdjacentHTML('afterend',exChips(job,'ctExPos')); bind(); sync();
+  out.onclick=()=>{ const T=$('ctTx'); T.value=exList(job).map(cevToText).join('\n'); try{ $('ctChk').click() }catch(e){} } }
+const _cevTextModal98=cevTextModal; cevTextModal=function(){ const r=_cevTextModal98.apply(this,arguments); ctExSetup(); return r };
+const _jobTextModal98=jobTextModal; jobTextModal=function(){ const r=_jobTextModal98.apply(this,arguments); ctExSetup(); return r };
+const _cevMoveModal98=cevMoveModal; cevMoveModal=function(){ const r=_cevMoveModal98.apply(this,arguments); const out=$('mvOut'); if(!out) return r;
+  const sync=()=>{ const n=exList(null).length; out.textContent=`1. ${rt.exPos==='A'?'전부':(rt.exPos==='N'?'일반':rt.exPos)} 내보내기 (${n}개)`; const ch=$('mvExPos'); if(ch) ch.outerHTML=exChips(null,'mvExPos'); bind() };
+  const bind=()=>{ document.querySelectorAll('#mvExPos [data-expos]').forEach(b=>b.onclick=()=>{ rt.exPos=b.dataset.expos; sync() }) };
+  out.closest('.row').insertAdjacentHTML('beforebegin',exChips(null,'mvExPos')); bind(); sync();
+  out.onclick=async()=>{ const L=exList(null), txt=JSON.stringify({fh:'cevents',v:1,at:Date.now(),events:L.map(e=>JSON.parse(JSON.stringify(e)))}); const T=$('mvTx'); T.value=txt; T.dispatchEvent(new Event('input')); T.select(); let ok=false; try{ await navigator.clipboard.writeText(txt); ok=true }catch(e){ try{ ok=document.execCommand('copy') }catch(_){} } toast(ok?`이벤트 ${L.length}개를 복사했어요.`:'칸의 글자를 길게 눌러 전체 복사해 주세요.',true) };
+  return r };
+(()=>{ const st=document.createElement('style'); st.textContent=`.expos{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0}.expos .note{font-size:12px;margin-right:2px}`; document.head.append(st) })();
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
