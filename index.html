@@ -5864,7 +5864,7 @@ const CEV_TRIG={random:'무작위 (조사·탐색 중)',arrive:'특정 지점에
 const s_=(v,n)=>typeof v==='string'?v.slice(0,n):'';
 const n_=(v,a,b)=>clamp(Math.round(+v||0),a,b);
 const pick_=(m,v)=>Object.prototype.hasOwnProperty.call(m,v)?v:'';
-function cevRes(r){ r=r&&typeof r==='object'?r:{}; return {t:s_(r.t,600),hp:n_(r.hp,-200,200),mind:n_(r.mind,-100,100),hg:n_(r.hg,-100,100),$:n_(r.$,-5000,5000),xp:n_(r.xp,0,2000),it:ITEMS[r.it]?r.it:'',iq:n_(r.iq,0,20),st:STS[r.st]?r.st:'',sm:n_(r.sm,0,120),cure:STS[r.cure]?r.cure:'',z:ZOMBIES[r.z]?r.z:'',crew:!!r.crew,kill:!!r.kill,move:!!r.move,go:n_(r.go==null?-1:r.go,-1,7),sfx:pick_(CEV_SFX,r.sfx),fx:pick_(CEV_FX,r.fx)} }
+function cevRes(r){ r=r&&typeof r==='object'?r:{}; return {t:s_(r.t,600),hp:n_(r.hp,-200,200),hpP:n_(r.hpP,-100,100),mind:n_(r.mind,-100,100),hg:n_(r.hg,-100,100),$:n_(r.$,-5000,5000),xp:n_(r.xp,0,2000),it:ITEMS[r.it]?r.it:'',iq:n_(r.iq,0,20),st:STS[r.st]?r.st:'',sm:n_(r.sm,0,120),cure:STS[r.cure]?r.cure:'',z:ZOMBIES[r.z]?r.z:'',crew:!!r.crew,kill:!!r.kill,move:!!r.move,go:n_(r.go==null?-1:r.go,-1,7),sfx:pick_(CEV_SFX,r.sfx),fx:pick_(CEV_FX,r.fx)} }
 function cevStep(s){ s=s&&typeof s==='object'?s:{}; return {p:(Array.isArray(s.p)?s.p:[]).map(x=>s_(x,600)).filter(Boolean).slice(0,6),mood:pick_(CEV_MOOD,s.mood)||'tense',sfx:pick_(CEV_SFX,s.sfx),fx:pick_(CEV_FX,s.fx),
   o:(Array.isArray(s.o)?s.o:[]).slice(0,4).map(x=>({n:s_(x&&x.n,80),pos:posArr(x&&x.pos),ck:pick_(CEV_STAT,x&&x.ck),ok:cevRes(x&&x.ok),no:cevRes(x&&x.no)})).filter(x=>x.n)} }
 function cevClean(id,d){ if(!d||typeof d!=='object') return null; const st=(Array.isArray(d.steps)?d.steps:[]).slice(0,8).map(cevStep).filter(s=>s.o.length); if(!st.length) return null; const T=d.trig&&typeof d.trig==='object'?d.trig:{};
@@ -5928,7 +5928,7 @@ function cevListDraw(){ const el=$('cevList'); if(!el) return; if(!rt.db){ el.in
 function resFields(pfx,r,label,nSteps){ r=r||cevRes({}); const go={'-1':'여기서 끝'}; for(let i=0;i<nSteps;i++) go[i]=`단계 ${i+1}로`;
   return `<fieldset class="cev-r"><legend>${label}</legend><label>결과 문장<textarea data-f="${pfx}.t" rows="2" maxlength="600">${esc(r.t)}</textarea></label>
   <div class="cev-g"><label>다음<select data-f="${pfx}.go">${optHtml(go,r.go)}</select></label><label>효과음<select data-f="${pfx}.sfx">${optHtml(CEV_SFX,r.sfx)}</select></label><label>화면 연출<select data-f="${pfx}.fx">${optHtml(CEV_FX,r.fx)}</select></label>
-  <label>체력<input type="number" data-f="${pfx}.hp" value="${r.hp}"></label><label>정신<input type="number" data-f="${pfx}.mind" value="${r.mind}"></label><label>허기<input type="number" data-f="${pfx}.hg" value="${r.hg}"></label><label>돈<input type="number" data-f="${pfx}.$" value="${r.$}"></label><label>XP<input type="number" data-f="${pfx}.xp" value="${r.xp}" min="0"></label>
+  <label>체력<input type="number" data-f="${pfx}.hp" value="${r.hp}"></label><label>체력 %<input type="number" data-f="${pfx}.hpP" value="${r.hpP||0}" min="-100" max="100" title="최대 체력의 몇 %를 회복(+)하거나 잃는지(-)"></label><label>정신<input type="number" data-f="${pfx}.mind" value="${r.mind}"></label><label>허기<input type="number" data-f="${pfx}.hg" value="${r.hg}"></label><label>돈<input type="number" data-f="${pfx}.$" value="${r.$}"></label><label>XP<input type="number" data-f="${pfx}.xp" value="${r.xp}" min="0"></label>
   <label>아이템<select data-f="${pfx}.it"><option value="">없음</option>${optHtml(Object.fromEntries(Object.keys(ITEMS).map(k=>[k,ITEMS[k].n])),r.it)}</select></label><label>개수<input type="number" data-f="${pfx}.iq" value="${r.iq}" min="0" max="20"></label>
   <label>상태 이상 걸기<select data-f="${pfx}.st"><option value="">없음</option>${optHtml(Object.fromEntries(Object.keys(STS).map(k=>[k,STS[k].n])),r.st)}</select></label><label>몇 분<input type="number" data-f="${pfx}.sm" value="${r.sm}" min="0" max="120"></label>
   <label>상태 이상 치료<select data-f="${pfx}.cure"><option value="">없음</option>${optHtml(Object.fromEntries(Object.keys(STS).map(k=>[k,STS[k].n])),r.cure)}</select></label>
@@ -8898,7 +8898,7 @@ const CEV_TEMPLATE=`=== 이벤트: 버려진 약국
 약장 앞에 흰 가운을 입은 감염자가 웅크리고 있다.
 
 > 조용히 약만 챙긴다 [민첩]
-  성공: 들키지 않고 진통제를 챙겼다. | 아이템 진통제 2 | XP 15 | 끝
+  성공: 들키지 않고 진통제를 챙겨 한 알 삼켰다. | 아이템 진통제 2 | 체력 20% | XP 15 | 끝
   실패: 놈이 고개를 들었다. | 전투 비틀거리는 감염자 | 끝
 > 맞서 싸운다
   결과: 녀석이 몸을 일으킨다. | 전투 비틀거리는 감염자 | 아이템 붕대 1 | 끝
@@ -8925,7 +8925,7 @@ const CEV_GUIDE=`[양식 설명]
 > 판정 없는 선택지
   결과: 결과 문장 | 효과
 
-[효과] 체력 -10 · 정신 5 · 허기 -10 · 달러 30 · XP 15 · 아이템 붕대 2 · 상태 출혈 10(분) · 치료 출혈
+[효과] 체력 -10 · 체력 30% (최대 체력의 30% 회복, -20%는 20% 피해) · 정신 5 · 허기 -10 · 달러 30 · XP 15 · 아이템 붕대 2 · 상태 출혈 10(분) · 치료 출혈
        전투 비틀거리는 감염자 · 대원 합류 · 대원 사망 · 기절 이동 · 소리 비명 · 연출 암전
        다음 2 (2단계로) · 끝 (여기서 마침. 안 쓰면 끝)`;
 function cevParse(txt){ const out=[], errs=[]; const blocks=String(txt||'').replace(/\r/g,'').split(/^===\s*이벤트\s*[:：]\s*/m).slice(1);
@@ -8935,6 +8935,7 @@ function cevParse(txt){ const out=[], errs=[]; const blocks=String(txt||'').repl
         if((m=p.match(/^다음\s*(\d+)$/))) r.go=clamp(+m[1]-1,0,7);
         else if(p==='끝') r.go=-1;
         else if((m=p.match(/^(체력|정신|허기|달러|XP|경험치)\s*([+-]?\d+)$/i))){ const k={체력:'hp',정신:'mind',허기:'hg',달러:'$',XP:'xp',xp:'xp',경험치:'xp'}[m[1]]; r[k]=+m[2] }
+        else if((m=p.match(/^체력\s*([+-]?\d+)\s*%$/))) r.hpP=+m[1];
         else if((m=p.match(/^아이템\s+(.+?)\s+(\d+)$/))){ const k=byName(ITEMS,m[1]); if(k){ r.it=k; r.iq=+m[2] } else errs.push(`「${title}」 ${line}: 아이템 '${m[1]}'을(를) 못 찾았어요`) }
         else if((m=p.match(/^상태\s+(.+?)\s+(\d+)$/))){ const k=byName(STS,m[1]); if(k){ r.st=k; r.sm=+m[2] } else errs.push(`「${title}」 ${line}: 상태 '${m[1]}'을(를) 못 찾았어요`) }
         else if((m=p.match(/^치료\s+(.+)$/))){ const k=byName(STS,m[1]); if(k) r.cure=k; else errs.push(`「${title}」 ${line}: 상태 '${m[1]}'을(를) 못 찾았어요`) }
@@ -8971,7 +8972,7 @@ function cevParse(txt){ const out=[], errs=[]; const blocks=String(txt||'').repl
     E.steps.forEach((s,i)=>s.o.forEach(o=>{ if(!o.ck) o.no=o.ok; [o.ok,o.no].forEach(r=>{ if(r.go>=E.steps.length){ errs.push(`「${title}」 ${i+1}단계 '${o.n}': ${r.go+1}단계가 없어요`); r.go=-1 } }) }));
     out.push({id:id||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),e:E}) }
   return {list:out,errs} }
-function cevToText(e){ const R=r=>{ const a=[r.t||'…']; if(r.hp) a.push(`체력 ${r.hp}`); if(r.mind) a.push(`정신 ${r.mind}`); if(r.hg) a.push(`허기 ${r.hg}`); if(r.$) a.push(`달러 ${r.$}`); if(r.xp) a.push(`XP ${r.xp}`); if(r.it&&r.iq) a.push(`아이템 ${ITEMS[r.it].n} ${r.iq}`); if(r.st&&r.sm) a.push(`상태 ${STS[r.st].n} ${r.sm}`); if(r.cure) a.push(`치료 ${STS[r.cure].n}`); if(r.z) a.push(`전투 ${ZOMBIES[r.z].n}`); if(r.crew) a.push('대원 합류'); if(r.kill) a.push('대원 사망'); if(r.move) a.push('기절 이동'); if(r.sfx) a.push(`소리 ${CEV_SFX[r.sfx]}`); if(r.fx) a.push(`연출 ${CEV_FX[r.fx]}`); a.push(r.go>=0?`다음 ${r.go+1}`:'끝'); return a.join(' | ') };
+function cevToText(e){ const R=r=>{ const a=[r.t||'…']; if(r.hp) a.push(`체력 ${r.hp}`); if(r.hpP) a.push(`체력 ${r.hpP}%`); if(r.mind) a.push(`정신 ${r.mind}`); if(r.hg) a.push(`허기 ${r.hg}`); if(r.$) a.push(`달러 ${r.$}`); if(r.xp) a.push(`XP ${r.xp}`); if(r.it&&r.iq) a.push(`아이템 ${ITEMS[r.it].n} ${r.iq}`); if(r.st&&r.sm) a.push(`상태 ${STS[r.st].n} ${r.sm}`); if(r.cure) a.push(`치료 ${STS[r.cure].n}`); if(r.z) a.push(`전투 ${ZOMBIES[r.z].n}`); if(r.crew) a.push('대원 합류'); if(r.kill) a.push('대원 사망'); if(r.move) a.push('기절 이동'); if(r.sfx) a.push(`소리 ${CEV_SFX[r.sfx]}`); if(r.fx) a.push(`연출 ${CEV_FX[r.fx]}`); a.push(r.go>=0?`다음 ${r.go+1}`:'끝'); return a.join(' | ') };
   const T=e.trig||{}, tr=T.k==='arrive'&&MAP[T.node]?`도착 ${MAP[T.node].n}`:T.k==='level'?`레벨 ${T.lv}`:T.k==='manual'?'직접':`무작위 ${T.w||2}`;
   let s=`=== 이벤트: ${e.t}\n아이디: ${e.id}\n태그: ${e.tag||'INCIDENT'}\n포지션: ${(e.pos||[]).join(', ')}\n레벨: ${e.lv||1}\n발생: ${tr}\n한 번만: ${e.once?'예':'아니오'}\n${e.d&&DOF[e.d]?`구역: ${DOF[e.d].n}\n`:''}`;
   (e.steps||[]).forEach((st,i)=>{ s+=`\n--- ${i+1}\n분위기: ${CEV_MOOD[st.mood]||'긴장'}\n${st.sfx?`소리: ${CEV_SFX[st.sfx]}\n`:''}${st.fx?`연출: ${CEV_FX[st.fx]}\n`:''}${(st.p||[]).join('\n')}\n\n`;
@@ -11222,6 +11223,34 @@ function cevStartBar(){ const el=$('cevList'); let bar=$('cevStart'); const G=ce
     let n=0, bad=0; for(const id of ids){ try{ await rt.db.doc('cevents/'+id).delete(); n++; delete rt.stSel[id] }catch(err){ bad++ } } toast(`${n}개를 지웠어요${bad?` · ${bad}개 실패`:''}`,true); setTimeout(()=>{ try{ cevListDraw() }catch(e){} },800) } }
 const _cevListDraw101=cevListDraw; cevListDraw=function(){ _cevListDraw101.apply(this,arguments); try{ cevStartBar() }catch(e){} };
 (()=>{ const st=document.createElement('style'); st.textContent=`.cevstart .stg{border:1px solid var(--line);padding:6px 8px;margin:6px 0;display:grid;gap:3px}.cevstart .stk{margin:0;font-size:12.5px;color:var(--muted)}.cevstart label{display:flex;gap:8px;align-items:baseline;font-size:13px}.cevstart label small{color:var(--muted)}.cevstart details{max-height:50vh;overflow:auto}`; document.head.append(st) })();
+
+/* ================= p102: 관리자 — 목록에서 펼친 글을 바로 고치고 '수정'으로 저장 ================= */
+rt.ceDraft=rt.ceDraft||{}; rt.ceSure=rt.ceSure||{};
+const cevSplitTx=e=>{ const t=cevToText(e), i=t.search(/^--- /m); return i<0?{h:t,b:''}:{h:t.slice(0,i),b:t.slice(i).trim()} };
+const _cevListDraw102=cevListDraw; cevListDraw=function(){ _cevListDraw102.apply(this,arguments); const el=$('cevList'); if(!el||!rt.cev) return;
+  el.querySelectorAll('.cev-i .cevrow').forEach(d=>{ const body=d.querySelector('.cr-b'), pre=body&&body.querySelector(':scope > pre'); if(!pre) return;
+    const id=d.querySelector('[data-id]')?.dataset.id, e=rt.cev.find(x=>x.id===id); if(!e) return; let sp; try{ sp=cevSplitTx(e) }catch(x){ return }
+    const ta=document.createElement('textarea'); ta.className='cr-ed'; ta.spellcheck=false; ta.value=rt.ceDraft[id]!=null?rt.ceDraft[id]:sp.b;
+    const fit=()=>{ ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight+4,window.innerHeight*.7)+'px' };
+    const row=body.querySelector('.row'); const bt=document.createElement('button'); bt.type='button'; bt.className='btn sm cr-sv';
+    const sure=()=>rt.ceSure[id]&&Date.now()-rt.ceSure[id]<6000;
+    const lab=()=>{ const ch=ta.value!==sp.b; bt.disabled=!ch; bt.textContent=!ch?'수정':sure()?'정말 이대로 고칠까요? 한 번 더':'수정'; bt.classList.toggle('warn',!!sure()) };
+    ta.oninput=()=>{ rt.ceDraft[id]=ta.value; rt.ceSure[id]=0; lab(); fit() };
+    bt.onclick=async()=>{ if(ta.value===sp.b) return; const r=cevParse(sp.h+ta.value+'\n');
+      if(!r.list.length||r.errs.length){ toast('글을 읽지 못했어요: '+((r.errs||[])[0]||'형식을 확인해 주세요'),false); return }
+      if(!sure()){ rt.ceSure[id]=Date.now(); lab(); return } rt.ceSure[id]=0;
+      const c=cevClean(id,Object.assign({},r.list[0].e,{on:e.on})); if(!c){ toast('저장할 수 없는 내용이에요.'); return }
+      const doc=Object.assign({},c,{at:e.at||Date.now(),fire:e.fire||0,on:e.on}); delete doc.id; bt.disabled=true; bt.textContent='저장 중…';
+      try{ await rt.db.doc('cevents/'+id).set(doc); delete rt.ceDraft[id]; toast('고쳤어요.',true) }catch(err){ toast('저장하지 못했어요. 관리자만 고칠 수 있어요.'); lab() } };
+    const rs=document.createElement('button'); rs.type='button'; rs.className='btn ghost sm'; rs.textContent='되돌리기';
+    rs.onclick=()=>{ delete rt.ceDraft[id]; rt.ceSure[id]=0; ta.value=sp.b; lab(); fit() };
+    pre.replaceWith(ta); if(row){ row.prepend(bt,rs) } else body.append(bt,rs); lab(); d.addEventListener('toggle',()=>{ if(d.open) fit() }); requestAnimationFrame(fit) }) };
+(()=>{ const st=document.createElement('style'); st.textContent=`.cevrow .cr-ed{width:100%;box-sizing:border-box;font:12.5px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflow:auto;min-height:120px;resize:vertical;padding:8px;background:var(--bg2,transparent);color:inherit;border:1px solid var(--line)}`; document.head.append(st) })();
+
+/* ================= p103: 사건 결과 '체력 N%' — 최대 체력의 N%만큼 회복/피해 ================= */
+const cevHpP=r=>{ if(!r||!r.hpP) return r; return Object.assign({},r,{hp:(r.hp||0)+Math.round(maxHp()*r.hpP/100),hpP:0}) };
+const _cevApplyNow103=cevApplyNow; cevApplyNow=function(r,e){ return _cevApplyNow103.call(this,cevHpP(r),e) };
+const _cevFinal103=cevFinal; cevFinal=function(r,e,fail){ return _cevFinal103.call(this,cevHpP(r),e,fail) };
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
