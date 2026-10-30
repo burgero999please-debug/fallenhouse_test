@@ -1271,7 +1271,7 @@ function eventAt(t){
   if(evCache.size>40) evCache.clear(); evCache.set(pid,ev); return ev;
 }
 const curEv=()=>eventAt(Date.now());
-const evProd=k=>{const p=curEv().def.prod; return p&&p[k]||1};
+const evProd=k=>{const p=curEv().def.prod; const b=(typeof S!=='undefined'&&S&&S.bld)||{}; return (p&&p[k]||1)*(k==='food'?1+.2*(b.greenhouse||0):k==='water'?1+.2*(b.pump||0):1)};
 function evZone(z){
   const e=curEv(), fx=e.def.fx||{}; const m={time:1,loot:1,col:0,block:false,res:fx.res||null,tags:[]};
   if(fx.all){m.time*=fx.all.time||1; m.loot*=fx.all.loot||1; m.col+=fx.all.col||0}
@@ -3064,7 +3064,7 @@ function viewMap(){
 /* ================= 탐험대원 ================= */
 const FIRST=['제이크','Maya','대니얼','루시','오언','클로이','마커스','에이바','타일러','노라','이선','사샤','브록','레이','하퍼','미겔','조이','칼렙','아이린','데브','윌라','토비','니코','베아','그레이스','루크','헥터','엠마','캐시','오스카'];
 const LAST=['밀러','존스','가르시아','리','윌슨','파커','헤일','브룩스','크루즈','레예스','오코너','킴','포스터','블레이크','와드'];
-const CREW_MAX=()=>6+Math.floor((S.bld.radio||0)/2)+Math.floor(lvlOf(S.xp)/8);
+const CREW_MAX=()=>6+Math.floor((S.bld.radio||0)/2)+Math.floor(lvlOf(S.xp)/8)+Math.floor((S.bld.barracks||0)/2);
 const crewAlive=()=>(S.crew||[]).filter(c=>c.state!=='dead');
 function rollStat(base){ return clamp(Math.round(base+rand(-2,3)),1,10) }
 function makeCrew(origin,bias){
@@ -7227,7 +7227,7 @@ const _cevOpen8=cevOpen; cevOpen=function(){ _cevOpen8(); const box=$('mbox'); i
   $('cbOut').onclick=async()=>{ const L=(rt.cev||[]).map(e=>JSON.parse(JSON.stringify(e))), txt=JSON.stringify({fh:'cevents',v:1,at:Date.now(),events:L}); $('cbTx').value=txt; try{ await navigator.clipboard.writeText(txt); $('cbMsg').textContent=`${L.length}개를 복사했어요.` }catch(e){ $('cbMsg').textContent=`${L.length}개 · 칸의 글자를 직접 복사하세요.` }
     try{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'})); a.download=`fallen-house-events-${new Date().toISOString().slice(0,10)}.json`; document.body.append(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove() },1000) }catch(e){} };
   $('cbIn').onclick=async()=>{ let o; try{ o=JSON.parse($('cbTx').value) }catch(e){ return $('cbMsg').textContent='백업 글자가 올바르지 않아요.' } const L=Array.isArray(o)?o:o&&Array.isArray(o.events)?o.events:null; if(!L) return $('cbMsg').textContent='이벤트 목록을 찾지 못했어요.';
-    let n=0, bad=0; for(const e of L){ const id=String(e&&e.id||'').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,40); if(!id||id==='_ann'){ bad++; continue } const c=cevClean(id,e); if(!c){ bad++; continue } try{ await rt.db.doc('cevents/'+id).set(Object.assign({},c,{fire:0})); n++ }catch(err){ bad++ } }
+    let n=0, bad=0; for(const e of L){ const id=String(e&&e.id||'').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,40); if(!id||id==='_ann'){ bad++; continue } const c=cevClean(id,e); if(!c){ bad++; continue } if(cevDupOf(c,id)){ bad++; continue } try{ await rt.db.doc('cevents/'+id).set(Object.assign({},c,{fire:0})); n++ }catch(err){ bad++ } }
     $('cbMsg').textContent=`${n}개를 가져왔어요${bad?` · ${bad}개는 건너뜀`:''}.`; toast(`이벤트 ${n}개 가져오기 완료`,true) } };
 
 /* ================= 1:1 결투 (동의해야 시작) · 지면 30분 굴복 또는 빼앗기기 ================= */
@@ -7603,7 +7603,7 @@ function cevMoveModal(){ const L=rt.cev||[]; rt.modalLock=true;
   $('mvSel').onclick=()=>{ $('mvTx').focus(); $('mvTx').select() };
   $('mvBack').onclick=()=>{ rt.modalLock=false; cevOpen() };
   $('mvIn').onclick=async()=>{ if(!rt.db) return toast('공유 서버에 연결되어 있어야 해요.'); let o; try{ o=JSON.parse($('mvTx').value) }catch(e){ return toast('백업 글자가 올바르지 않아요.') } const E=Array.isArray(o)?o:o&&o.events; if(!Array.isArray(E)) return toast('이벤트 목록을 찾지 못했어요.');
-    let n=0, bad=0; for(const e of E){ const id=String(e&&e.id||'').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,40); if(!id||id==='_ann'){ bad++; continue } const c=cevClean(id,e); if(!c){ bad++; continue } const doc=Object.assign({},c,{fire:0}); delete doc.id; try{ await rt.db.doc('cevents/'+id).set(doc); n++ }catch(err){ bad++ } }
+    let n=0, bad=0; for(const e of E){ const id=String(e&&e.id||'').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,40); if(!id||id==='_ann'){ bad++; continue } const c=cevClean(id,e); if(!c){ bad++; continue } if(cevDupOf(c,id)){ bad++; continue } const doc=Object.assign({},c,{fire:0}); delete doc.id; try{ await rt.db.doc('cevents/'+id).set(doc); n++ }catch(err){ bad++ } }
     $('mvPrev').textContent=`${n}개를 가져왔어요${bad?` · ${bad}개는 건너뜀`:''}. 편집기 목록에서 확인하세요.`; toast(`이벤트 ${n}개 가져오기 완료`,true) } }
 ACT.cevMove=()=>cevMoveModal();
 const _cevOpen11=cevOpen; cevOpen=function(){ _cevOpen11(); const box=$('mbox'); if(!box||!rt.isAdmin) return; const h=box.querySelector('h2'); if(h&&!box.querySelector('[data-act=cevMove]')) h.insertAdjacentHTML('afterend',`<div class="row"><button class="btn warn" data-act="cevMove" type="button">📦 이벤트 옮기기 (백업 · 테섭 → 본섭)</button><span class="note">지금 이 서버의 이벤트 ${(rt.cev||[]).length}개</span></div>`) };
@@ -8645,7 +8645,7 @@ raidHp=function(rid){ if(rid===undefined) rid=raidId(); let lv=0, c=0; for(const
 /* ================= p42: 동행 레이드 턴제 · 공개 구인 · 막힘 복구 · 인벤토리 · 지도 정리 ================= */
 /* ---------- 동행 레이드: 몹 → 1·2·3번 행동 입력 → 몹 ---------- */
 const PR_IT={bandage:{heal:30},painkiller:{heal:20},medkit:{heal:60},ration:{heal:15},adrenaline:{heal:40},molotov:{dmg:2.2},grenade:{dmg:3.5}};
-const prUp=()=>{ const P=rt.party; return P?peersIn().map(p=>p.by).filter(id=>!P.dead[id]&&!((P.down||{})[id]>Date.now())):[] };
+const prUp=()=>{ const P=rt.party; return P?peersIn().map(p=>p.by).filter(id=>!P.dead[id]&&!((P.down||{})[id]>Date.now())&&!(P.kid&&P.kid.tg===id&&Date.now()<P.kid.until)):[] };
 startPRaid=function(){ const P=rt.party; if(!P||!amLeader()||P.raid) return; const n=Math.max(1,aliveIds().length), L=pMaxLv()+ri(1,2), z=stPick(PR_POOL.filter(k=>ZOMBIES[k])), hp=Math.round((90+L*13)*(.6+n*.4)), atk=Math.round(4+L*.9);
   P.raidT=Date.now(); P.R.emit('pev',{type:'raid',id:'r'+Date.now().toString(36),z,n:'우두머리 '+ZOMBIES[z].n,L,hp,atk,dl:Date.now()+120000,tb:1}) };
 const _onPRaid42=onPRaid; onPRaid=function(d){ _onPRaid42(d); const P=rt.party, R=P&&P.raid; if(!R||R.id!==String(d.id)) return; if(d.tb){ R.tb=1; R.round=0; R.phase='mob'; R.acts={}; R.my=null; R.powR=-9; R.guardNext=false; if(amLeader()) setTimeout(prNext,1500) } partyRender() };
@@ -8656,7 +8656,7 @@ function prNext(){ const P=rt.party, R=P&&P.raid; if(!R||!R.tb||!amLeader()||R.o
   setTimeout(()=>{ const Q=rt.party, R2=Q&&Q.raid; if(!R2||R2!==R||R.over) return; R.inDl=Date.now()+15000; R.acts[R.round]={}; Q.R.emit('pev',{type:'rin',id:R.id,r:R.round,dl:R.inDl}) },1400) }
 function prResolve(){ const P=rt.party, R=P&&P.raid; if(!R||!R.tb||!amLeader()||R.phase!=='input'||R.over) return; R.phase='res';
   const A=R.acts[R.round]||{}, order=peersIn().map(p=>p.by).filter(id=>!P.dead[id]); let tot=0; const lines=[];
-  order.forEach((id,i)=>{ const a=A[id], down=(P.down||{})[id]>Date.now(); if(down){ lines.push(`${i+1}. ${nameOf(id)} — 쓰러져 있다`); return } if(!a){ lines.push(`${i+1}. ${nameOf(id)} — 머뭇거렸다`); return }
+  order.forEach((id,i)=>{ const a=A[id], down=(P.down||{})[id]>Date.now(); if(down){ lines.push(`${i+1}. ${nameOf(id)} — 쓰러져 있다`); return } if(!a){ lines.push(`${i+1}. ${nameOf(id)} — ${P.kid&&P.kid.tg===id&&Date.now()<P.kid.until?'붙잡혀 있다':'머뭇거렸다'}`); return }
     const d=clamp(+a.d||0,0,5000); tot+=d; if(d) R.dmg[id]=(R.dmg[id]||0)+d; lines.push(`${i+1}. ${nameOf(id)} — ${String(a.lb||'').slice(0,30)}${d?` · ${d} 피해`:''}`) });
   R.hp=Math.max(0,R.hp-tot); P.R.emit('pev',{type:'rres',id:R.id,r:R.round,lines,hp:R.hp,dmg:R.dmg});
   if(R.hp<=0){ R.over=1; setTimeout(()=>P.R.emit('pev',{type:'rend',id:R.id,win:true,dmg:R.dmg}),900); return } setTimeout(prNext,1800) }
@@ -8992,7 +8992,7 @@ function cevTextModal(){ rt.modalLock=true;
   $('ctChk').onclick=check; T.oninput=()=>{ clearTimeout(T.__t); T.__t=setTimeout(check,500) };
   $('ctBack').onclick=()=>{ rt.modalLock=false; cevOpen() };
   $('ctSave').onclick=async()=>{ if(!rt.db) return toast('공유 서버에 연결되어 있어야 해요.'); const r=check(); if(!r.list.length) return toast('저장할 이벤트가 없어요.'); let n=0, bad=0;
-    for(const {id,e} of r.list){ const c=cevClean(id,Object.assign({on:true},e)); if(!c){ bad++; continue } const doc=Object.assign({},c,{at:Date.now()}); delete doc.id; try{ await rt.db.doc('cevents/'+id).set(doc); n++ }catch(err){ bad++ } }
+    for(const {id,e} of r.list){ const c=cevClean(id,Object.assign({on:true},e)); if(!c){ bad++; continue } if(cevDupOf(c,id)){ bad++; continue } const doc=Object.assign({},c,{at:Date.now()}); delete doc.id; try{ await rt.db.doc('cevents/'+id).set(doc); n++ }catch(err){ bad++ } }
     toast(`이벤트 ${n}개 저장${bad?` · ${bad}개 실패`:''}`,true); $('ctPrev').insertAdjacentHTML('afterbegin',`<p class="okc">${n}개 저장했어요. 편집기 목록에서 확인하세요.</p>`) } }
 ACT.cevText=()=>cevTextModal();
 const _cevOpen43=cevOpen; cevOpen=function(){ _cevOpen43(); const box=$('mbox'); if(!box||!rt.isAdmin) return; const mv=box.querySelector('[data-act=cevMove]'); if(mv&&!box.querySelector('[data-act=cevText]')) mv.insertAdjacentHTML('afterend',`<button class="btn pri" data-act="cevText" type="button">📝 글로 이벤트 넣기 (메모장 양식)</button>`) };
@@ -10595,7 +10595,7 @@ const _lr81=leaderResolve; leaderResolve=function(){ const P=rt.party, e=P&&P.ev
   else if(k==='blackout'){ const hit=ids.filter(()=>Math.random()<.5), lucky=stPick(ids); all(id=>hit.includes(id)?{hp:-ri(14,24),xp:12}:{xp:16,item:id===lucky?'flare':null}); t=hit.length?`어둠 속에서 ${hit.map(nameOf).join(', ')}이(가) 물어뜯길 뻔했다. 해가 다시 나오자 놈들은 사라졌다.`:'서로 등을 맞대고 버텼다. 아무도 다치지 않았다.' }
   else { const tg=P.evTg&&ids.includes(P.evTg)?P.evTg:null, vs=ids.filter(id=>id!==tg), pay=vs.filter(id=>V[id].c===0), fight=vs.filter(id=>V[id].c===1), cost=P.ransom||500; if(tg) ch[tg]=-2;
     if(!tg){ all(()=>({xp:4})); t='끌려간 줄 알았던 사람이 골목 끝에서 걸어 나왔다.'; extra.kid=null }
-    else if(pay.length){ const who=stPick(pay); ids.forEach(id=>{ per[id]=id===who?{money:-cost,xp:20}:id===tg?{xp:6}:{xp:6} }); t=`${nameOf(who)}이(가) 혼자 몸값 $${fmt(cost)}을 다 냈다. 납치범들이 ${nameOf(tg)}을(를) 길바닥에 던져 놓고 사라졌다.`; extra.kid=null }
+    else if(pay.length){ const who=stPick(pay); ids.forEach(id=>{ per[id]=id===who?{money:-cost,xp:20}:id===tg?{xp:6}:{xp:6} }); t=`${nameOf(who)}이(가) 혼자 몸값을 다 냈다. 납치범들이 ${nameOf(tg)}을(를) 길바닥에 던져 놓고 사라졌다.`; extra.kid=null }
     else if(fight.length){ all(()=>({xp:4})); t=`${fight.map(nameOf).join(', ')}이(가) 몸값 대신 쳐들어가기로 했다. 납치범들의 소굴로 간다.`; extra.kid={tg,ms:200000}; raid=tg }
     else { ids.forEach(id=>{ per[id]=id===tg?{money:-ri(20,50),hp:-ri(8,16),xp:3}:{xp:5} }); t=`아무도 돌아가지 않았다. ${nameOf(tg)}은(는) 혼자 남겨졌다. 빠져나오려면 시간이 걸릴 것이다.`; extra.kid={tg,ms:90000}; try{ P.R.emit('pev',{type:'sfx',n:'sob'}).catch(()=>{}) }catch(x){} }
     P.evTg=null }
@@ -10638,6 +10638,235 @@ const _cevOpen81=cevOpen; cevOpen=function(){ _cevOpen81.apply(this,arguments); 
   cevListDraw() };
 (()=>{ const st=document.createElement('style'); st.textContent=`.cevtabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}.animp{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.45;padding:8px 10px;border:1px dashed var(--warn);margin:6px 0}.animp input{margin-top:3px;width:18px;height:18px;flex:none}`; document.head.append(st) })();
 window.__P81={bagPick,annImpCheck};
+
+/* ================= p82: 관리자 — 똑같은 사건 중복 정리 · 가져올 때 중복은 건너뛰기 ================= */
+function cevSig(e){ const o=Object.assign({},e); delete o.id; delete o.at; delete o.fire; delete o.on; try{ return JSON.stringify(o) }catch(x){ return String(Math.random()) } }
+function cevDupOf(c,id){ const sg=cevSig(c); return (rt.cev||[]).find(x=>x.id!==id&&cevSig(x)===sg)||null }
+function cevDupGroups(){ const m=new Map(); for(const e of rt.cev||[]){ const k=cevSig(e); if(!m.has(k)) m.set(k,[]); m.get(k).push(e) } return [...m.values()].filter(g=>g.length>1).map(g=>g.slice().sort((a,b)=>(b.on-a.on)||((a.at||0)-(b.at||0)))) }
+function cevDupBar(){ const el=$('cevList'), G=cevDupGroups(), extra=G.reduce((a,g)=>a+g.length-1,0); let bar=$('cevDup');
+  if(!extra||!el||!rt.isAdmin){ if(bar) bar.remove(); return }
+  if(!bar){ const tb=$('cevTabs')||el; tb.insertAdjacentHTML('beforebegin','<div class="cevdup" id="cevDup"></div>'); bar=$('cevDup') }
+  bar.innerHTML=`<b>똑같은 사건 ${extra}개가 중복으로 들어가 있어요</b><small>${G.length}종류 · 내용이 글자 하나까지 같은 것만 셌어요. 종류마다 하나만 남기고(켜진 것·먼저 만든 것 우선) 나머지를 지워요.</small><details><summary>목록 보기</summary><ul>${G.map(g=>`<li>${esc(g[0].t)} ×${g.length}</li>`).join('')}</ul></details><button type="button" class="btn warn sm" id="cevDupGo">중복 ${extra}개 지우기</button>`;
+  $('cevDupGo').onclick=async()=>{ const b=$('cevDupGo'); if(b.dataset.sure!=='1'){ b.dataset.sure='1'; b.textContent=`정말 ${extra}개를 지울까요? (되돌릴 수 없어요)`; return } b.disabled=true; b.textContent='지우는 중…';
+    let n=0, bad=0; for(const g of cevDupGroups()) for(const e of g.slice(1)){ try{ await rt.db.doc('cevents/'+e.id).delete(); n++ }catch(err){ bad++ } }
+    toast(`중복 ${n}개를 지웠어요${bad?` · ${bad}개는 실패`:''}`,true); setTimeout(()=>{ try{ cevListDraw() }catch(e){ console.error(e) } try{ cevDupBar() }catch(e){ console.error(e) } },800) } }
+window.__P82={cevDupBar,cevDupGroups};
+const _cevListDraw82=cevListDraw; cevListDraw=function(){ _cevListDraw82.apply(this,arguments); try{ cevDupBar() }catch(e){} };
+(()=>{ const st=document.createElement('style'); st.textContent=`.cevdup{display:grid;gap:6px;border:1px solid var(--warn);background:var(--panel);padding:10px 12px;margin:10px 0}.cevdup small{color:var(--muted);font-size:12px}.cevdup ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;max-height:200px;overflow:auto}.cevdup .btn{justify-self:start}`; document.head.append(st) })();
+
+/* ================= p83: 납치 — 각자 겪은 일은 그 사람에게만 ================= */
+const _onPev83=onPev; onPev=function(m){ const r=_onPev83.apply(this,arguments); const P=rt.party, d=(m&&m.data)||{};
+  if(P&&m.by===P.leader&&d.type==='res'&&P.evMem&&P.evMem.id===d.id&&P.evMem.k==='kidnap'&&P.turns&&P.turns.list) P.turns.list=P.turns.list.filter(x=>x.me);
+  return r };
+/* 붙잡혀 있는 동안: 나만 보는 장면 */
+const KID_SCENE=[['자루 너머로 납치범들이 몸값 얘기를 하는 소리가 들린다.'],['손목의 밧줄이 살을 파고든다.',{hp:-3}],['누군가 물병을 발치에 던져 주었다. 미지근하다.',{hunger:4}],['"얌전히 있으면 안 다쳐." 담배 냄새가 가까이 다가왔다 멀어진다.'],
+  ['바닥을 더듬다 녹슨 못 하나를 손에 쥐었다. 밧줄을 조금씩 긁는다.'],['발길질이 날아왔다. 숨이 턱 막힌다.',{hp:-6}],['멀리서 동료들 목소리가 들린 것 같다. 착각일까.'],['빈속이 쓰리다. 마지막으로 먹은 게 언제였더라.',{hunger:-5}]];
+setInterval(()=>{ try{ if(!kidMe()) return; const P=rt.party; P.kidSc=(P.kidSc||0); if(Date.now()-(P.kidScT||0)<20000) return; P.kidScT=Date.now(); const [t,o]=KID_SCENE[(P.kidSc++)%KID_SCENE.length], fx=[];
+  if(o&&o.hp){ S.hp=clamp(S.hp+o.hp,1,maxHp()); fx.push(`체력 ${o.hp}`) } if(o&&o.hunger){ S.hunger=clamp((S.hunger||0)+o.hunger,0,100); fx.push(`허기 ${o.hunger>0?'+':''}${o.hunger}`) }
+  plog(`(나만 보임) ${t}${fx.length?` · ${fx.join(', ')}`:''}`,'me'); markSave() }catch(e){} },2000);
+
+/* ================= p84: 납치 중엔 레이드 제외 · 원한 덜 자주 · 잔해 도감 4세트 추가 · 무기 강화 ================= */
+/* --- 1. 납치된 사람: 레이드에서 공격하지도, 공격받지도 않는다 --- */
+const kidId=()=>{ const P=rt.party; return kidOn(P)?P.kid.tg:null };
+const _prDo84=prDo; prDo=function(){ if(kidMe()) return toast('묶여 있어 싸울 수 없다.'); return _prDo84.apply(this,arguments) };
+const _prAuto84=prAuto; prAuto=function(){ if(kidMe()) return; return _prAuto84.apply(this,arguments) };
+const _onPact84=onPact; onPact=function(m){ const d=(m&&m.data)||{}; if(d.kind==='ract'&&m.by&&m.by===kidId()) return; return _onPact84.apply(this,arguments) };
+/* 우두머리 공격 대상에서 빼고(대장 쪽), 혹시 맞았다는 신호가 와도 무시(본인 쪽) */
+const _prOnMob84=prOnMob; prOnMob=function(d){ if(d&&d.tg===rt.myId&&kidMe()){ d=Object.assign({},d,{dmg:0}) } return _prOnMob84.call(this,d) };
+
+const _partyRender84=partyRender; partyRender=function(){ const r=_partyRender84.apply(this,arguments); if(kidMe()){ const el=$('party'); if(el) el.querySelectorAll('[data-act=pRAct],[data-act=prAuto]').forEach(b=>{ b.disabled=true; b.title='묶여 있어 싸울 수 없다' }) } return r };
+/* --- 2. 원한 이벤트: 덜 자주 · 한 번에 하나만 · 더 늦게 --- */
+const GRUDGE=new Set(['kickedGrudge','leaderRevenge','loverRevenge','loverAmbush','thugsHunt']);
+const _seed84=seed; seed=function(key,ctx,lo,hi){ if(GRUDGE.has(key)){ if(Math.random()>.4) return; if((S.seeds||[]).some(x=>GRUDGE.has(x.key))) return; lo=(lo||15)*2; hi=(hi||40)*2 } return _seed84.call(this,key,ctx,lo,hi) };
+/* 이미 쌓여 있던 원한도 하나만 남기기 */
+setTimeout(()=>{ try{ if(!S||!S.seeds) return; let keep=false; S.seeds=S.seeds.filter(x=>{ if(!GRUDGE.has(x.key)) return true; if(keep) return false; keep=true; return true }); markSave() }catch(e){} },8000);
+
+/* --- 3. 잔해 도감: 단계마다 새 세트 하나씩 (기존 세트는 그대로) --- */
+SETS.forEach((s,i)=>{ if(s.tier==null) s.tier=i });
+SETS.push(
+  {n:'거리의 흔적',c:'var(--s0)',tier:0,bonus:'획득량 +8%',items:[
+    ['bell','녹슨 자전거 벨','누르면 아직 맑은 소리가 난다. 누르지 않는 게 좋다.'],
+    ['receipt','반쯤 탄 영수증','우유, 빵, 기저귀. 결제 시각 23:58.'],
+    ['shades','깨진 선글라스','한쪽 알만 남았다. 세상이 반만 어둡다.'],
+    ['collar','주인 잃은 목줄','이름표에 "보리"라고 적혀 있다.'],
+    ['pillbox','빈 약통','요일별 칸이 목요일에서 멈췄다.']]},
+  {n:'남겨진 사람들',c:'var(--s1)',tier:1,bonus:'사람 만날 확률 +15%',items:[
+    ['ring','결혼반지','안쪽에 날짜가 새겨져 있다. 다음 달이 10주년이었다.'],
+    ['letters','손편지 묶음','고무줄로 묶인 편지 열두 통. 전부 같은 사람에게.'],
+    ['missing','실종자 전단','"우리 딸을 찾습니다." 같은 얼굴의 전단이 수백 장.'],
+    ['sos','SOS 낙서 사진','옥상에 페인트로 쓴 SOS. 헬기는 오지 않았다.'],
+    ['shoe','아이 운동화 한 짝','불이 들어오는 운동화. 아직 깜빡인다.']]},
+  {n:'무기고 기록',c:'var(--s2)',tier:2,bonus:'공격력 +5%',items:[
+    ['ledger','탄약 출납부','마지막 장: "전량 반출. 사유 — 기재하지 않음."'],
+    ['bayonet','부러진 총검','날 끝이 검게 굳어 있다.'],
+    ['shield','진압 방패 조각','긁힌 자국이 손톱 모양이다.'],
+    ['armkey','무기고 열쇠','태그에 "B-2 지하"라고 적혀 있다.'],
+    ['scope','저격수 조준경','십자선 너머로 아직 누군가를 보고 있는 것 같다.']]},
+  {n:'최초 감염',c:'var(--s3)',tier:3,bonus:'받는 피해 -6%, 경험치 +5%',items:[
+    ['p0file','0번 환자 기록','이름 대신 번호. 입원 사유: 고열, 공격성.'],
+    ['cctv','격리실 CCTV 테이프','03:12, 침대의 환자가 일어난다. 그리고 화면이 끊긴다.'],
+    ['tissue','변이 조직 표본','포르말린 속에서도 미세하게 움직인다.'],
+    ['memo','연구소장 음성 메모','"멈춰야 했다. 우리가 시작했다."'],
+    ['report','해독 실패 보고서','결론란에 한 단어. "불가."']]},
+);
+SETS.slice(4).forEach((s,si)=>s.items.forEach(([k,n,d])=>COL[k]={k,n,d,set:4+si}));
+rollCol=function(rar){ let r=Math.random(), tier=0; for(let i=0;i<4;i++){ if(r<rar[i]){ tier=i; break } r-=rar[i]; tier=i }
+  const pool=SETS.filter(s=>s.tier===tier).flatMap(s=>s.items); return pool[ri(0,pool.length-1)][0] };
+const _gearV84=gearV; gearV=function(k){ let v=_gearV84(k); try{ if(k==='gather'&&setDone(4)) v+=.08; else if(k==='human'&&setDone(5)) v+=.15; else if(k==='atk'&&setDone(6)) v+=.05; else if(k==='def'&&setDone(7)) v+=.06; else if(k==='xp'&&setDone(7)) v+=.05 }catch(e){} return v };
+
+/* --- 4. 무기 강화: 다른 무기를 재료로 합쳐 +1 · 성공률 · 조사에서 얻는 강화 도구 --- */
+ITEMS.whet={n:'숫돌',d:'무기 강화 성공률 +10%p (강화할 때 골라서 사용)',use:null};
+ITEMS.toolkit={n:'정밀 공구 세트',d:'무기 강화 성공률 +20%p (강화할 때 골라서 사용)',use:null};
+ITEMS.wax={n:'보호 오일',d:'무기 강화에 실패해도 단계가 떨어지지 않게 막아 준다',use:null};
+const ENH_MAX=10, ENH_P=[.9,.82,.72,.62,.52,.42,.33,.25,.18,.12];
+const wLv=k=>Math.min(ENH_MAX,((S.wLv||{})[k])|0);
+const wEnhAtk=w=>{ const l=wLv(w.k); return l?Math.round(l*(1.5+w.dmg*.6)):0 };
+const _pAtk84=pAtk; pAtk=function(power){ return _pAtk84.apply(this,arguments)+Math.round(wEnhAtk(curWeapon())*(power?1.8:1)) };
+function enhMats(tk){ const L=[]; for(const w of MELEE){ if(w.k==='fist') continue; const n=wCount(w.k); if(!n) continue; let use=n; if(S.weapon===w.k) use--; if(w.k===tk) use=Math.min(use,n-1); if(use>0) L.push({w,use,same:w.k===tk}) } return L }
+function enhChance(tk,mk,boost){ const t=weaponOf(tk), m=weaponOf(mk), l=wLv(tk); let p=ENH_P[l]||0; if(mk===tk) p+=.12; else p+=clamp((m.dmg-t.dmg)*.05,-.25,.15)+wLv(mk)*.02; if(boost.whet) p+=.1; if(boost.toolkit) p+=.2; return clamp(p,.03,.97) }
+ACT.wEnh=el=>{ const tk=(el&&el.dataset.k)||rt.enhT||S.weapon; rt.enhT=tk; rt.enhB=rt.enhB||{}; const own=MELEE.filter(w=>w.k!=='fist'&&S.weapons[w.k]);
+  if(!own.length) return toast('강화할 무기가 없어요.');
+  if(!S.weapons[tk]||tk==='fist'){ rt.enhT=own[0].k; return ACT.wEnh() }
+  const t=weaponOf(tk), l=wLv(tk), mats=enhMats(tk); if(!rt.enhM||!mats.some(x=>x.w.k===rt.enhM)) rt.enhM=(mats.find(x=>x.same)||mats[0]||{w:{}}).w.k;
+  const B=rt.enhB, have=k=>(S.inv[k]||0)>0; Object.keys(B).forEach(k=>{ if(!have(k)) B[k]=false });
+  const p=rt.enhM?enhChance(tk,rt.enhM,B):0, nx=l<ENH_MAX?Math.round((l+1)*(1.5+t.dmg*.6)):0;
+  openModal(`<div class="eyebrow">FORGE <span class="dash"></span> 무기 강화</div><h2>무기 강화</h2><p class="note">다른 무기 하나를 녹여 붙여서 한 단계 올려요. 재료 무기는 성공해도 실패해도 사라져요. 같은 무기를 쓰면 성공률이 더 높아요.</p>
+    <label class="field">강화할 무기<select id="enT">${own.map(w=>`<option value="${w.k}"${w.k===tk?' selected':''}>${esc(w.n)}${wLv(w.k)?` +${wLv(w.k)}`:''}</option>`).join('')}</select></label>
+    <div class="enhst"><b>${esc(t.n)} <span class="num">+${l}</span></b><span>지금 강화 보너스 공격 +${wEnhAtk(t)}</span>${l<ENH_MAX?`<span>다음 단계 공격 +${nx}</span>`:'<span>최고 단계예요</span>'}</div>
+    ${l>=ENH_MAX?'':mats.length?`<label class="field">재료로 쓸 무기<select id="enM">${mats.map(x=>`<option value="${x.w.k}"${x.w.k===rt.enhM?' selected':''}>${esc(x.w.n)}${wLv(x.w.k)?` +${wLv(x.w.k)}`:''}${x.same?' (같은 무기)':''} · ${x.use}개</option>`).join('')}</select></label>
+      <div class="enhb">${['whet','toolkit','wax'].map(k=>`<label class="${have(k)?'':'off'}"><input type="checkbox" data-eb="${k}" ${B[k]?'checked':''} ${have(k)?'':'disabled'}> ${esc(ITEMS[k].n)} <small>${(S.inv[k]||0)}개 · ${esc(ITEMS[k].d)}</small></label>`).join('')}</div>
+      <div class="enhp"><span>성공률</span><b class="num">${Math.round(p*100)}%</b><small>${l>=4&&!B.wax?'실패하면 40% 확률로 한 단계 떨어져요':'실패해도 단계는 그대로예요'}</small></div>
+      <div class="row"><button class="btn pri" id="enGo">강화하기</button><button class="btn" data-act="closeModal">닫기</button></div>`:'<p class="muted">재료로 쓸 무기가 없어요. 같은 무기를 하나 더 얻거나 다른 무기를 모아 오세요. (장착 중인 무기는 재료로 쓸 수 없어요)</p><div class="row"><button class="btn" data-act="closeModal">닫기</button></div>'}
+    <p class="note">숫돌·정밀 공구 세트·보호 오일은 지도 조사와 특수 조사에서 가끔 나와요.</p>`);
+  $('enT').onchange=e=>{ rt.enhT=e.target.value; rt.enhM=null; ACT.wEnh() };
+  if($('enM')) $('enM').onchange=e=>{ rt.enhM=e.target.value; ACT.wEnh() };
+  $('mbox').querySelectorAll('[data-eb]').forEach(i=>i.onchange=()=>{ B[i.dataset.eb]=i.checked; ACT.wEnh() });
+  if($('enGo')) $('enGo').onclick=()=>{ const mk=rt.enhM; if(!mk) return; const l0=wLv(tk); if(l0>=ENH_MAX) return; if(!wTake(mk)) return; const pp=enhChance(tk,mk,B);
+    const usedWax=!!(B.wax&&have('wax')); ['whet','toolkit','wax'].forEach(k=>{ if(B[k]&&have(k)){ S.inv[k]--; } }); rt.enhB={};
+    S.wLv=S.wLv||{}; if(mk!==tk&&S.wLv[mk]&&!wCount(mk)) delete S.wLv[mk];
+    let msg; if(Math.random()<pp){ S.wLv[tk]=l0+1; sfx('level'); try{ FXL.flash('rgba(255,210,90,.35)',300) }catch(e){} msg=`강화 성공! ${t.n} +${l0+1} (공격 +${wEnhAtk(t)})`; hx&&hx('wEnh'); if(l0+1>=7) feed(`${S.nick}님이 「${t.n}」을(를) +${l0+1}까지 강화했습니다`) }
+    else { const drop=l0>=4&&!usedWax&&Math.random()<.4; if(drop) S.wLv[tk]=l0-1; sfx('hurt'); msg=drop?`강화 실패… ${t.n}이(가) +${l0-1}로 떨어졌어요.`:`강화 실패. ${t.n}은(는) +${l0} 그대로예요.` }
+    toast(msg,true); slog(msg); markSave(); render(); ACT.wEnh() } };
+/* 강화 도구는 조사에서 */
+const _scanOnce84=scanOnce; scanOnce=function(z,at){ const r=_scanOnce84.apply(this,arguments); try{ const x=Math.random(); const k=x<.035?'whet':x<.045?'toolkit':x<.052?'wax':null; if(k){ S.inv[k]=(S.inv[k]||0)+1; toast(`${ITEMS[k].n}을(를) 주웠다 · 무기 강화에 써요`,true); slog(`${ITEMS[k].n} 획득`) } }catch(e){} return r };
+/* 내 캐릭터: 무기 칸에 강화 버튼과 +단계 표시 */
+function enhDeco(h){ if(h.indexOf('data-col="weapons"')<0) return h; const tp=document.createElement('template'); tp.innerHTML=h; const C=tp.content;
+  const sec=C.querySelector('[data-col="weapons"]'); if(sec){ const sm=sec.querySelector('summary'); if(sm&&!sec.querySelector('.enhrow')) sm.insertAdjacentHTML('afterend',`<div class="enhrow"><span>무기 강화 · 다른 무기를 재료로 합쳐 +1 (최대 +${ENH_MAX})</span><button class="btn sm pri" data-act="wEnh">무기 강화</button></div>`);
+    sec.querySelectorAll('[data-act=equip][data-k]').forEach(b=>{ const k=b.dataset.k, l=wLv(k); if(!l) return; const card=b.closest('.card'), h3=card&&card.querySelector('h3'), tag=card&&card.querySelector('.tag'); if(h3) h3.insertAdjacentHTML('beforeend',` <span class="wenh">+${l}</span>`); if(tag) tag.textContent=tag.textContent.replace(/공격 (\d+)/,(m0,n)=>`공격 ${+n+wEnhAtk(weaponOf(k))}`) }) }
+  const d=document.createElement('div'); d.append(C); return d.innerHTML }
+const _viewSurvive84=viewSurvive; viewSurvive=function(){ return enhDeco(_viewSurvive84.apply(this,arguments)) };
+const _viewChar84=viewChar; viewChar=function(){ return enhDeco(_viewChar84.apply(this,arguments)) };
+(()=>{ const st=document.createElement('style'); st.textContent=`
+.enhrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px dashed var(--line2);padding:8px 12px;margin:6px 0 10px;font-size:13px}.enhrow .btn{margin-left:auto}
+.wenh{color:var(--warn);font-weight:800}
+.enhst{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;padding:10px 12px;border:1px solid var(--line2);margin:8px 0;font-size:13px}.enhst b{font-size:16px}
+.enhb{display:grid;gap:6px;margin:8px 0}.enhb label{display:flex;gap:8px;align-items:flex-start;font-size:13px}.enhb label.off{opacity:.5}.enhb small{color:var(--muted);display:block}.enhb input{margin-top:3px;width:18px;height:18px;flex:none}
+.enhp{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:8px 0}.enhp b{font-size:24px;color:var(--accent)}.enhp small{color:var(--muted)}`; document.head.append(st) })();
+window.__P84={wLv,wEnhAtk,enhChance,enhMats,GRUDGE};
+
+/* ================= p85: 임시 동행 화면 새 배치
+   PC: 상단 바 → 지도(접기) → [동료·레이드/안내·진행 기록 | 사건 카드·채팅·입력] 50:50
+   휴대폰: 상단 바 → 동료 → 지도(접기) → 레이드/안내 → 사건 → 진행 기록 → 채팅 → 입력 ================= */
+rt.ptMapOpen=rt.ptMapOpen??false;
+const _partyRender85=partyRender; partyRender=function(){ const r=_partyRender85.apply(this,arguments); const P=rt.party, el=$('party'); if(!P||!el||el.classList.contains('mini')||el.classList.contains('pmini')) return r;
+  const b=el.querySelector(':scope > .pt-b'), side=b&&b.querySelector('.pt-side'), mapw=b&&b.querySelector('.pt-mapw'), chat=el.querySelector(':scope > .pt-chat'); if(!b||!side||!mapw) return r;
+  const keepTop=(b.querySelector('.pt-colR #pChat')||{}).scrollTop;
+  const mem=side.querySelector('.pt-mem'), log=side.querySelector('.pt-log'), pevs=[...side.querySelectorAll(':scope > .pev')];
+  const info=pevs.filter(x=>x.matches('.praid,.idle,.nxev')), evs=pevs.filter(x=>!info.includes(x));
+  const fold=document.createElement('details'); fold.className='pt-mapfold'; if(rt.ptMapOpen) fold.open=true;
+  const sm=document.createElement('summary'); sm.innerHTML=`<b>동행 지도</b><span class="note">${P.at&&MAP[P.at]?esc(MAP[P.at].n)+' · ':''}지점을 누르면 이동을 제안해요</span><i aria-hidden="true">▾</i>`; fold.append(sm,mapw);
+  fold.addEventListener('toggle',()=>{ rt.ptMapOpen=fold.open });
+  const L=document.createElement('div'); L.className='pt-colL'; if(mem) L.append(mem); info.forEach(x=>L.append(x)); if(log) L.append(log);
+  const R=document.createElement('div'); R.className='pt-colR'; evs.forEach(x=>R.append(x)); if(chat) R.append(chat);
+  const cols=document.createElement('div'); cols.className='pt-cols'; cols.append(L,R);
+  b.replaceChildren(fold,cols); b.classList.add('pt-b2');
+  const cb=$('pChat'); if(cb) cb.scrollTop=cb.scrollHeight;
+  return r };
+(()=>{ const st=document.createElement('style'); st.textContent=`
+#party:not(.mini):not(.pmini){grid-template-rows:auto 1fr}
+#party .pt-b.pt-b2{display:flex;flex-direction:column;gap:12px;overflow:auto;padding:12px 16px 16px}
+.pt-b2 .pt-log,.pt-b2 .pev,.pt-b2 .pt-mem,.pt-b2 .pt-chat,.pt-b2 .pt-mapfold,.pt-b2 .pt-cols{flex-shrink:0}
+.pt-mapfold{border:1px solid var(--line2);background:var(--panel)}
+.pt-mapfold>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;flex-wrap:wrap}.pt-mapfold>summary::-webkit-details-marker{display:none}
+.pt-mapfold>summary .note{flex:1;font-size:12px}.pt-mapfold>summary i{font-style:normal;transition:transform .2s}.pt-mapfold:not([open])>summary i{transform:rotate(-90deg)}
+.pt-mapfold .pt-mapw{padding:0 12px 12px}.pt-mapfold .pt-map{max-height:56vh;aspect-ratio:auto;height:min(56vh,620px)}
+.pt-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+.pt-colL,.pt-colR{display:flex;flex-direction:column;gap:10px;min-width:0}
+.pt-colR .pt-chat{border:1px solid var(--line2);border-top:1px solid var(--line2);padding:8px 10px 10px}
+.pt-colR .pt-cl{max-height:none;height:clamp(180px,32vh,360px)}
+.pt-colR .chatform{display:flex;gap:8px;align-items:stretch}.pt-colR .chatform input{flex:1;min-width:0;min-height:44px}.pt-colR .chatform .btn{min-height:44px;align-self:stretch;margin:0}
+@media (max-width:760px){
+ .pt-cols,.pt-colL,.pt-colR{display:contents}
+ #party .pt-b.pt-b2{display:flex;flex-direction:column}
+ .pt-b2 .pt-mem{order:1}.pt-b2 .pt-mapfold{order:2}.pt-b2 .pev.praid,.pt-b2 .pev.idle,.pt-b2 .pev.nxev{order:3}.pt-b2 .pev:not(.praid):not(.idle):not(.nxev){order:4}.pt-b2 .pt-log{order:5}.pt-b2 .pt-chat{order:6}
+ .pt-mapfold .pt-map{height:min(48vh,420px)}
+ .pt-b2 .pt-log{max-height:160px;overflow:auto}
+ .pt-colR .pt-cl,.pt-b2 .pt-cl{height:clamp(160px,30vh,280px)}
+ .pt-b2 .pt-chat{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+}`; document.head.append(st) })();
+
+/* ================= p86: 휴대폰 임시 동행 — 다 접고, 채팅·사건 기록을 한 줄씩 한 흐름으로 · 입력칸은 항상 아래 ================= */
+const ptMob=()=>innerWidth<=760;
+rt.ptOpen=rt.ptOpen||'';
+function ptFeedHtml(P){ const L=(P.log||[]).map(l=>({t:l.t,h:`<span class="fl ${esc(l.cls||'')}">${esc(l.x)}</span>`})), C=(P.chat||[]).map(c=>({t:c.t,h:`<span class="fc${c.me?' me':''}"><b>${esc(c.me?S.nick:nameOf(c.by))}</b> ${esc(c.x)}</span>`}));
+  const all=L.concat(C).sort((a,b)=>a.t-b.t).slice(-80); return all.length?all.map(x=>`<li><span class="ft num">${hhmm(x.t)}</span>${x.h}</li>`).join(''):'<li class="muted">채팅과 사건 기록이 여기에 한 줄씩 쌓여요.</li>' }
+const _partyRender86=partyRender; partyRender=function(){ const el=$('party'), old=el&&el.querySelector('#ptFeed'), wasBottom=!old||old.scrollHeight-old.scrollTop-old.clientHeight<40, top=old?old.scrollTop:0;
+  const r=_partyRender86.apply(this,arguments); const P=rt.party; if(!P||!el||!ptMob()||el.classList.contains('mini')||el.classList.contains('pmini')) { el&&el.classList.remove('ptm-on'); return r }
+  const b=el.querySelector(':scope > .pt-b.pt-b2'); if(!b) return r; const fold=b.querySelector('.pt-mapfold'), L=b.querySelector('.pt-colL'), R=b.querySelector('.pt-colR'); if(!L||!R) return r;
+  const mem=L.querySelector('.pt-mem'), info=[...L.querySelectorAll(':scope > .pev')], evs=[...R.querySelectorAll(':scope > .pev')], chat=R.querySelector('.pt-chat'), form=chat&&chat.querySelector('form');
+  const alive=(mem?mem.children.length:0), raidOn=!!P.raid;
+  const tabs=[['mem',`동료 ${alive}`],['map','지도'],['info',raidOn?'☠ 레이드':'레이드·안내']].map(([k,n])=>`<button type="button" class="chipb${rt.ptOpen===k?' on':''}" data-pto="${k}" aria-expanded="${rt.ptOpen===k}">${n}</button>`).join('');
+  const bar=document.createElement('div'); bar.className='pt-mtabs'; bar.innerHTML=tabs;
+  const pane=document.createElement('div'); pane.className='pt-mpane'; pane.hidden=!rt.ptOpen;
+  if(rt.ptOpen==='mem'&&mem) pane.append(mem); else if(rt.ptOpen==='map'&&fold){ fold.open=true; const w=fold.querySelector('.pt-mapw'); if(w) pane.append(w) } else if(rt.ptOpen==='info') info.forEach(x=>pane.append(x));
+  const feed=document.createElement('ol'); feed.className='pt-feed'; feed.id='ptFeed'; feed.setAttribute('aria-live','polite'); feed.innerHTML=ptFeedHtml(P);
+  const evw=document.createElement('div'); evw.className='pt-mev'; evs.forEach(x=>evw.append(x));
+  b.replaceChildren(bar,pane,evw,feed); b.classList.add('mob');
+  if(form){ form.classList.add('pt-mform'); el.append(form) } if(chat) chat.remove(); el.classList.add('ptm-on');
+  bar.querySelectorAll('[data-pto]').forEach(x=>x.onclick=()=>{ rt.ptOpen=rt.ptOpen===x.dataset.pto?'':x.dataset.pto; partyRender() });
+  feed.scrollTop=wasBottom?feed.scrollHeight:top;
+  return r };
+const _onPchat86=onPchat; onPchat=function(m){ const r=_onPchat86.apply(this,arguments); try{ if(ptMob()&&rt.party){ const f=$('ptFeed'); if(f){ const wb=f.scrollHeight-f.scrollTop-f.clientHeight<40; f.innerHTML=ptFeedHtml(rt.party); if(wb) f.scrollTop=f.scrollHeight } } }catch(e){} return r };
+addEventListener('resize',()=>{ try{ if(rt.party) partyRender() }catch(e){} });
+(()=>{ const st=document.createElement('style'); st.textContent=`
+@media (max-width:760px){
+ #party.ptm-on{inset:0 0 auto 0;height:var(--vvh,100dvh);grid-template-rows:auto minmax(0,1fr) auto}
+ #party.ptm-on .pt-h{padding:6px 12px;gap:8px}#party.ptm-on .pt-h .btn{min-height:32px;padding:4px 10px}
+ #party .pt-b.pt-b2.mob{display:flex;flex-direction:column;gap:8px;padding:8px 12px 6px;overflow:hidden;min-height:0}
+ .pt-mtabs{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;flex-shrink:0}.pt-mtabs .chipb{flex:none;min-height:34px}
+ .pt-mpane{flex-shrink:0;max-height:46%;overflow:auto;border:1px solid var(--line2);background:var(--panel);padding:8px}
+ .pt-mpane .pt-map{height:min(40vh,320px);max-height:none;aspect-ratio:auto}
+ .pt-mev{flex-shrink:0;display:flex;flex-direction:column;gap:6px;max-height:42%;overflow:auto}.pt-mev:empty{display:none}
+ .pt-mev .pev{padding:8px 10px;gap:6px}.pt-mev .pev p{font-size:13px;line-height:1.45}.pt-mev .pev .row{gap:6px}.pt-mev .pev .btn{min-height:38px;padding:6px 10px;font-size:13px}
+ .pt-mev .pev.idle,.pt-mev .pev.nxev{display:none}
+ .pt-feed{flex:1 1 auto;min-height:80px;overflow:auto;list-style:none;margin:0;padding:6px 8px;border:1px solid var(--line2);background:var(--panel);display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.4;overscroll-behavior:contain}
+ .pt-feed li{display:flex;gap:6px;align-items:baseline}.pt-feed .ft{flex:none;font-size:10.5px;color:var(--muted)}
+ .pt-feed .fc b{color:var(--accent);margin-right:2px}.pt-feed .fc.me b{color:var(--fg)}
+ .pt-feed .fl{color:var(--fg2)}.pt-feed .fl.ev{color:var(--warn);font-weight:600}.pt-feed .fl.inf{color:var(--blood);font-weight:600}.pt-feed .fl.me{color:var(--accent)}.pt-feed .fl.v{color:var(--muted)}
+ #party .pt-mform{display:flex;gap:8px;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--panel)}
+ #party .pt-mform input{flex:1;min-width:0;min-height:44px;font-size:16px}#party .pt-mform .btn{min-height:44px;margin:0}
+}`; document.head.append(st) })();
+
+/* ================= p87: 새 시설 7종 (레벨에 따라 열림) ================= */
+const BLD_NEW={
+  greenhouse:{n:'비닐 온실',d:'식량 생산 +20%/단계 (옥상 텃밭과 따로 쌓여요)',base:{wood:80,water:40},lv:15},
+  pump:{n:'지하수 펌프',d:'식수 생산 +20%/단계 (빗물 정수기와 따로 쌓여요)',base:{scrap:90,wood:40},lv:15},
+  clinic:{n:'간이 진료소',d:'회복 효과 +6%/단계',base:{wood:60,med:6},lv:20},
+  barracks:{n:'대원 숙소',d:'2단계마다 대원 정원 +1',base:{wood:120,scrap:80},lv:25},
+  forge:{n:'대장간',d:'무기 강화 성공률 +2%p/단계',base:{scrap:150,fuel:4},lv:30},
+  tower:{n:'감시탑',d:'감염자 조우 확률 -3%/단계',base:{scrap:120,wood:120},lv:35},
+  kennel:{n:'펫 우리',d:'펫 친밀도 오르는 양 +10%/단계',base:{wood:90,food:60},lv:40},
+};
+Object.assign(BLD,BLD_NEW);
+const bldFix=()=>{ if(!S||!S.bld) return; for(const k in BLD) if(typeof S.bld[k]!=='number'||isNaN(S.bld[k])) S.bld[k]=0 };
+setInterval(()=>{ try{ bldFix() }catch(e){} },2000);
+const bldLocked=k=>BLD[k]&&BLD[k].lv&&lvlOf(S.xp)<BLD[k].lv;
+const _build87=ACT.build; ACT.build=el=>{ bldFix(); const k=el&&el.dataset.k; if(bldLocked(k)) return toast(`${BLD[k].n}은(는) Lv.${BLD[k].lv}부터 지을 수 있어요.`); return _build87(el) };
+const _viewBuild87=viewBuild; viewBuild=function(){ bldFix(); let h=_viewBuild87.apply(this,arguments); for(const k in BLD_NEW){ if(!bldLocked(k)) continue; h=h.replace(new RegExp(`<button class="btn" data-act="build" data-k="${k}"[^>]*>[^<]*</button>`),`<button class="btn" disabled>Lv.${BLD_NEW[k].lv}부터</button>`) } return h };
+const _gearV87=gearV; gearV=function(k){ let v=_gearV87(k); try{ if(k==='heal') v+=.06*(S.bld.clinic||0) }catch(e){} return v };
+const _evM87=evM; evM=function(k){ let v=_evM87(k); try{ if(k==='enc') v*=Math.max(.5,1-.03*(S.bld.tower||0)) }catch(e){} return v };
+const _enhChance87=enhChance; enhChance=function(tk,mk,boost){ return clamp(_enhChance87(tk,mk,boost)+.02*((S.bld||{}).forge||0),.03,.97) };
+const _affAdd87=affAdd; affAdd=function(k,n){ return _affAdd87.call(this,k,n>0?Math.round(n*(1+.1*((S.bld||{}).kennel||0))):n) };
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
