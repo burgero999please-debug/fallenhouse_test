@@ -8607,7 +8607,7 @@ setInterval(()=>{ const box=document.getElementById('phNotes'); if(!box||!box.of
 /* ================= p39: 입력 중인 글 보존 · 쪽지 말풍선 길이 ================= */
 (()=>{ const st=document.createElement('style'); st.textContent='.nm.in{align-self:flex-start;justify-items:start}.nm p{width:fit-content;max-width:100%}'; document.head.append(st) })();
 /* 쓰던 글은 화면이 다시 그려져도, 알림 창이 떠도 지워지지 않게 */
-const DRAFT_IDS=['chatIn','pChatIn','nTx','nRepTx'];
+const DRAFT_IDS=['chatIn','pChatIn','pChatDock','nTx','nRepTx'];
 const draftKey=el=>{ if(!el||!el.id||!DRAFT_IDS.includes(el.id)) return ''; return el.id==='nRepTx'?'nRepTx:'+(rt.noteW||''):el.id==='nTx'?'nTx:'+(el.closest('form')?.dataset.to||rt.noteTo||''):el.id };
 rt.drafts={}; rt.drFocus=null;
 document.addEventListener('input',e=>{ const k=draftKey(e.target); if(k){ rt.drafts[k]=e.target.value; rt.drFocus=e.target.id } },true);
@@ -9586,7 +9586,7 @@ body[data-cf=can] #view .card[data-can="0"],body[data-cf=lack] #view .card[data-
 /* 팝업(도움말·설정·미니게임)이 열려 있거나 무전·쪽지를 쓰는 중이면 일반 알림 카드는 기다렸다가 닫힌 뒤 차례로 보여 준다.
    시간 제한이 있는 동행 제안(inv·pq)은 바로 보이되, 팝업 위를 덮지 않는다. */
 const NQ=[]; let nqT=0;
-function nBusy(){ const m=$('modal'); if(m&&!m.hidden) return true; const a=document.activeElement; return !!(a&&['chatIn','pChatIn','nTx','nRepTx'].includes(a.id)&&String(a.value||'').length>0) }
+function nBusy(){ const m=$('modal'); if(m&&!m.hidden) return true; const a=document.activeElement; return !!(a&&['chatIn','pChatIn','pChatDock','nTx','nRepTx'].includes(a.id)&&String(a.value||'').length>0) }
 const _msgCard56=msgCard; msgCard=function(html,cls,ttl){ const d=_msgCard56(html,cls,ttl); if(!d) return d; const c=String(cls||'');
   if(/\binv\b|\bpq\b/.test(c)||!nBusy()) return d;
   d.remove(); NQ.push({d,ttl}); nqBadge(); return d };
@@ -10768,7 +10768,7 @@ window.__P84={wLv,wEnhAtk,enhChance,enhMats,GRUDGE};
    PC: 상단 바 → 지도(접기) → [동료·레이드/안내·진행 기록 | 사건 카드·채팅·입력] 50:50
    휴대폰: 상단 바 → 동료 → 지도(접기) → 레이드/안내 → 사건 → 진행 기록 → 채팅 → 입력 ================= */
 rt.ptMapOpen=rt.ptMapOpen??false;
-const _partyRender85=partyRender; partyRender=function(){ const r=_partyRender85.apply(this,arguments); const P=rt.party, el=$('party'); if(!P||!el||el.classList.contains('mini')||el.classList.contains('pmini')) return r;
+const _partyRender85=partyRender; partyRender=function(){ const r=_partyRender85.apply(this,arguments); const P=rt.party, el=$('party'); if(!P||!el||el.classList.contains('mini')||el.classList.contains('pmini')||innerWidth>760) return r;
   const b=el.querySelector(':scope > .pt-b'), side=b&&b.querySelector('.pt-side'), mapw=b&&b.querySelector('.pt-mapw'), chat=el.querySelector(':scope > .pt-chat'); if(!b||!side||!mapw) return r;
   const keepTop=(b.querySelector('.pt-colR #pChat')||{}).scrollTop;
   const mem=side.querySelector('.pt-mem'), log=side.querySelector('.pt-log'), pevs=[...side.querySelectorAll(':scope > .pev')];
@@ -10883,6 +10883,27 @@ function wDestroy(w){ const k=w.k; S.wBrk[k]=0; delete S.wd[k]; if(S.wLv) delete
   if((S.wExtra||{})[k]>0){ S.wExtra[k]--; toast(`${w.n}이(가) 부서져 없어졌다. 예비로 가진 ${w.n}을(를) 꺼내 들었다. (강화 단계는 사라짐)`,true) }
   else { delete S.weapons[k]; if(S.weapon===k) S.weapon='fist'; toast(`${w.n}이(가) 완전히 부서져 없어졌다.`,true) }
   slog(`${w.n} 파괴`); sfx('bang'); try{ FXL.shake(6,300) }catch(e){} markSave(); try{ render() }catch(e){} }
+
+/* ================= p90: 동행 채팅 입력칸을 다시 그리지 않는 고정 칸으로 (사건·기록이 쌓여도 한글 입력이 끊기지 않게) · PC는 원래 배치 ================= */
+function ptDock(){ let d=$('ptDock'); if(d) return d; d=document.createElement('form'); d.id='ptDock'; d.className='ptdock'; d.hidden=true;
+  d.innerHTML=`<input id="pChatDock" maxlength="200" placeholder="동행에게만 보이는 채팅" autocomplete="off" enterkeyhint="send"><button class="btn pri" type="submit">송신</button>`;
+  d.onsubmit=e=>{ e.preventDefault(); ACT.pSend() }; document.body.append(d); return d }
+ACT.pSend=function(){ const P=rt.party, i=$('pChatDock'); if(!P||!i) return; if(kidMe()){ i.value=''; return toast('입이 막혀 있다. 납치된 동안은 말할 수 없다.') } const x=i.value.trim().slice(0,200); if(!x) return; i.value=''; P.R.emit('pchat',{x}).catch?.(()=>{}); i.focus() };
+function ptDockSync(){ const d=ptDock(), P=rt.party, el=$('party'), on=!!(P&&el&&!el.hidden&&!el.classList.contains('mini')&&!el.classList.contains('pmini'));
+  if(d.hidden===on) d.hidden=!on; document.body.classList.toggle('ptdock-on',on); if(!on) return;
+  if(el) el.querySelectorAll('#pChatF,.pt-mform').forEach(f=>f.remove());
+  const i=$('pChatDock'), kid=kidMe(), down=typeof pDownMe==='function'&&pDownMe(), me=kid||down, ph=kid?'입이 막혀 있다 (납치됨)':down?'쓰러져서 말할 수 없다':'동행에게만 보이는 채팅'; if(i){ if(i.disabled!==me) i.disabled=me; if(i.placeholder!==ph) i.placeholder=ph } const b=d.querySelector('button'); if(b&&b.disabled!==me) b.disabled=me }
+const _partyRender90=partyRender; partyRender=function(){ const r=_partyRender90.apply(this,arguments); try{ ptDockSync() }catch(e){} return r };
+const _partyEnd90=partyEnd; partyEnd=function(){ const r=_partyEnd90.apply(this,arguments); try{ const d=$('ptDock'); if(d){ d.hidden=true; const i=$('pChatDock'); if(i){ i.value=''; i.blur() } } document.body.classList.remove('ptdock-on') }catch(e){} return r };
+setInterval(()=>{ try{ if(!rt.party){ const d=$('ptDock'); if(d&&!d.hidden){ d.hidden=true; document.body.classList.remove('ptdock-on') } } else ptDockSync() }catch(e){} },800);
+(()=>{ const st=document.createElement('style'); st.textContent=`
+.ptdock{position:fixed;left:0;right:0;bottom:0;z-index:72;display:flex;gap:8px;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));background:var(--panel-solid,var(--panel));border-top:1px solid var(--line2);box-sizing:border-box}
+.ptdock[hidden]{display:none}
+.ptdock input{flex:1;min-width:0;min-height:44px;font:inherit;font-size:16px;background:var(--field,var(--panel));color:var(--fg);border:1px solid var(--line2);padding:8px 10px}
+.ptdock .btn{min-height:44px;margin:0;padding:0 18px}
+body.ptdock-on #party:not(.mini):not(.pmini){padding-bottom:calc(62px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
+@media (max-width:760px){ .ptdock{top:calc(var(--vvh,100dvh) - 60px - env(safe-area-inset-bottom,0px));bottom:auto;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px))}
+ body.ptdock-on #party.ptm-on{grid-template-rows:auto minmax(0,1fr)} }`; document.head.append(st) })();
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
