@@ -10905,6 +10905,86 @@ body.ptdock-on #party:not(.mini):not(.pmini){padding-bottom:calc(62px + env(safe
 @media (max-width:760px){ .ptdock{top:calc(var(--vvh,100dvh) - 60px - env(safe-area-inset-bottom,0px));bottom:auto;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px))}
  body.ptdock-on #party.ptm-on{grid-template-rows:auto minmax(0,1fr)} }`; document.head.append(st) })();
 
+/* ================= p91: 긴급 회복 — 포지션(T·M·B)별 사건 · 10분에 1번 · 결과에 따라 더 나빠질 수도 ================= */
+const EM_CD=10*60000, EM_WARN='선택지나 사건에 따라 상태가 오히려 더 나빠질 수 있어요.';
+CEV_TRIG.heal='긴급 회복 버튼 (생존 탭)';
+/* 결과: hp 체력 · mind 정신 · hg 허기 · $ 돈 · st [상태,분] · cure 상태 치료 */
+const emG=(t,o)=>Object.assign({t},o||{});
+const EM_EV={
+ T:[
+  {n:'약탈자의 구급상자',d:'골목 끝, 구급상자를 멘 약탈자가 혼자 담배를 피우고 있다. 이쪽은 아직 못 봤다.',o:[
+    {n:'덮쳐서 통째로 빼앗는다',st:'str',b:.5,ok:emG('바닥에 눌러 놓고 상자를 뜯었다. 붕대와 진통제가 가득했다.',{hp:50,cure:'bleed'}),no:emG('놈이 먼저 칼을 뽑았다. 상자는 놓치고 팔만 베였다.',{hp:-18,st:['bleed',10]})},
+    {n:'눈을 마주치고 천천히 다가간다',st:'cha',b:.5,ok:emG('"가져가. 목숨은 하나잖아." 그가 상자 절반을 밀어 주었다.',{hp:30,mind:3}),no:emG('그가 침을 뱉고 달아났다. 쫓다가 넘어졌다.',{hp:-8,mind:-4})}]},
+  {n:'잠긴 진료소',d:'셔터가 내려진 동네 의원. 안쪽 선반에 약병이 보인다. 근처에 놈들의 기척이 있다.',o:[
+    {n:'셔터를 걷어차 부순다',st:'str',b:.55,ok:emG('세 번 만에 셔터가 휘었다. 약을 챙겨 쏜살같이 빠져나왔다.',{hp:45}),no:emG('소리에 놈들이 몰려왔다. 겨우 빠져나왔지만 다리를 물릴 뻔했다.',{hp:-15,st:['leg',15]})},
+    {n:'뒷창문을 깨고 조용히 들어간다',st:'agi',b:.5,ok:emG('유리 조각을 피해 들어가 소독약과 붕대를 챙겼다.',{hp:35,cure:'bleed'}),no:emG('유리 조각이 손바닥을 갈랐다.',{hp:-10,st:['bleed',8]})}]},
+  {n:'다친 우두머리',d:'다른 무리의 우두머리가 다리를 절며 약 상자를 지키고 있다. 부하들은 멀리 흩어졌다.',o:[
+    {n:'정면으로 붙어 무릎 꿇린다',st:'str',b:.45,ok:emG('짧은 싸움 끝에 그가 무릎을 꿇었다. 약 상자는 이제 내 것이다.',{hp:55,mind:5}),no:emG('다쳐도 우두머리는 우두머리였다. 갈비뼈가 울린다.',{hp:-22,st:['conc',10]})},
+    {n:'부하들이 돌아오기 전에 협박한다',st:'cha',b:.5,ok:emG('"부하들 앞에서 망신당하기 싫으면." 그가 이를 갈며 약을 던졌다.',{hp:30}),no:emG('부하들이 돌아왔다. 돌 몇 개를 맞고 물러났다.',{hp:-12,mind:-5})}]},
+  {n:'진통제 장수',d:'수레에 진통제를 잔뜩 실은 장사꾼. 값을 세 배로 부른다.',o:[
+    {n:'멱살을 잡고 값을 다시 정한다',st:'str',b:.55,ok:emG('값이 순식간에 공짜가 됐다.',{hp:35,mind:2}),no:emG('그의 경호원이 뒤에서 나타났다.',{hp:-14,$:-20})},
+    {n:'제값을 내고 산다 ($40)',need:()=>(S.money||0)>=40,b:1,ok:emG('비싸지만 확실했다.',{hp:30,$:-40}),no:emG('',{})}]},
+ ],
+ B:[
+  {n:'의사 행세',d:'대피소 입구에 부상자 줄이 길다. 흰 가운 하나가 의자에 걸려 있다.',o:[
+    {n:'가운을 걸치고 의사인 척한다',st:'cha',b:.5,ok:emG('"선생님, 이쪽으로." 간호사가 약품 창고 열쇠를 건넸다.',{hp:45,cure:'bleed'}),no:emG('"그 이름 의사는 지난주에 죽었는데요?" 쫓겨나며 몇 대 맞았다.',{hp:-12,mind:-6})},
+    {n:'줄 서서 기다린다',b:.8,ok:emG('한참을 기다려 붕대 한 묶음을 받았다.',{hp:20,hg:-8}),no:emG('차례가 오기 전에 약이 떨어졌다.',{hg:-10,mind:-3})}]},
+  {n:'배급소의 눈물',d:'약 배급소. 담당자가 피곤한 얼굴로 서류만 넘기고 있다.',o:[
+    {n:'아이가 아프다며 울먹인다',st:'cha',b:.55,ok:emG('담당자가 한숨을 쉬더니 약 봉투를 두 개 쥐여 주었다.',{hp:40,mind:2}),no:emG('"어제도 그 얘기 했잖아요." 명단에서 지워졌다.',{mind:-8})},
+    {n:'담당자의 서류를 슬쩍 바꿔 친다',st:'per',b:.45,ok:emG('내 이름이 맨 위로 올라갔다.',{hp:45}),no:emG('들켰다. 경비가 팔을 비틀었다.',{hp:-14,st:['arm',12]})}]},
+  {n:'카드판의 구급약',d:'창고 구석에서 생존자들이 카드를 친다. 판돈은 구급약이다.',o:[
+    {n:'밑장을 빼서 이긴다',st:'per',b:.5,ok:emG('마지막 판까지 웃으며 따냈다. 아무도 눈치채지 못했다.',{hp:50}),no:emG('소매에서 카드가 떨어졌다. 다들 일어섰다.',{hp:-20,$:-15})},
+    {n:'구경꾼인 척 약만 챙긴다',st:'agi',b:.45,ok:emG('판이 시끄러운 틈에 약 상자를 챙겨 나왔다.',{hp:35}),no:emG('"어이, 거기." 뒤통수에 의자가 날아왔다.',{hp:-12,st:['conc',8]})}]},
+  {n:'친절한 낯선 사람',d:'"많이 다쳤네요. 따뜻한 수프 좀 드세요." 낯선 사람이 그릇을 내민다.',o:[
+    {n:'고맙다며 받아 마신다',st:'per',b:.5,ok:emG('정말 그냥 친절한 사람이었다. 몸이 녹았다.',{hp:35,hg:25,mind:4}),no:emG('수프에 뭔가 들어 있었다. 정신이 들었을 땐 가방이 가벼웠다.',{$:-30,st:['sick',15],mind:-6})},
+    {n:'역으로 상대를 구슬려 약을 얻어 낸다',st:'cha',b:.5,ok:emG('웃으며 맞장구를 쳐 주자 그가 숨겨 둔 약까지 꺼냈다.',{hp:40}),no:emG('그의 웃음이 싹 사라졌다. 칼끝이 보였다.',{hp:-15})}]},
+ ],
+ M:[
+  {n:'야전 병원의 긴 줄',d:'임시 병원 앞 줄이 끝도 없다. 앞쪽에 덩치 큰 남자가 새치기를 막고 있다.',o:[
+    {n:'덩치를 밀치고 앞으로 간다',st:'str',b:.5,ok:emG('덩치가 비켜섰다. 바로 치료를 받았다.',{hp:45}),no:emG('덩치는 덩치였다. 줄 맨 뒤로 내던져졌다.',{hp:-16})},
+    {n:'"응급 환자 보호자예요!" 둘러댄다',st:'cha',b:.5,ok:emG('간호사가 길을 터 주었다.',{hp:40}),no:emG('거짓말이 들통났다. 사람들의 야유 속에 쫓겨났다.',{mind:-8,hp:-5})}]},
+  {n:'두 얼굴의 거래',d:'약을 가진 남자. 말로 할지, 힘으로 할지 정해야 한다.',o:[
+    {n:'웃으며 다가가 말로 녹인다',st:'cha',b:.5,ok:emG('몇 마디에 그가 약을 나눠 주었다.',{hp:35,mind:3}),no:emG('그가 경계하며 뒷걸음질 쳤다. 시간만 날렸다.',{hg:-10,mind:-3})},
+    {n:'말이 안 통하면 주먹으로',st:'str',b:.5,ok:emG('대화는 짧았다. 약은 내 손에 있다.',{hp:45}),no:emG('그가 먼저 휘둘렀다.',{hp:-18,st:['conc',8]})},
+    {n:'말로 시작해서 틈을 노린다',st:'per',b:.4,ok:emG('웃는 얼굴로 다가가 약 가방을 낚아챘다.',{hp:55}),no:emG('둘 다 실패했다. 얻어맞고 신용도 잃었다.',{hp:-20,mind:-5})}]},
+ ],
+};
+function emApply(r){ const fx=[];
+  if(r.hp){ const v=r.hp>0?Math.round(r.hp*healMul()):r.hp; const b=S.hp; S.hp=clamp(S.hp+v,1,maxHp()); const dv=Math.round(S.hp-b); fx.push(`체력 ${dv>=0?'+':''}${dv}`) }
+  if(r.mind){ mindAdd(r.mind); fx.push(`정신 ${r.mind>0?'+':''}${r.mind}`) }
+  if(r.hg){ S.hunger=clamp((S.hunger||0)+r.hg,0,100); fx.push(`허기 ${r.hg>0?'+':''}${r.hg}`) }
+  if(r.$){ if(r.$>0) addMoney(r.$); else S.money=Math.max(0,(S.money||0)+r.$); fx.push(`$${r.$}`) }
+  if(r.st&&STS[r.st[0]]){ addSt(r.st[0],r.st[1],true); fx.push(`상태 이상: ${STS[r.st[0]].n}`) }
+  if(r.cure&&S.sts&&S.sts[r.cure]){ delete S.sts[r.cure]; fx.push(`${STS[r.cure].n} 나음`) }
+  return fx }
+const emLeft=()=>Math.max(0,(S.emT||0)+EM_CD-Date.now());
+function emPool(){ const p=S.tmb, L=p==='T'?EM_EV.T:p==='B'?EM_EV.B:p==='M'?EM_EV.M.concat(EM_EV.T,EM_EV.B):EM_EV.T.concat(EM_EV.B,EM_EV.M);
+  const adm=(rt.cev||[]).filter(e=>e.on&&e.trig&&e.trig.k==='heal'&&lvlOf(S.xp)>=(e.lv||1)&&(!e.pos||!e.pos.length||!p||e.pos.includes(p)||(p==='M'))&&!(e.once&&(S.cevDone||{})[e.id]));
+  return L.map(e=>({b:e})).concat(adm.map(e=>({c:e}))) }
+ACT.emHeal=()=>{ if(rt.enc) return toast('전투 중에는 쓸 수 없어요.'); const left=emLeft(); if(left>0) return toast(`긴급 회복은 10분에 한 번 · ${mmss(left)} 남음`);
+  if(!$('modal').hidden) return; const pick=stPick(emPool()); if(!pick) return toast('준비된 긴급 회복 사건이 없어요.'); S.emT=Date.now(); markSave();
+  if(pick.c){ try{ S.cevDone=S.cevDone||{}; S.cevDone[pick.c.id]=Date.now(); runChain(cevChain(pick.c)); return }catch(e){} }
+  const E=pick.b, opts=E.o.filter(o=>!o.need||o.need()); rt.modalLock=true; try{ FXL.pre('tense') }catch(e){} sfx('heart');
+  openModal(`<div class="eyebrow">EMERGENCY <span class="dash"></span> 긴급 회복${S.tmb?' · '+S.tmb:''}</div><h2>${esc(E.n)}</h2><p class="ch-p">${esc(E.d)}</p><p class="emwarn">⚠ ${EM_WARN}</p>
+    <div class="story-opts">${opts.map((o,i)=>`<button class="btn opt" data-em="${i}">${esc(o.n)}${o.st?` <small class="optlv">${STN[o.st]||{per:'감각'}[o.st]||''}</small>`:''}</button>`).join('')}</div>`);
+  $('mbox').querySelectorAll('[data-em]').forEach(b=>b.onclick=()=>{ $('mbox').querySelectorAll('[data-em]').forEach(x=>x.disabled=true); const o=opts[+b.dataset.em], p=o.st?clamp(o.b+(ST(o.st)-3)*.05,.1,.95):o.b, good=Math.random()<p, r=good?o.ok:o.no, fx=emApply(r);
+    if(good) sfx('heal'); else { sfx('hurt'); try{ FXL.flash('rgba(200,0,0,.35)',300) }catch(e){} }
+    $('mbox').innerHTML=`<div class="eyebrow">EMERGENCY <span class="dash"></span> ${good?'성공':'실패'}</div><h2>${esc(E.n)}</h2><p class="ch-p">${esc(r.t)}</p>${fx.length?`<ul class="ev-eff">${fx.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}<button class="btn pri" id="emOk">확인</button>`;
+    $('emOk').onclick=()=>{ rt.modalLock=false; closeModal(); addXp(6); markSave(); render() } }) };
+ACT.emHealGo=()=>{ setTab('survive'); setTimeout(()=>{ const b=document.querySelector('.emheal'); if(b){ b.scrollIntoView({block:'center',behavior:'smooth'}); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash') } },250) };
+function emHtml(){ const left=emLeft(); return `<div class="emheal"><div class="emh-t"><b>긴급 회복</b><span class="note num" id="emLeft">${left?`${mmss(left)} 뒤 다시`:'10분에 1번'}</span></div><p class="emwarn">⚠ ${EM_WARN}</p><button class="btn warn" data-act="emHeal" ${left||rt.enc?'disabled':''}>긴급 회복 시도</button></div>` }
+const _viewSurvive91=viewSurvive; viewSurvive=function(){ const h=_viewSurvive91.apply(this,arguments); const i=h.indexOf('<div class="bag"><div class="bag-h">'); return i<0?h:h.slice(0,i)+emHtml()+h.slice(i) };
+const _viewHome91=viewHome; viewHome=function(){ const h=_viewHome91.apply(this,arguments); const tp=document.createElement('template'); tp.innerHTML=h; const b=[...tp.content.querySelectorAll('button')].find(x=>/탐험대 보내기|밖으로 나가기/.test(x.textContent)); if(!b) return h;
+  b.insertAdjacentHTML('afterend',`<button class="btn lg herob emhb" data-act="emHealGo">긴급 회복${emLeft()?` <small class="num">${mmss(emLeft())}</small>`:''}</button>`); const d=document.createElement('div'); d.append(tp.content); return d.innerHTML };
+setInterval(()=>{ try{ const e=$('emLeft'); if(!e) return; const left=emLeft(), t=left?`${mmss(left)} 뒤 다시`:'10분에 1번'; if(e.textContent!==t) e.textContent=t; const b=document.querySelector('.emheal [data-act=emHeal]'); if(b){ const dis=!!left||!!rt.enc; if(b.disabled!==dis) b.disabled=dis } }catch(x){} },1000);
+(()=>{ const st=document.createElement('style'); st.textContent=`
+.emheal{border:1px solid var(--warn);background:color-mix(in srgb,var(--warn) 7%,var(--panel));padding:10px 12px;margin:0 0 10px;display:grid;gap:6px}
+.emheal .emh-t{display:flex;align-items:baseline;gap:10px}.emheal .emh-t .note{margin-left:auto;font-size:12px}
+.emwarn{margin:0;font-size:12.5px;color:var(--warn);line-height:1.5}
+.emheal .btn{justify-self:start;min-height:40px}
+.emheal.flash{animation:emfl 1.2s ease-out}@keyframes emfl{0%{box-shadow:0 0 0 3px var(--warn)}100%{box-shadow:0 0 0 0 transparent}}`; document.head.append(st) })();
+window.__P91={EM_EV,emPool,emLeft};
+
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
