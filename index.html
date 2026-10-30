@@ -11168,6 +11168,61 @@ const _cevMoveModal98=cevMoveModal; cevMoveModal=function(){ const r=_cevMoveMod
   return r };
 (()=>{ const st=document.createElement('style'); st.textContent=`.expos{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0}.expos .note{font-size:12px;margin-right:2px}`; document.head.append(st) })();
 
+/* ================= p99: 관리자 편집기 넓게 · 목록에서 사건 글을 바로 펼쳐 보기 ================= */
+(()=>{ const B=$('mbox'); if(!B) return; const chk=()=>{ const w=!!B.querySelector('#cevList,#cevF,#ctTx,#mvTx'); if(B.classList.contains('admwide')!==w) B.classList.toggle('admwide',w) };
+  new MutationObserver(chk).observe(B,{childList:true}); new MutationObserver(()=>{ if($('modal').hidden) B.classList.remove('admwide') }).observe($('modal'),{attributes:true,attributeFilter:['hidden']}) })();
+rt.cevPeekAll=rt.cevPeekAll||false; rt.cevPeek=rt.cevPeek||{};
+function cevPeekHtml(e){ let t=''; try{ t=cevToText(e) }catch(x){ return '' } t=t.split('\n').filter(l=>!/^(===|아이디:|태그:|포지션:|레벨:|발생:|한 번만:|구역:)/.test(l)).join('\n').replace(/\n{3,}/g,'\n\n').trim(); return t }
+const _cevListDraw99=cevListDraw; cevListDraw=function(){ _cevListDraw99.apply(this,arguments); const el=$('cevList'); if(!el||!rt.cev) return;
+  let bar=$('cevPeekBar'); if(!bar){ el.insertAdjacentHTML('beforebegin','<div class="cevpeekbar" id="cevPeekBar"></div>'); bar=$('cevPeekBar') }
+  bar.innerHTML=`<button type="button" class="chipb${rt.cevPeekAll?' on':''}" id="cevPeekAll">${rt.cevPeekAll?'모두 접기':'모두 펼치기'}</button><span class="note">제목 줄을 누르면 그 사건만 펼쳐져요 (본문·선택지·결과와 고치기 버튼).</span>`;
+  $('cevPeekAll').onclick=()=>{ rt.cevPeekAll=!rt.cevPeekAll; rt.cevPeek={}; cevListDraw() };
+  el.querySelectorAll('.cev-i').forEach(card=>{ if(card.querySelector(':scope > .cevrow')) return; const id=card.querySelector('[data-id]')?.dataset.id, e=rt.cev.find(x=>x.id===id); if(!e) return;
+    const h3=card.querySelector('h3'), tag=card.querySelector('.tag'), note=card.querySelector('p.note'), row=card.querySelector('.row:last-child');
+    const d=document.createElement('details'); d.className='cevrow'; const open=rt.cevPeek[id]!=null?rt.cevPeek[id]:rt.cevPeekAll; if(open) d.open=true;
+    const sm=document.createElement('summary'); sm.innerHTML=`<b class="cr-t">${esc(e.t)}</b><span class="cr-m">${note?esc(note.textContent):''}</span>${tag?`<span class="tag">${esc(tag.textContent)}</span>`:''}`;
+    const body=document.createElement('div'); body.className='cr-b'; body.innerHTML=`<pre>${esc(cevPeekHtml(e))}</pre>`; if(row) body.append(row);
+    d.append(sm,body); d.addEventListener('toggle',()=>{ rt.cevPeek[id]=d.open }); card.replaceChildren(d); card.classList.add('cev-one') }) };
+(()=>{ const st=document.createElement('style'); st.textContent=`
+@media (min-width:761px){
+ .mbox.admwide{width:min(1500px,96vw)!important;max-width:96vw!important}
+ .mbox.admwide #cevList{display:block;column-count:3;column-gap:6px}
+ .mbox.admwide #cevList>.cev-i{margin:0 0 6px;break-inside:avoid;display:block}
+ .mbox.admwide #cevList>.cev-i[hidden]{display:none}
+ .mbox.admwide #cevList>.card{margin:0}
+ .mbox.admwide #ctTx,.mbox.admwide #mvTx{min-height:60vh}
+ .mbox.admwide .cev-f .cev-g{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+ .mbox.admwide .cev-f textarea{min-height:90px}
+}
+.cev-i.cev-one{padding:0!important;margin:0 0 6px}
+.cevrow>summary{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;list-style:none;min-height:40px}.cevrow>summary::-webkit-details-marker{display:none}
+.cevrow>summary::before{content:'▸';color:var(--muted);flex:none;transition:transform .15s}.cevrow[open]>summary::before{transform:rotate(90deg)}
+.cevrow .cr-t{flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cevrow .cr-m{flex:1;min-width:0;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cevrow .tag{flex:none}
+.cevrow .cr-b{padding:0 12px 10px;border-top:1px dashed var(--line2)}.cevrow .cr-b pre{white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit;font-size:13px;line-height:1.6;margin:8px 0}
+.cev-i.off .cevrow>summary{opacity:.6}
+.cevpeekbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}.cevpeekbar .note{font-size:12px}
+.cevpeek{margin:6px 0;border:1px dashed var(--line2);padding:4px 8px}.cevpeek>summary{cursor:pointer;font-size:12.5px;color:var(--accent)}
+.cevpeek pre{white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;font-family:inherit;font-size:13px;line-height:1.6;margin:6px 0 2px;max-height:none}`; document.head.append(st) })();
+
+/* ================= p101: 관리자 — '상황 시작'(첫 단계 본문)이 같은 사건 골라 지우기 ================= */
+const cevStartKey=e=>{ const p=((e.steps||[])[0]||{}).p; return (Array.isArray(p)?p.join(' '):String(p||'')).replace(/\s+/g,' ').trim() };
+function cevStartGroups(){ const m=new Map(); for(const e of rt.cev||[]){ const k=cevStartKey(e); if(!k) continue; if(!m.has(k)) m.set(k,[]); m.get(k).push(e) } return [...m.entries()].filter(([k,g])=>g.length>1).map(([k,g])=>({k,g:g.slice().sort((a,b)=>(b.on-a.on)||((a.at||0)-(b.at||0)))})) }
+rt.stSel=rt.stSel||{}; rt.stOpen=rt.stOpen||false;
+function cevStartBar(){ const el=$('cevList'); let bar=$('cevStart'); const G=cevStartGroups(); if(!el||!rt.isAdmin||!G.length){ if(bar) bar.remove(); return }
+  G.forEach(({g})=>g.forEach((e,i)=>{ if(rt.stSel[e.id]==null) rt.stSel[e.id]=i>0 }));
+  const sel=G.flatMap(({g})=>g).filter(e=>rt.stSel[e.id]).length, extra=G.reduce((a,x)=>a+x.g.length-1,0);
+  if(!bar){ const tb=$('cevTabs')||el; tb.insertAdjacentHTML('beforebegin','<div class="cevdup cevstart" id="cevStart"></div>'); bar=$('cevStart') }
+  bar.innerHTML=`<b>상황 시작(첫 단계 본문)이 똑같은 사건 ${G.length}묶음 · ${extra+G.length}개</b><small>제목이나 뒤쪽 내용이 달라도 처음 장면 글이 같으면 모았어요. 묶음마다 맨 위(켜진 것·먼저 만든 것)만 빼고 체크해 두었어요. 남길 것은 체크를 풀어 주세요.</small>
+    <details ${rt.stOpen?'open':''} id="cevStartList"><summary>묶음 보기</summary>${G.map(({k,g})=>`<div class="stg"><p class="stk">「${esc(k.slice(0,90))}${k.length>90?'…':''}」</p>${g.map(e=>`<label><input type="checkbox" class="stChk" value="${esc(e.id)}" ${rt.stSel[e.id]?'checked':''}> ${esc(e.t)} <small>${e.on?'켜짐':'꺼짐'}${posArr(e.pos).length?' · '+posArr(e.pos).join('/'):''} · ${(e.steps||[]).length}단계</small></label>`).join('')}</div>`).join('')}</details>
+    <button type="button" class="btn warn sm" id="cevStartGo" ${sel?'':'disabled'}>${rt.stSure&&Date.now()-rt.stSure<6000?`정말 ${sel}개를 지울까요? 한 번 더 누르세요`:`체크한 ${sel}개 지우기`}</button>`;
+  $('cevStartList').addEventListener('toggle',e=>{ rt.stOpen=e.target.open });
+  bar.querySelectorAll('.stChk').forEach(c=>c.onchange=()=>{ rt.stSel[c.value]=c.checked; cevStartBar() });
+  $('cevStartGo').onclick=async()=>{ const ids=G.flatMap(({g})=>g).filter(e=>rt.stSel[e.id]).map(e=>e.id); if(!ids.length) return;
+    if(!rt.stSure||Date.now()-rt.stSure>6000){ rt.stSure=Date.now(); cevStartBar(); return } rt.stSure=0; const b=$('cevStartGo'); if(b){ b.disabled=true; b.textContent='지우는 중…' }
+    let n=0, bad=0; for(const id of ids){ try{ await rt.db.doc('cevents/'+id).delete(); n++; delete rt.stSel[id] }catch(err){ bad++ } } toast(`${n}개를 지웠어요${bad?` · ${bad}개 실패`:''}`,true); setTimeout(()=>{ try{ cevListDraw() }catch(e){} },800) } }
+const _cevListDraw101=cevListDraw; cevListDraw=function(){ _cevListDraw101.apply(this,arguments); try{ cevStartBar() }catch(e){} };
+(()=>{ const st=document.createElement('style'); st.textContent=`.cevstart .stg{border:1px solid var(--line);padding:6px 8px;margin:6px 0;display:grid;gap:3px}.cevstart .stk{margin:0;font-size:12.5px;color:var(--muted)}.cevstart label{display:flex;gap:8px;align-items:baseline;font-size:13px}.cevstart label small{color:var(--muted)}.cevstart details{max-height:50vh;overflow:auto}`; document.head.append(st) })();
+
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
