@@ -10989,16 +10989,18 @@ const _lr94=leaderResolve; leaderResolve=function(){ const P=rt.party, e=P&&P.ev
 
 /* --- 2. 알바: 관리자만 · 등록한 알바 의뢰를 골라서 한꺼번에 지우기 --- */
 rt.jobSel=rt.jobSel||{};
-function jobAdmHtml(){ if(!rt.isAdmin) return ''; const L=(rt.cev||[]).filter(e=>e.trig&&e.trig.k==='job'); if(!L.length) return '';
+function jobAdmHtml(){ if(!rt.isAdmin) return ''; const ALL=(rt.cev||[]).filter(e=>e.trig&&e.trig.k==='job'); if(!ALL.length) return ''; const fp=rt.jaPos||'A', posOf=e=>e.pos&&e.pos.length?e.pos:['N'], L=fp==='A'?ALL:ALL.filter(e=>posOf(e).includes(fp)); const cntP=k=>k==='A'?ALL.length:ALL.filter(e=>posOf(e).includes(k)).length;
   const n=L.filter(e=>rt.jobSel[e.id]).length;
-  return `<details class="fold sec jobadm" ${rt.jobAdmOpen?'open':''}><summary><h2>관리자 · 등록한 알바 ${L.length}</h2><span class="note">관리자에게만 보여요</span></summary>
-    <div class="jadm-bar"><label><input type="checkbox" id="jaAll" ${n===L.length?'checked':''}> 전체 선택</label><span class="note">${n}개 선택</span><button type="button" class="btn sm warn" id="jaDel" ${n?'':'disabled'}>선택한 ${n}개 삭제</button></div>
+  return `<details class="fold sec jobadm" ${rt.jobAdmOpen!==false?'open':''}><summary><h2>🗑 관리자 · 등록한 알바 ${L.length}개 · 골라서 삭제</h2><span class="note">관리자에게만 보여요 · 접기/펼치기</span></summary>
+    <div class="jadm-pos">${[['A','전체'],['T','T'],['M','M'],['B','B'],['N','공통']].map(([k,n])=>`<button type="button" class="chipb${fp===k?' on':''}" data-japos="${k}">${n} <small class="num">${cntP(k)}</small></button>`).join('')}<span class="note">내 포지션과 상관없이 모든 알바가 보여요</span></div><div class="jadm-bar"><label><input type="checkbox" id="jaAll" ${n===L.length?'checked':''}> 전체 선택</label><span class="note">${n}개 선택</span><button type="button" class="btn sm warn" id="jaDel" ${n?'':'disabled'}>${rt.jaSure&&Date.now()-rt.jaSure<6000?`정말 ${n}개를 지울까요? 한 번 더 누르세요 (되돌릴 수 없어요)`:`선택한 ${n}개 삭제`}</button></div>
     <ul class="jadm-list">${L.map(e=>`<li class="${e.on?'':'off'}"><label><input type="checkbox" class="jaChk" value="${esc(e.id)}" ${rt.jobSel[e.id]?'checked':''}> <b>${esc(e.t)}</b> <small>${e.on?'켜짐':'꺼짐'} · Lv.${e.lv}${e.pos&&e.pos.length?' · '+e.pos.join('/'):''}</small></label></li>`).join('')}</ul></details>` }
-const _viewJobs94=viewJobs; viewJobs=function(){ return _viewJobs94.apply(this,arguments)+jobAdmHtml() };
+const _viewJobs94=viewJobs; viewJobs=function(){ const h=_viewJobs94.apply(this,arguments); if(!rt.isAdmin) return h; const adm=jobAdmHtml()||'<div class="sec jobadm"><p class="muted" style="margin:0">관리자 · 등록한 알바가 아직 없어요. (「💼 글로 알바 넣기」로 넣은 알바가 여기에 나와요)</p></div>';
+  const i=h.indexOf('data-act="jobText"'); if(i<0) return adm+h; const j=h.indexOf('</div>',i)+6; return h.slice(0,j)+adm+h.slice(j) };
 document.addEventListener('toggle',e=>{ const t=e.target; if(t&&t.classList&&t.classList.contains('jobadm')) rt.jobAdmOpen=t.open },true);
-document.addEventListener('change',e=>{ const t=e.target; if(!t) return; if(t.classList&&t.classList.contains('jaChk')){ rt.jobSel[t.value]=t.checked; render() } else if(t.id==='jaAll'){ (rt.cev||[]).filter(x=>x.trig&&x.trig.k==='job').forEach(x=>{ rt.jobSel[x.id]=t.checked }); render() } });
+document.addEventListener('change',e=>{ const t=e.target; if(!t) return; if(t.classList&&t.classList.contains('jaChk')){ rt.jobSel[t.value]=t.checked; render() } else if(t.id==='jaAll'){ [...document.querySelectorAll('.jaChk')].forEach(c=>{ rt.jobSel[c.value]=t.checked }); render() } });
+document.addEventListener('click',e=>{ const b=e.target&&e.target.closest&&e.target.closest('[data-japos]'); if(!b) return; rt.jaPos=b.dataset.japos; render() });
 document.addEventListener('click',async e=>{ const b=e.target&&e.target.closest&&e.target.closest('#jaDel'); if(!b||!rt.isAdmin) return; const ids=Object.keys(rt.jobSel).filter(id=>rt.jobSel[id]&&(rt.cev||[]).some(x=>x.id===id));
-  if(!ids.length) return; if(b.dataset.sure!=='1'){ b.dataset.sure='1'; b.textContent=`정말 ${ids.length}개를 지울까요? (되돌릴 수 없어요)`; return } b.disabled=true; b.textContent='지우는 중…';
+  if(!ids.length) return; if(!rt.jaSure||Date.now()-rt.jaSure>6000){ rt.jaSure=Date.now(); b.textContent=`정말 ${ids.length}개를 지울까요? 한 번 더 누르세요 (되돌릴 수 없어요)`; return } rt.jaSure=0; b.disabled=true; b.textContent='지우는 중…';
   let n=0, bad=0; for(const id of ids){ try{ await rt.db.doc('cevents/'+id).delete(); n++; delete rt.jobSel[id] }catch(err){ bad++ } } toast(`알바 ${n}개를 지웠어요${bad?` · ${bad}개 실패`:''}`,true); setTimeout(()=>render(),600) });
 
 /* --- 3. 목록 정렬: 가격 · 공격력 · 내구도 · 회복량 --- */
@@ -11115,7 +11117,7 @@ const _petCard94=petCard; petCard=function(){ const h=_petCard94.apply(this,argu
 (()=>{ const st=document.createElement('style'); st.textContent=`
 .pforced{margin:0;font-size:13px;color:var(--warn);font-weight:600}
 .jobadm{border:1px dashed var(--warn);padding:8px 12px}.jobadm>summary{display:flex;align-items:baseline;gap:10px;cursor:pointer;list-style:none}.jobadm>summary h2{margin:0;font-size:16px}
-.jadm-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0}.jadm-bar .btn{margin-left:auto}
+.jadm-pos{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0 0}.jadm-pos .note{font-size:12px}.jadm-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0}.jadm-bar .btn{margin-left:auto}
 .jadm-list{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:420px;overflow:auto}.jadm-list li{border:1px solid var(--line);padding:6px 8px}.jadm-list li.off{opacity:.6}.jadm-list label{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.jadm-list small{color:var(--muted)}
 .lsort{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 8px}.lsort .note{font-size:12px;margin-right:2px}.lsort .chipb{min-height:30px;font-size:12.5px}
 .shopw[data-tab=lux] .shopsec:not([data-sk=lux]),.shopw[data-tab=pet] .shopsec:not([data-sk=pet]){display:none}
