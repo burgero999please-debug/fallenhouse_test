@@ -11023,31 +11023,47 @@ const _viewCodex94=viewCodex; viewCodex=function(){ const h=_viewCodex94.apply(t
 
 /* --- 4. 명품관 · 펫용품샵 --- */
 Object.assign(GEAR,{
-  luxchain:{n:'금 목걸이',slot:'acc',fx:{rare:3,money:.06},d:'희귀품 +3%p, 얻는 돈 +6%',lp:3600,lv:10,find:999,lux:1},
-  luxhat:{n:'맞춤 페도라',slot:'head',fx:{dodge:4,event:.05},d:'회피 +4%p, 돌발 사건 +5%',lp:2400,lv:12,find:999,lux:1},
-  luxwatch:{n:'기계식 명품 시계',slot:'acc',fx:{crit:5,xp:.05},d:'치명타 +5%p, 경험치 +5%',lp:4800,lv:15,find:999,lux:1},
-  luxcoat:{n:'캐시미어 롱코트',slot:'body',fx:{def:.1,hp:25,money:.05},d:'받는 피해 -10%, 최대 체력 +25, 얻는 돈 +5%',lp:5200,lv:20,find:999,lux:1},
-  luxring:{n:'다이아 반지',slot:'acc',fx:{money:.1,human:.1},d:'얻는 돈 +10%, 사람 만날 확률 +10%',lp:7500,lv:25,find:999,lux:1},
-  luxbag:{n:'가죽 여행 가방',slot:'bag',fx:{gather:.25,heal:.2},d:'획득량 +25%, 회복 효과 +20%',lp:6200,lv:25,find:999,lux:1},
-  luxhelm:{n:'탄소섬유 헬멧',slot:'head',fx:{def:.2,hp:15},d:'받는 피해 -20%, 최대 체력 +15',lp:6800,lv:30,find:999,lux:1},
-  luxarmor:{n:'맞춤 방탄 슈트',slot:'body',fx:{def:.24,hp:20},d:'받는 피해 -24%, 최대 체력 +20',lp:14000,lv:40,find:999,lux:1},
+  luxchain:{n:'불가뤼 순금 체인 팔찌',slot:'acc',fx:{rare:3,money:.06},d:'희귀품 +3%p, 얻는 돈 +6% · 손목에서 금빛이 흘러내린다',p:30000,lv:10,lux:1},
+  luxhat:{n:'보르살리노오 페도라',slot:'head',fx:{dodge:4,event:.05},d:'회피 +4%p, 돌발 사건 +5% · 모자 하나로 영화 주인공이 된다',p:36000,lv:12,lux:1},
+  luxshades:{n:'레이반느 에비에이터',slot:'acc',fx:{crit:3,dodge:3},d:'치명타 +3%p, 회피 +3%p · 폐허 위 석양이 더 멋있어 보인다',p:42000,lv:14,lux:1},
+  luxwatch:{n:'오메가쓰 기계식 시계',slot:'acc',fx:{crit:5,xp:.05},d:'치명타 +5%p, 경험치 +5% · 전기가 없어도 멈추지 않는다',p:58000,lv:15,lux:1},
+  luxpen:{n:'몽블랑끄 만년필',slot:'acc',fx:{xp:.08,event:.04},d:'경험치 +8%, 돌발 사건 +4% · 생존 일지가 갑자기 문학이 된다',p:64000,lv:18,lux:1},
+  luxcoat:{n:'버버뤼 캐시미어 롱코트',slot:'body',fx:{def:.1,hp:25,money:.05},d:'받는 피해 -10%, 최대 체력 +25, 얻는 돈 +5% · 체크무늬 안감이 살짝 보인다',p:76000,lv:20,lux:1},
+  luxhood:{n:'발렌씨아가 트랙 후드',slot:'body',fx:{dodge:5,hp:10},d:'회피 +5%p, 최대 체력 +10 · 일부러 해진 소매가 진짜 해졌다',p:82000,lv:22,lux:1},
+  luxring:{n:'반클리프 다이아 반지',slot:'acc',fx:{money:.1,human:.1},d:'얻는 돈 +10%, 사람 만날 확률 +10% · 네잎클로버 모양이 행운을 부른다',p:95000,lv:25,lux:1},
+  luxbag:{n:'고야드으 가죽 여행 가방',slot:'bag',fx:{gather:.25,heal:.2},d:'획득량 +25%, 회복 효과 +20% · 손으로 그린 무늬가 빼곡하다',p:108000,lv:25,lux:1},
+  luxpack:{n:'보테가 베네따 위빙 백팩',slot:'bag',fx:{gather:.18,hp:10},d:'획득량 +18%, 최대 체력 +10 · 가죽을 엮은 결이 갑옷 같다',p:126000,lv:28,lux:1},
+  luxhelm:{n:'아라이이 탄소섬유 헬멧',slot:'head',fx:{def:.2,hp:15},d:'받는 피해 -20%, 최대 체력 +15 · 레이서용인데 이빨도 막는다',p:140000,lv:30,lux:1},
+  luxsuit:{n:'톰포드으 맞춤 정장',slot:'body',fx:{def:.08,human:.15,money:.08},d:'받는 피해 -8%, 사람 만날 확률 +15%, 얻는 돈 +8% · 협상 테이블이 기울어진다',p:160000,lv:32,lux:1},
+  luxrider:{n:'생로랑뜨 라이더 헬멧',slot:'head',fx:{def:.16,dodge:3},d:'받는 피해 -16%, 회피 +3%p · 검은 광택에 놈들이 비친다',p:175000,lv:36,lux:1},
+  luxpilot:{n:'브라이틀링 항공 시계',slot:'acc',fx:{crit:4,rare:3,xp:.04},d:'치명타 +4%p, 희귀품 +3%p, 경험치 +4% · 구조 신호 버튼은 고장 났다',p:190000,lv:38,lux:1},
+  luxarmor:{n:'키톤느 맞춤 방탄 슈트',slot:'body',fx:{def:.24,hp:20},d:'받는 피해 -24%, 최대 체력 +20 · 정장 안에 방탄판을 넣었다',p:230000,lv:40,lux:1},
 });
 MELEE.push(
-  {k:'luxknife',n:'다마스커스 나이프',dmg:5,c:'blade',d:'물결무늬 강철. 손에 감기듯 가볍다.',how:'명품관',lp:2600,lv:10,lux:1},
-  {k:'luxbat',n:'티타늄 배트',dmg:7,c:'blunt',d:'가볍고 휘지 않는다. 손잡이에 가죽을 감았다.',how:'명품관',lp:5600,lv:20,lux:1},
-  {k:'luxblade',n:'장인의 단조 검',dmg:9,c:'blade',d:'한 장인이 석 달을 두드린 칼. 날이 쉽게 상하지 않는다.',how:'명품관',lp:9800,lv:30,lux:1});
-WSPX.luxknife=[5,4,80]; WSPX.luxbat=[3,2,160,1,.3]; WSPX.luxblade=[4,5,150,0,.08];
+  {k:'luxknife',n:'헨켈쓰 다마스커스 나이프',dmg:5,c:'blade',d:'물결무늬 강철. 손에 감기듯 가볍다.',how:'명품관',lp:45000,lv:10,lux:1},
+  {k:'luxbat',n:'루이빌르 티타늄 배트',dmg:7,c:'blunt',d:'가볍고 휘지 않는다. 손잡이에 가죽을 감았다.',how:'명품관',lp:85000,lv:20,lux:1},
+  {k:'luxbar',n:'에르메쓰 가죽 감은 쇠지렛대',dmg:8,c:'blunt',d:'손잡이에 오렌지색 가죽을 감았다. 문도 놈들도 연다.',how:'명품관',lp:110000,lv:26,lux:1},
+  {k:'luxblade',n:'무라마싸 공방 단조 검',dmg:9,c:'blade',d:'한 장인이 석 달을 두드린 칼. 날이 쉽게 상하지 않는다.',how:'명품관',lp:150000,lv:30,lux:1},
+  {k:'luxaxe',n:'피스카쓰 장인 도끼',dmg:10,c:'blade',d:'북유럽 장인이 벼린 도끼. 한 번에 끝낸다.',how:'명품관',lp:200000,lv:35,lux:1});
+WSPX.luxknife=[5,4,80]; WSPX.luxbat=[3,2,160,1,.3]; WSPX.luxbar=[3,2,220,1,.35]; WSPX.luxblade=[4,5,150,0,.08]; WSPX.luxaxe=[2,4,180,1,.35,2.1];
 const PACC={
   ribbon:{n:'리본 목걸이',e:'🎀',fx:{mind:.05},d:'정신 피해 -5%',p:120},
+  tagname:{n:'이름표',e:'🏷️',fx:{event:.02,human:.03},d:'돌발 사건 +2%, 사람 만날 확률 +3%',p:110},
+  flower:{n:'꽃 목걸이',e:'🌸',fx:{mind:.06},d:'정신 피해 -6%',p:140},
   bell:{n:'작은 방울',e:'🔔',fx:{event:.03},d:'돌발 사건 +3%',p:150},
+  cap:{n:'작은 모자',e:'🧢',fx:{dodge:1},d:'회피 +1%p',p:160},
   bandana:{n:'두건',e:'🧣',fx:{dodge:1},d:'회피 +1%p',p:180},
+  raincoat:{n:'노란 우비',e:'☔',fx:{def:.02},d:'받는 피해 -2%',p:220},
+  pshades:{n:'펫 선글라스',e:'🕶️',fx:{crit:1},d:'치명타 +1%p',p:260,lv:5},
+  minibag:{n:'미니 배낭',e:'🎒',fx:{gather:.03},d:'획득량 +3%',p:340,lv:7},
   goggles:{n:'모험가 고글',e:'🥽',fx:{rare:1},d:'희귀품 +1%p',p:380,lv:6},
   harness:{n:'튼튼한 하네스',e:'🦺',fx:{def:.03},d:'받는 피해 -3%',p:420,lv:8},
-  crown:{n:'보석 왕관',e:'👑',fx:{money:.06,rare:2},d:'얻는 돈 +6%, 희귀품 +2%p',p:4800,lv:20,lux:1},
-  cape:{n:'벨벳 망토',e:'🧥',fx:{def:.05,dodge:2},d:'받는 피해 -5%, 회피 +2%p',p:6500,lv:30,lux:1},
-  gemcollar:{n:'다이아 목걸이',e:'💎',fx:{crit:3,money:.05},d:'치명타 +3%p, 얻는 돈 +5%',p:9000,lv:35,lux:1},
+  crown:{n:'쇼메에 보석 왕관',e:'👑',fx:{money:.06,rare:2},d:'얻는 돈 +6%, 희귀품 +2%p · 펫이 고개를 꼿꼿이 든다',p:48000,lv:20,lux:1},
+  cape:{n:'펜디이 벨벳 망토',e:'🧥',fx:{def:.05,dodge:2},d:'받는 피해 -5%, 회피 +2%p · 뛸 때마다 펄럭인다',p:65000,lv:30,lux:1},
+  carrier:{n:'루이비똥 펫 하네스',e:'💼',fx:{def:.06,dodge:2},d:'받는 피해 -6%, 회피 +2%p · 모노그램이 피에 젖어도 멀쩡하다',p:80000,lv:32,lux:1},
+  gemcollar:{n:'티파늬 다이아 목걸이',e:'💎',fx:{crit:3,money:.05},d:'치명타 +3%p, 얻는 돈 +5% · 목에서 반짝여 놈들도 눈을 돌린다',p:90000,lv:35,lux:1},
 };
-const PFOOD={pf_basic:['기본 사료',30,4],pf_jerky:['육포 간식',60,6],pf_fish:['생선 통조림',70,7],pf_can:['고급 캔',90,8],pf_gel:['영양 젤리',150,10],pf_wagyu:['한우 스테이크 간식',800,25,1]};
+const PFOOD={pf_basic:['기본 사료',30,4],pf_chicken:['닭가슴살 큐브',45,5],pf_cheese:['치즈 스틱',55,5],pf_jerky:['육포 간식',60,6],pf_biscuit:['수제 비스킷',65,6],pf_fish:['생선 통조림',70,7],pf_salmon:['연어 트릿',80,7],pf_can:['고급 캔',90,8],pf_gel:['영양 젤리',150,10],pf_wagyu:['마장동 1++ 한우 스테이크',12000,25,1]};
 const PF_DAY=5, PF_CD=10*60000;
 function petFeed(k){ const f=PFOOD[k], p=S.pet; if(!f) return false; if(!p||!PETS[p]){ toast('함께 다니는 펫이 없어요.'); return false } const D=petDay(); D.feed=D.feed||0;
   if(D.feed>=PF_DAY){ toast(`펫 먹이는 하루 ${PF_DAY}번까지예요.`); return false } if(Date.now()<(S.petFeedT||0)){ toast(`아직 배가 불러요 · ${mmss(S.petFeedT-Date.now())}`); return false }
@@ -11057,11 +11073,12 @@ for(const k in PFOOD){ const f=PFOOD[k]; ITEMS[k]={n:f[0],d:`펫 먹이 · 친�
 const paccOf=p=>(S.pacc||{})[p]||'';
 const _gearV94=gearV; gearV=function(k){ let v=_gearV94(k); try{ const a=PACC[paccOf(S.pet)]; if(S.pet&&a&&a.fx[k]) v+=a.fx[k] }catch(e){} return v };
 function luxCard(t,k,it,pr,own,lk,extra){ return `<div class="card${lk?' wlock':''}${it.lux?' luxc':''}"><div class="row spread"><h3>${it.e?it.e+' ':''}${esc(it.n)}</h3><span class="tag num">${own?'보유':'$'+fmt(pr)}</span></div><p>${esc(it.d||'')}${lk?` · Lv.${it.lv}+`:''}</p>${extra||''}<div class="shopbtns">${own&&t!=='pacc'&&t!=='food'?'':`<button class="btn sm" data-act="buyLux" data-t="${t}" data-k="${k}" ${lk||(S.money||0)<pr?'disabled':''}>구매</button>`}</div></div>` }
-function luxSecs(){ const l=lvlOf(S.xp);
-  const gear=Object.entries(GEAR).filter(([k,g])=>g.lux&&g.lp).map(([k,g])=>luxCard('gear',k,Object.assign({},g,{d:SLOTS[g.slot]+' · '+g.d}),price(g.lp),!!(S.gear||{})[k],g.lv&&l<g.lv)).join('');
-  const weap=MELEE.filter(w=>w.lux).map(w=>luxCard('weap',w.k,Object.assign({},w,{d:`무기 · 공격 ${wBase(w)} · 내구 ${WSP(w).dur} · ${w.d}`}),price(w.lp),!!S.weapons[w.k],w.lv&&l<w.lv)).join('');
-  const pet=Object.entries(PACC).filter(([k,a])=>a.lux).map(([k,a])=>luxCard('pacc',k,Object.assign({},a,{d:'펫 장신구 · '+a.d}),price(a.p),false,a.lv&&l<a.lv,`<p class="note">가진 개수 ${((S.paccOwn||{})[k])||0}</p>`)).join('')+Object.entries(PFOOD).filter(([k,f])=>f[3]).map(([k,f])=>luxCard('food',k,{n:f[0],e:'🥩',d:`펫 먹이 · 친밀도 +${f[2]}`,lux:1},price(f[1]),false,false,`<p class="note">가진 개수 ${S.inv[k]||0}</p>`)).join('');
-  return `<div class="sec shopsec luxsec" data-sk="lux"><div class="sec-head"><h2>명품관 · 장신구와 옷</h2><p>오래 쓰는 고급품. 레벨이 되어야 살 수 있어요.</p></div><div class="grid">${gear}</div></div>
+function luxStd(t,k,nm,pr,desc,lv,own,extra){ const lk=lv&&lvlOf(S.xp)<lv; return `<div class="card lux${lk?' wlock':''}"><div class="row spread"><h3>${esc(nm)} <em class="luxtag">명품</em></h3><span class="tag num">${own?'보유':'$'+fmt(pr)}</span></div><p>${esc(desc)}${lk?` · Lv.${lv}+`:''}</p>${extra||''}<div class="shopbtns"><button class="btn sm" data-act="buyLux" data-t="${t}" data-k="${k}" ${own||lk||(S.money||0)<pr?'disabled':''}>${own?'보유 중':'구매'}</button></div></div>` }
+function luxSecs(){
+  const weap=MELEE.filter(w=>w.lux).map(w=>luxStd('weap',w.k,w.n,price(w.lp),`무기 · 공격 ${wBase(w)} · 내구 ${WSP(w).dur} · ${w.d}`,w.lv,!!S.weapons[w.k])).join('');
+  const pet=Object.entries(PACC).filter(([k,a])=>a.lux).map(([k,a])=>luxStd('pacc',k,`${a.e} ${a.n}`,price(a.p),`펫 장신구 · ${a.d}`,a.lv,false,((S.paccOwn||{})[k])?`<p class="note">가진 개수 ${S.paccOwn[k]}</p>`:'')).join('')
+    +Object.entries(PFOOD).filter(([k,f])=>f[3]).map(([k,f])=>luxStd('food',k,`🥩 ${f[0]}`,price(f[1]),`펫 먹이 · 친밀도 +${f[2]} · 한 점에 차 한 대 값`,0,false,S.inv[k]?`<p class="note">가진 개수 ${S.inv[k]}</p>`:'')).join('');
+  return `<div class="sec shopsec luxsec" data-sk="lux"><div class="sec-head"><h2>명품관 · 장신구와 옷</h2><p>아주 비싸고 훔치기도 거의 불가능해요. 레벨이 되어야 살 수 있어요.</p></div><div class="grid"></div></div>
     <div class="sec shopsec luxsec" data-sk="lux"><div class="sec-head"><h2>명품관 · 무기</h2></div><div class="grid">${weap}</div></div>
     <div class="sec shopsec luxsec" data-sk="lux"><div class="sec-head"><h2>명품관 · 펫 명품</h2></div><div class="grid">${pet}</div></div>` }
 function petShopSecs(){ const l=lvlOf(S.xp);
@@ -11070,7 +11087,7 @@ function petShopSecs(){ const l=lvlOf(S.xp);
   return `<div class="sec shopsec" data-sk="pet"><div class="sec-head"><h2>펫 먹이</h2><p>함께 다니는 펫에게 펫 관리 창이나 가방에서 먹여요.</p></div><div class="grid">${food}</div></div>
     <div class="sec shopsec" data-sk="pet"><div class="sec-head"><h2>펫 장신구</h2><p>펫 한 마리에 하나씩. 함께 다니는 펫의 장신구 효과가 적용돼요.</p></div><div class="grid">${acc}</div></div>` }
 ACT.buyLux=el=>{ const t=el.dataset.t, k=el.dataset.k, l=lvlOf(S.xp); let it, pr;
-  if(t==='gear'){ it=GEAR[k]; if(!it||!it.lux||(S.gear||{})[k]) return; pr=price(it.lp) } else if(t==='weap'){ it=MELEE.find(w=>w.k===k); if(!it||S.weapons[k]) return; pr=price(it.lp) }
+  if(t==='gear'){ it=GEAR[k]; if(!it||!it.lux||(S.gear||{})[k]) return; pr=price(it.lp||it.p) } else if(t==='weap'){ it=MELEE.find(w=>w.k===k); if(!it||S.weapons[k]) return; pr=price(it.lp) }
   else if(t==='pacc'){ it=PACC[k]; if(!it) return; pr=price(it.p) } else if(t==='food'){ const f=PFOOD[k]; if(!f) return; it={n:f[0]}; pr=price(f[1]) } else return;
   if(it.lv&&l<it.lv) return toast(`Lv.${it.lv}부터 살 수 있어요.`); if((S.money||0)<pr) return toast('돈이 부족합니다.'); S.money-=pr;
   if(t==='gear'){ S.gear=S.gear||{}; S.gear[k]=1; S.equip=S.equip||{}; if(!S.equip[it.slot]) S.equip[it.slot]=k } else if(t==='weap') wGain(k); else if(t==='pacc'){ S.paccOwn=S.paccOwn||{}; S.paccOwn[k]=(S.paccOwn[k]||0)+1 } else S.inv[k]=(S.inv[k]||0)+1;
@@ -11107,6 +11124,25 @@ const _petCard94=petCard; petCard=function(){ const h=_petCard94.apply(this,argu
 .pfgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin:8px 0}.pfb{display:grid;gap:2px;text-align:left;border:1px solid var(--line2);background:var(--panel2,var(--panel));color:var(--fg);padding:10px;cursor:pointer;font:inherit;min-height:48px}.pfb small{color:var(--muted);font-size:12px}.pfb.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.pfb:disabled{opacity:.5;cursor:default}
 .paccb{font-size:16px}`; document.head.append(st) })();
 window.__P94={PACC,PFOOD,petFeed,lsMetric};
+
+/* ================= p95: 관리자 — 글로 붙여 넣어 '같은 제목' 사건을 한꺼번에 고치기 ================= */
+const cevTitleKey=t=>String(t||'').replace(/^\s*[\[(]?[TMBtmb](\s*[\/,·]\s*[TMBtmb])*[\])]?\s*[·:\-.]?\s*/,'').replace(/\s+/g,' ').trim();
+function cevMatch(e){ const k=cevTitleKey(e.t), job=!!rt.jobTextMode; return (rt.cev||[]).filter(x=>cevTitleKey(x.t)===k&&((x.trig&&x.trig.k==='job')===job)) }
+const _cevTextModal95=cevTextModal; cevTextModal=function(){ const r=_cevTextModal95.apply(this,arguments); const sv=$('ctSave'); if(!sv||$('ctUpd')) return r;
+  sv.insertAdjacentHTML('beforebegin','<button class="btn pri" id="ctUpd" type="button">✏️ 같은 제목 고치기</button>');
+  const info=document.createElement('p'); info.className='note ctupdnote'; info.textContent='「같은 제목 고치기」는 붙여 넣은 글 가운데 이미 등록된 것과 제목이 같은 것만 내용(본문·선택지·결과·조건)을 새 글로 바꿔요. 켜짐/꺼짐 상태는 그대로 두고, 제목이 없는 것은 건너뛰어요. 「글로 내보내기」로 지금 내용을 꺼내 고친 뒤 붙여 넣으면 편해요.'; $('ctPrev').before(info);
+  const prev=()=>{ const P=$('ctPrev'); if(!P) return; let x=P.querySelector('.ctmatch'); const rr=cevParse($('ctTx').value); if(!rr.list.length){ if(x) x.remove(); return } const hit=rr.list.filter(({e})=>cevMatch(e).length).length;
+    if(!x){ x=document.createElement('p'); x.className='ctmatch'; P.append(x) } x.innerHTML=`같은 제목으로 등록된 것: <b>${hit}</b>개 · 없는 제목: ${rr.list.length-hit}개`; };
+  const T=$('ctTx'); if(T) T.addEventListener('input',()=>{ clearTimeout(T.__t2); T.__t2=setTimeout(prev,600) }); const ck=$('ctChk'); if(ck) ck.addEventListener('click',()=>setTimeout(prev,50)); ['ctOut','ctTpl','ctGuide'].forEach(id=>{ const b=$(id); if(b) b.addEventListener('click',()=>setTimeout(prev,50)) });
+  $('ctUpd').onclick=async()=>{ if(!rt.db) return toast('공유 서버에 연결되어 있어야 해요.'); const rr=cevParse($('ctTx').value); if(!rr.list.length) return toast('읽은 이벤트가 없어요.');
+    const b=$('ctUpd'); const plan=rr.list.map(({e})=>({e,M:cevMatch(e)})).filter(x=>x.M.length), cnt=plan.reduce((a,x)=>a+x.M.length,0); if(!cnt) return toast('같은 제목으로 등록된 사건이 없어요.');
+    if(b.dataset.sure!=='1'){ b.dataset.sure='1'; b.textContent=`${cnt}개를 새 내용으로 바꿀까요? 한 번 더 누르세요`; return } b.disabled=true; b.textContent='고치는 중…';
+    let n=0, bad=0, same=0; for(const {e,M} of plan){ for(const old of M){ const c=cevClean(old.id,Object.assign({},e,{on:old.on})); if(!c){ bad++; continue } if(cevSig(c)===cevSig(old)){ same++; continue }
+        const doc=Object.assign({},c,{at:old.at||Date.now(),fire:0,on:old.on}); delete doc.id; try{ await rt.db.doc('cevents/'+old.id).set(doc); n++ }catch(err){ bad++ } } }
+    b.disabled=false; b.dataset.sure=''; b.textContent='✏️ 같은 제목 고치기'; toast(`${n}개 고쳤어요${same?` · ${same}개는 이미 같은 내용`:''}${bad?` · ${bad}개 실패`:''}`,true);
+    $('ctPrev').insertAdjacentHTML('afterbegin',`<p class="okc">${n}개를 새 내용으로 고쳤어요${same?` (${same}개는 바뀐 게 없어 그대로)`:''}.</p>`) };
+  return r };
+(()=>{ const st=document.createElement('style'); st.textContent=`.ctupdnote{margin:6px 0;font-size:12.5px}.ctmatch{margin:4px 0 0;color:var(--accent)}`; document.head.append(st) })();
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
