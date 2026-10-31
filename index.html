@@ -12207,6 +12207,15 @@ const _pendNext116=ACT.pendNext; ACT.pendNext=function(){ const p=(S.pend||[])[0
 .sppath{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}.sppath span{border:1px solid var(--line);padding:6px 8px;display:grid;gap:2px;font-size:13px}.sppath small{color:var(--muted)}
 @media (max-width:520px){.sppath{grid-template-columns:1fr}}`; document.head.append(st) })();
 
+/* ================= p117: 관리자 — 구역 특수 사건을 바로 해 보기 ================= */
+const _cevListDraw117=cevListDraw; cevListDraw=function(){ _cevListDraw117.apply(this,arguments); const el=$('cevList'); if(!el||!rt.isAdmin) return; if($('spxTest')) return;
+  const box=document.createElement('details'); box.id='spxTest'; box.className='spxtest'; if(rt.spxOpen) box.open=true;
+  box.innerHTML=`<summary>🎲 구역 특수 사건 바로 해 보기 (관리자 시험용 · 실제 보상·피해가 적용돼요)</summary><div class="spxtb">${Object.keys(SPX_N).map(k=>`<button type="button" class="btn sm" data-spx="${k}">${esc(ZTYPE[k]?ZTYPE[k].n:k)} · ${esc(SPX_N[k])}</button>`).join('')}</div>`;
+  box.addEventListener('toggle',()=>{ rt.spxOpen=box.open });
+  box.querySelectorAll('[data-spx]').forEach(b=>b.onclick=()=>{ const t=b.dataset.spx, z=Object.keys(MAP).filter(k=>MAP[k].t===t&&!MAP[k].home); rt.modalLock=false; closeModal(); setTimeout(()=>spxRun(t,z.length?stPick(z):S.pos),250) });
+  const pk=$('cevPeekBar')||el; pk.insertAdjacentElement('beforebegin',box) };
+(()=>{ const st=document.createElement('style'); st.textContent=`.spxtest{border:1px dashed var(--line2);padding:6px 10px;margin:6px 0}.spxtest summary{cursor:pointer;font-size:13px}.spxtb{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}`; document.head.append(st) })();
+
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
