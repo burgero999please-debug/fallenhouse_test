@@ -11291,8 +11291,8 @@ const _petInf105=petInfect; petInfect=function(){ if(S.pet==='ghost') return; if
 /* ================= p106: 임시 동행 — 접속자가 없어도 내 대원(또는 거리의 사람)과 나가기 ================= */
 rt.npcNm=rt.npcNm||{};
 const _nameOf106=nameOf; nameOf=function(id){ if(typeof id==='string'&&id.startsWith('npc-')){ const P=rt.party, I=P&&P.npc&&P.npc.info[id]; return I?I.name:(rt.npcNm[id]||'동행자') } return _nameOf106.apply(this,arguments) };
-const NPC_TONE={blunt:'dry',cynic:'dry',brag:'bold',calm:'bold',timid:'scared',chatty:'scared',warm:'kind',pious:'kind'};
-const NPC_STREET=[['떠돌이 정비공','해리','남','어른'],['전직 소방관','마리','여','어른'],['배낭 멘 대학생','준','남','청소년'],['말수 적은 사냥꾼','로이','남','어른'],['목발 짚은 간호사','엘라','여','어른'],['무표정한 택배 기사','덕','남','어른'],['군복 입은 할머니','루스','여','노인'],['자전거 탄 소녀','니나','여','청소년'],['수염 덥수룩한 목사','벤','남','노인'],['문신한 바텐더','케이','여','어른']];
+const NPC_TONE={blunt:'dry',cynic:'dry',brag:'bold',calm:'bold',timid:'scared',chatty:'bold',warm:'kind',pious:'kind'};
+const NPC_STREET=[['떠돌이 정비공','해리','남','어른','dry'],['전직 소방관','마리','여','어른','bold'],['겁 많은 대학생','준','남','청소년','scared'],['말수 적은 사냥꾼','로이','남','어른','dry'],['목발 짚은 간호사','엘라','여','어른','kind'],['무표정한 택배 기사','덕','남','어른','dry'],['군복 입은 할머니','루스','여','노인','bold'],['떨고 있는 소녀','니나','여','청소년','scared'],['수염 덥수룩한 목사','벤','남','노인','kind'],['문신한 바텐더','케이','여','어른','bold']];
 const NPC_CAT={horde:'danger',sniper:'danger',dogs:'danger',bridge:'danger',acid:'danger',mutant:'danger',ambush:'danger',collapse:'danger',gas:'danger',fire:'danger',toll:'danger',flood:'danger',blackout:'danger',kidnap:'danger',hurt:'help',child:'help',radio:'help',trader:'help',truck:'loot',gun:'loot',bunker:'loot',airdrop:'loot'};
 /* 사건마다 말투별 한마디 */
 const NPC_EV={
@@ -11334,7 +11334,7 @@ function npcSay(P,id,x,ms){ setTimeout(()=>{ if(rt.party!==P||!x) return; pDeliv
 function npcPact(P,id,d){ pDeliver(P,'pact',{data:Object.assign({pid:P.id,mid:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)},d),by:id,isMe:false}) }
 function npcMake(c,i){ const id='npc-'+Date.now().toString(36)+i+Math.random().toString(36).slice(2,5);
   if(c){ crewInfo(c); return {id,name:crewNm(c),crew:c.id,per:c.per,age:c.age,sex:c.sex,tone:NPC_TONE[c.per]||'dry',pw:power(c)} }
-  const s=npcU(NPC_STREET); return {id,name:`${s[1]} (${s[0]})`,crew:null,per:'',age:s[3],sex:s[2],tone:stPick(['dry','bold','scared','kind']),pw:ri(9,16)} }
+  const s=npcU(NPC_STREET); return {id,name:`${s[1]} (${s[0]})`,crew:null,per:'',age:s[3],sex:s[2],tone:s[4]||'dry',pw:ri(9,16)} }
 async function npcGo(crewIds,fill){ if(rt.party) return toast('이미 동행 중이에요.'); if(rt.enc) return toast('전투 중이에요.'); if(resting()||S.hp<=0) return toast('지금 몸으로는 나갈 수 없어요.');
   const cs=crewIds.map(crewById).filter(Boolean).slice(0,P_SIZE-1); const L=cs.map((c,i)=>npcMake(c,i)); if(fill) while(L.length<P_SIZE-1){ let x; do{ x=npcMake(null,L.length) }while(L.some(y=>y.name===x.name)); L.push(x) }
   if(!L.length) return toast('함께 나갈 사람을 골라 주세요.');
@@ -11375,7 +11375,7 @@ setInterval(()=>{ try{ const P=rt.party; if(!P||!P.npc) return; const now=Date.n
   if(P.on&&P.start&&!N.bye&&P.start+P_MAX-now<15000&&!P.ev&&!P.raid&&!P.inf){ N.bye=1; const id=stPick(N.ids.filter(x=>!P.dead[x])); if(id) npcSay(P,id,npcU(NPC_BYE[N.info[id].tone]||NPC_BYE.dry),500) }
  }catch(e){} },1000);
 /* 내가 말하면 가끔 대답 */
-const _pSend106=ACT.pSend; ACT.pSend=function(){ const P=rt.party, n0=P?P.chat.length:0; const r=_pSend106.apply(this,arguments); try{ if(P&&P.npc&&P.chat.length>n0&&Math.random()<.6){ const L=P.npc.ids.filter(x=>!P.dead[x]&&!(P.kid&&P.kid.tg===x&&Date.now()<P.kid.until)); if(L.length){ const id=stPick(L), I=P.npc.info[id], x=(P.chat[P.chat.length-1]||{}).x||''; npcSay(P,id,/\?|？|까$|니$|요\?/.test(x)&&I.tone!=='scared'?npcU(['글쎄.','음… 가 보면 알겠지.','난 잘 모르겠어.','그건 대장이 정해.','…생각 좀 해 볼게.']):npcU(NPC_CHAT[I.tone]||NPC_CHAT.dry),ri(1400,3200)) } } }catch(e){} return r };
+const _pSend106=ACT.pSend; ACT.pSend=function(){ const P=rt.party, n0=P?P.chat.length:0; const r=_pSend106.apply(this,arguments); try{ if(false&&P&&P.npc&&P.chat.length>n0){ const L=P.npc.ids.filter(x=>!P.dead[x]&&!(P.kid&&P.kid.tg===x&&Date.now()<P.kid.until)); if(L.length){ const id=stPick(L), I=P.npc.info[id], x=(P.chat[P.chat.length-1]||{}).x||''; npcSay(P,id,/\?|？|까$|니$|요\?/.test(x)&&I.tone!=='scared'?npcU(['글쎄.','음… 가 보면 알겠지.','난 잘 모르겠어.','그건 대장이 정해.','…생각 좀 해 볼게.']):npcU(NPC_CHAT[I.tone]||NPC_CHAT.dry),ri(1400,3200)) } } }catch(e){} return r };
 /* 끝난 NPC 동행은 다시 들어가기 대상이 아님 */
 const _pBackUi106=pBackUi; pBackUi=function(){ if(S.pty&&/^pt-npc/.test(S.pty.id||'')&&!(rt.party&&rt.party.id===S.pty.id)){ delete S.pty } return _pBackUi106.apply(this,arguments) };
 const _pBack106=ACT.pBack; ACT.pBack=function(){ if(S.pty&&/^pt-npc/.test(S.pty.id||'')){ delete S.pty; pBackUi(); return toast('대원들과의 동행은 이미 끝났어요.') } return _pBack106.apply(this,arguments) };
@@ -11543,6 +11543,7 @@ body.hz-hallu .shell{animation:hzSway 6s ease-in-out infinite}
 /* ---------- 1. 같은 말 반복 막기 ---------- */
 function npcU(arr){ arr=(arr||[]).filter(Boolean); if(!arr.length) return ''; const P=rt.party, N=P&&P.npc; if(!N) return stPick(arr); N.used=N.used||new Set(); const fresh=arr.filter(x=>!N.used.has(x)); const x=stPick(fresh.length?fresh:arr); N.used.add(x); return x }
 npcLine=function(I,set,cat){ const t=I.tone; if(I.age==='어린이'&&cat) return npcU(NPC_KID[cat]||NPC_KID.danger); if(I.age==='노인'&&cat&&Math.random()<.3) return npcU(NPC_OLD[cat]||NPC_OLD.danger); const L=set[t]||set.dry; return npcU(Array.isArray(L)?L:(L[cat]||L.danger||[])) };
+const npcAdd1=(T,o)=>{ for(const k in o) T[k]=(T[k]||[]).concat(o[k]) };
 const npcAdd=(T,o)=>{ for(const k in o){ T[k]=T[k]||{}; for(const t in o[k]) T[k][t]=(T[k][t]||[]).concat(o[k][t]) } };
 npcAdd(NPC_EV,{
  truck:{dry:['적십자 마크라고 안전한 건 아니다.','문 열기 전에 귀부터 대 봐.'],bold:['식량이면 대박이고, 놈들이면 운동이고.'],scared:['문틈에서 손가락 같은 게 보였어요…'],kind:['약이 있으면 아픈 사람들한테 가져가요.']},
@@ -11568,10 +11569,10 @@ npcAdd(NPC_EV,{
  flood:{dry:['물 먹지 마. 무슨 물인지 모른다.'],bold:['가슴까지 차기 전에 빠진다!'],scared:['발에 뭐가 감겼어요! 머리카락 같은 거!'],kind:['제 손 잡아요. 미끄러워요.']},
  blackout:{dry:['눈 감고 소리만 들어.'],bold:['어둠은 저놈들한테도 똑같다!'],scared:['누가 제 발목 만졌어요… 누구예요?'],kind:['괜찮아요, 여기 있어요. 계속 말할게요.']},
 });
-npcAdd(NPC_HI,{dry:['오래 안 걸린다. 짐 가볍게.','뒤는 내가 본다.'],bold:['오늘 사냥감은 크게 잡자.','앞장은 나다. 불만 없지?'],scared:['저, 혹시 무서우면 말해도 되죠?','물이랑 붕대 챙겼어요. 두 번 확인했어요.'],kind:['다녀와서 같이 밥 먹어요.','다들 신발 끈 묶었어요?']});
-npcAdd(NPC_CHAT,{dry:['됐어. 집중해.','그건 나중에.','…흠.'],bold:['당연하지.','그 정도는 일도 아냐.','말보다 몸이 먼저야.'],scared:['저, 저만 그렇게 생각한 거 아니죠?','소리 좀 줄여요…','알았어요, 알았어요.'],kind:['그 말 들으니 좀 낫네요.','같이 있으니까 괜찮아요.','네, 그렇게 해요.']});
-npcAdd(NPC_BYE,{dry:['더 있으면 운을 다 쓴다.'],bold:['다음엔 더 깊이 들어가자.'],scared:['다리가 아직 떨려요. 돌아가요.'],kind:['오늘 같이 와 줘서 고마워요.']});
-npcAdd(NPC_RAID,{dry:['패턴 봐. 세 번 휘두르고 쉰다.','다리를 노려.'],bold:['저 덩치 쓰러뜨리면 다들 한 잔씩이다!','내가 정면이다!'],scared:['지, 진짜 저걸 잡아요?','제가 뒤에서 도울게요…!'],kind:['다치면 꼭 말해요!','숨 고르고, 같이 쳐요!']});
+npcAdd1(NPC_HI,{dry:['오래 안 걸린다. 짐 가볍게.','뒤는 내가 본다.'],bold:['오늘 사냥감은 크게 잡자.','앞장은 나다. 불만 없지?'],scared:['저, 혹시 무서우면 말해도 되죠?','물이랑 붕대 챙겼어요. 두 번 확인했어요.'],kind:['다녀와서 같이 밥 먹어요.','다들 신발 끈 묶었어요?']});
+npcAdd1(NPC_CHAT,{dry:['됐어. 집중해.','그건 나중에.','…흠.'],bold:['당연하지.','그 정도는 일도 아냐.','말보다 몸이 먼저야.'],scared:['저, 저만 그렇게 생각한 거 아니죠?','소리 좀 줄여요…','알았어요, 알았어요.'],kind:['그 말 들으니 좀 낫네요.','같이 있으니까 괜찮아요.','네, 그렇게 해요.']});
+npcAdd1(NPC_BYE,{dry:['더 있으면 운을 다 쓴다.'],bold:['다음엔 더 깊이 들어가자.'],scared:['다리가 아직 떨려요. 돌아가요.'],kind:['오늘 같이 와 줘서 고마워요.']});
+npcAdd1(NPC_RAID,{dry:['패턴 봐. 세 번 휘두르고 쉰다.','다리를 노려.'],bold:['저 덩치 쓰러뜨리면 다들 한 잔씩이다!','내가 정면이다!'],scared:['지, 진짜 저걸 잡아요?','제가 뒤에서 도울게요…!'],kind:['다치면 꼭 말해요!','숨 고르고, 같이 쳐요!']});
 const NPC_WHY={dry:{act:['{o}. 그게 제일 남는다.','{o}. 따지지 말고.'],avoid:['{o}. 오늘 죽을 이유는 없다.','{o}. 욕심은 화를 부른다.'],mid:['{o}. 이게 덜 위험해.']},bold:{act:['{o}! 내가 앞이다.','{o}. 망설이면 늦어.'],avoid:['…{o}. 이번만 물러선다.'],mid:['{o}. 머리 쓰자.']},scared:{act:['{o}… 다들 한다면 저도요.'],avoid:['{o}! 제발요!','{o}… 저 무서워요.'],mid:['{o}… 이게 제일 안전해 보여요.']},kind:{act:['{o}. 누군가는 해야 하니까요.'],avoid:['{o}. 다치는 사람 없게요.'],mid:['{o}. 이게 다 같이 사는 길 같아요.']}};
 const NPC_RES2={danger:{dry:{ok:['살았다. 숨 돌리고 움직이자.','생각보다 쉬웠다.'],bad:['상처 묶어. 피 냄새 맡고 온다.','계산이 틀렸다.']},bold:{ok:['봤지? 우리 강해.','다음 거 와라.'],bad:['…빚 하나 진 거다, 저 놈들한테.','이 정도 상처는 훈장이야.']},scared:{ok:['살았어요… 진짜 살았어요.','손이 아직도 떨려요.'],bad:['피… 피가 멈추지 않아요.','다음엔 그냥 도망쳐요, 네?']},kind:{ok:['다행이에요, 다들 무사해서.','서로 잘 지켰어요.'],bad:['붕대 여기요. 꽉 묶어요.','많이 아파요? 조금만 버텨요.']}},
  help:{dry:{ok:['이번엔 진짜였네.','손해는 아니었다.'],bad:['그러니까 의심부터 하랬잖아.']},bold:{ok:['좋은 일 하니까 기분 좋네.'],bad:['…다음엔 내가 먼저 확인한다.']},scared:{ok:['저 사람, 괜찮겠죠?'],bad:['역시 함정이었어요…']},kind:{ok:['고맙다는 말 들으니 좋네요.','언젠가 우리도 도움받겠죠.'],bad:['그래도 도우려던 게 잘못은 아니에요.']}},
@@ -11837,8 +11838,8 @@ const _openStoryChain108=openStoryChain; openStoryChain=function(){ try{ if(!rt.
 @media (max-width:760px){.caprt,.capst{grid-template-columns:1fr}.capact{grid-template-columns:repeat(2,minmax(0,1fr))}}`; document.head.append(st) })();
 
 
-npcAdd(NPC_KID,{danger:['쉿… 나 숨 참을 수 있어. 봐 봐.','저거 텔레비전에서 본 거랑 똑같아.','엄마가 이럴 땐 눈 감으랬어.','손 잡아 줘. 꽉.','나 안 울 거야. 진짜야.'],help:['저 사람 배고파 보여. 내 사탕 줄까?','우리도 누가 도와줬잖아.','불쌍해…'],loot:['반짝이는 거 있다!','이거 내가 들게, 응?','과자 있으면 좋겠다.']});
-npcAdd(NPC_OLD,{danger:['전쟁 때도 이런 소리는 못 들어 봤네.','무릎이 시큰거리는 걸 보니 비가 오겠군. 놈들도 오고.','뛰는 건 자네들한테 맡기지.','내가 미끼가 돼 줄 수도 있네. 늙은 고기라 맛은 없겠지만.'],help:['남 돕는 게 결국 나 돕는 일이야.','저 사람 눈빛, 우리 아들 닮았구먼.'],loot:['예전엔 이런 데서 장도 봤지.','쓸 만한 건 다 무거운 법이야.','버리는 것도 기술이라네.']});
+npcAdd1(NPC_KID,{danger:['쉿… 나 숨 참을 수 있어. 봐 봐.','저거 텔레비전에서 본 거랑 똑같아.','엄마가 이럴 땐 눈 감으랬어.','손 잡아 줘. 꽉.','나 안 울 거야. 진짜야.'],help:['저 사람 배고파 보여. 내 사탕 줄까?','우리도 누가 도와줬잖아.','불쌍해…'],loot:['반짝이는 거 있다!','이거 내가 들게, 응?','과자 있으면 좋겠다.']});
+npcAdd1(NPC_OLD,{danger:['전쟁 때도 이런 소리는 못 들어 봤네.','무릎이 시큰거리는 걸 보니 비가 오겠군. 놈들도 오고.','뛰는 건 자네들한테 맡기지.','내가 미끼가 돼 줄 수도 있네. 늙은 고기라 맛은 없겠지만.'],help:['남 돕는 게 결국 나 돕는 일이야.','저 사람 눈빛, 우리 아들 닮았구먼.'],loot:['예전엔 이런 데서 장도 봤지.','쓸 만한 건 다 무거운 법이야.','버리는 것도 기술이라네.']});
 const _onPev108b=onPev; onPev=function(m){ try{ const P=rt.party, d=(m&&m.data)||{}; if(P&&P.npc&&m.by===P.leader&&d.type==='res'){ const v=Object.values(d.per||{}); P.npc.lastBad=v.some(x=>x&&((x.hp|0)<0||(x.mind|0)<0||(x.money|0)<0)) } }catch(e){} return _onPev108b.apply(this,arguments) };
 /* ================= p109: Lv.30부터 열리는 고급 시설 (전에는 숨김) · 열릴 때 공지 · 위탁 판매 수익 ================= */
 const BLD_HI={
@@ -11867,6 +11868,42 @@ setInterval(()=>{ try{ if(!S||!S.intro||!$('modal').hidden||rt.enc||document.get
   openModal(`<div class="eyebrow">NEW FACILITY <span class="dash"></span> Lv.${lv}</div><h2>새로운 시설을 건설할 수 있어요</h2><p class="ch-p">캠프가 커지면서 더 큰 일을 벌일 수 있게 됐어요. 증축 자원은 많이 들지만 효과도 커요.</p><div class="nbl">${nw.map(k=>`<div class="nbr"><b>${esc(BLD_HI[k].n)}</b><small>${esc(BLD_HI[k].d)}</small><span class="cost">${costHtml(costOf(BLD_HI[k].base,0))}</span></div>`).join('')}</div><div class="row"><button class="btn pri" id="nbGo" type="button">시설 보러 가기</button><button class="btn" id="nbX" type="button">나중에</button></div>`);
   $('nbGo').onclick=()=>{ rt.modalLock=false; closeModal(); setTab('build') }; $('nbX').onclick=()=>{ rt.modalLock=false; closeModal() } }catch(e){} },3000);
 (()=>{ const st=document.createElement('style'); st.textContent=`.nbl{display:grid;gap:8px;margin:10px 0}.nbr{border:1px solid var(--line2);padding:10px 12px;display:grid;gap:4px}.nbr small{color:var(--muted);font-size:12.5px}.nbr .cost{font-size:12px}.bincc .num{font-size:20px}`; document.head.append(st) })();
+
+/* ================= p110: 동행 동료 — 말에 반응 · 감염되면 아픈 말투 · 성격과 말투 맞추기 ================= */
+const NPC_SICK={dry:['…괜찮다. 열이 좀 나는 것뿐이다.','손이… 떨린다. 신경 쓰지 마.','물… 물 좀.','…오래 못 버틴다. 알고 있다.'],bold:['이 정도로… 안 쓰러져… 콜록.','웃기지 마… 나 아직 멀쩡해…','다리가 말을 안 듣네… 젠장.','…눈앞이 자꾸 흐려진다.'],scared:['추워요… 왜 이렇게 추워요…','저 변하는 거예요? 그렇죠?','팔이… 팔이 제 것 같지 않아요…','무서워요… 혼자 두지 마요…'],kind:['저 때문에 멈추지 마요… 괜찮아요…','다들… 다친 데는 없죠…?','미안해요… 짐만 돼서…','손 좀 잡아 줄래요… 잠깐만.']};
+const NPC_SICK_KID=['열나… 엄마…','나 이제 괴물 돼…?','졸려… 자면 안 돼…?'];
+const NPC_INFOTHER={dry:['물렸다. 결정해야 한다.','상처 색 봐. 시간 없다.'],bold:['버텨! 아직 눈은 사람이야!','정신 놓지 마!'],scared:['저, 저 사람 눈이…','이제 어떡해요…?'],kind:['괜찮아요, 제가 옆에 있을게요.','숨 천천히 쉬어요. 천천히.']};
+const NPC_RE={
+ greet:{dry:['어.','왔냐.'],bold:['오, 대장!','반갑다!'],scared:['아, 네! 안녕하세요…'],kind:['안녕하세요. 오늘도 무사하길.']},
+ ok:{dry:['멀쩡하다. 너는?','살아는 있다.'],bold:['쌩쌩하지!','나야 늘 좋지.'],scared:['저, 저는 괜찮아요… 아마도요.','다리가 좀 떨리는 거 빼면요…'],kind:['전 괜찮아요. 대장은요?','걱정해 줘서 고마워요.']},
+ go:{dry:['가자.','앞장서. 뒤는 본다.'],bold:['좋아, 가 보자고!','기다리던 말이야.'],scared:['벌써요…? 아, 알았어요.','천천히 가요, 네?'],kind:['네, 같이 가요.','다들 준비됐죠?']},
+ quiet:{dry:['…','(고개만 끄덕인다)'],bold:['알았어, 알았어.'],scared:['(입을 틀어막는다)'],kind:['(조용히 고개를 끄덕인다)']},
+ thanks:{dry:['됐다.','갚을 거 없다.'],bold:['당연한 거지!','다음에도 맡겨.'],scared:['저, 저야말로요…!'],kind:['저도 고마워요.','서로 돕는 거죠.']},
+ scared:{dry:['무서운 게 정상이다. 그래야 산다.'],bold:['내가 있잖아. 걱정 마.'],scared:['저도요… 저도 무서워요…'],kind:['괜찮아요. 같이 있잖아요.']},
+ food:{dry:['아껴 먹어. 돌아갈 때까지.'],bold:['돌아가면 실컷 먹자.'],scared:['저 비스킷 하나 있어요… 나눠 먹을래요?'],kind:['제 물 나눠 마셔요.']},
+ fight:{dry:['싸울 거면 확실하게.'],bold:['그래야지!','드디어 몸 좀 풀겠네.'],scared:['싸, 싸워요…? 진짜로요?'],kind:['다치지 않게만 해요.']},
+ laugh:{dry:['…웃을 기운도 있네.'],bold:['하하, 그거 좋다!'],scared:['헤헤… 조금 덜 무섭네요.'],kind:['웃으니까 좋네요.']},
+ q:{dry:['글쎄.','가 보면 안다.','몰라. 근데 조심은 해.'],bold:['몰라도 돼. 내가 알아서 한다.','그건 부딪혀 보면 알지!'],scared:['저, 저도 잘 모르겠어요…','그거 물어보면 안 되는 거 같은데요…'],kind:['음… 같이 생각해 봐요.','대장 생각은 어때요?']},
+ yes:{dry:['그래.','알았다.'],bold:['오케이!','맡겨!'],scared:['네, 네!'],kind:['네, 그렇게 해요.']},
+ no:{dry:['그럼 그만두자.'],bold:['에이, 왜?'],scared:['아… 네…'],kind:['그래요, 무리하지 말아요.']},
+ any:{dry:['응.','…그래.','듣고 있다.'],bold:['그렇지!','말 되네.','좋아.'],scared:['네…','아, 네…!','그, 그렇죠…'],kind:['그래요.','응, 듣고 있어요.','그 말 좋네요.']}};
+const NPC_RE_KID={greet:['안녕!'],ok:['나 괜찮아!'],go:['가자 가자!'],quiet:['(입을 손으로 막는다)'],thanks:['헤헤.'],scared:['나도 무서워… 손 잡아도 돼?'],food:['배고파…'],fight:['나도 돌 던질 수 있어!'],laugh:['히히!'],q:['몰라…'],yes:['응!'],no:['힝…'],any:['응!','알았어!']};
+const NPC_RE_OLD={greet:['허, 왔는가.'],ok:['늙은 몸치곤 멀쩡하네.'],go:['가세. 천천히라도 가는 게 낫지.'],quiet:['(지팡이를 고쳐 쥔다)'],thanks:['고맙긴, 당연한 걸.'],scared:['겁나는 건 부끄러운 게 아닐세.'],food:['배는 채워 둬야 하네.'],fight:['젊은 사람들이 앞장서게.'],laugh:['허허.'],q:['글쎄, 세상이 이리 됐으니 알 수가 있나.'],yes:['그러세.'],no:['그것도 좋지.'],any:['음, 그렇지.','허허, 그런가.']};
+function npcIntent(x){ x=String(x||''); if(/안녕|하이|ㅎㅇ|반가/.test(x)) return 'greet'; if(/괜찮|다쳤|아파|살아/.test(x)) return 'ok'; if(/가자|출발|가보|이동|움직/.test(x)) return 'go'; if(/조용|쉿|닥쳐|소리/.test(x)) return 'quiet'; if(/고마|수고|잘했|최고/.test(x)) return 'thanks'; if(/무서|겁|쫄/.test(x)) return 'scared'; if(/배고|목마|밥|먹/.test(x)) return 'food'; if(/싸우|죽여|공격|쳐|패/.test(x)) return 'fight'; if(/ㅋㅋ|ㅎㅎ|하하|웃/.test(x)) return 'laugh'; if(/^(응|어|ㅇㅇ|그래|좋아|ㅇㅋ|오케)/.test(x.trim())) return 'yes'; if(/^(아니|ㄴㄴ|싫어|됐어)/.test(x.trim())) return 'no'; if(/\?|？|뭐|어디|어떻게|왜|누구|언제/.test(x)) return 'q'; return 'any' }
+const NPC_SICKSET=new Set(Object.values(NPC_SICK).flat().concat(NPC_SICK_KID));
+function npcSick(I){ return I.age==='어린이'?npcU(NPC_SICK_KID):npcU(NPC_SICK[I.tone]||NPC_SICK.dry) }
+function npcReplyLine(I,it){ if(I.age==='어린이') return npcU(NPC_RE_KID[it]||NPC_RE_KID.any); if(I.age==='노인'&&Math.random()<.6) return npcU(NPC_RE_OLD[it]||NPC_RE_OLD.any); const T=NPC_RE[it]||NPC_RE.any; return npcU(T[I.tone]||T.dry) }
+npcSay=function(P,id,x,ms){ setTimeout(()=>{ if(rt.party!==P||!x||!P.npc) return; if(P.dead[id]) return; if(P.kid&&P.kid.tg===id&&Date.now()<P.kid.until) return; const I=P.npc.info[id]; if(I&&P.inf===id&&!NPC_SICKSET.has(x)) x=npcSick(I);
+  pDeliver(P,'pchat',{data:{x,pid:P.id,mid:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)},by:id,isMe:false}) },ms||ri(900,2600)) };
+/* 내가 말하면 꼭 누군가 대답 · 이름을 부르면 그 사람이 */
+const _pSend110=ACT.pSend; ACT.pSend=function(){ const P=rt.party, n0=P?P.chat.length:0; const r=_pSend110.apply(this,arguments); try{ if(!P||!P.npc||P.chat.length<=n0) return r; const x=(P.chat[P.chat.length-1]||{}).x||''; const N=P.npc;
+  const live=N.ids.filter(id=>!P.dead[id]&&!(P.kid&&P.kid.tg===id&&Date.now()<P.kid.until)); if(!live.length) return r;
+  const named=live.filter(id=>{ const nm=N.info[id].name.split(/[\s(]/)[0]; return nm&&x.includes(nm) }); const it=npcIntent(x);
+  let who=named.length?named:[stPick(live)]; if(!named.length&&live.length>1&&(it==='ok'||it==='greet'||it==='go'||Math.random()<.3)) who=live.slice().sort(()=>Math.random()-.5).slice(0,2);
+  who.forEach((id,i)=>{ const I=N.info[id]; npcSay(P,id,P.inf===id?npcSick(I):npcReplyLine(I,it),ri(1100,2200)+i*1500) }) }catch(e){} return r };
+/* 동료가 감염되면 다른 동료가 반응 · 감염된 동료는 아픈 말 */
+setInterval(()=>{ try{ const P=rt.party, N=P&&P.npc; if(!N) return; const tg=P.inf;
+  if(tg&&N.infSeen!==tg+':'+(P.infS&&P.infS.r)){ N.infSeen=tg+':'+(P.infS&&P.infS.r); if(N.info[tg]&&P.infS&&P.infS.r===1){ const o=N.ids.filter(id=>id!==tg&&!P.dead[id]); if(o.length){ const id=stPick(o); npcSay(P,id,npcU(NPC_INFOTHER[N.info[id].tone]||NPC_INFOTHER.dry),ri(1500,2500)) } npcSay(P,tg,npcSick(N.info[tg]),ri(3000,4500)) } } }catch(e){} },1000);
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
