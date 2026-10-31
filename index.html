@@ -6332,7 +6332,7 @@ const _viewShop5=viewShop; viewShop=function(){ let h=_viewShop5();
   return h.replace(/<div class="card( wlock)?"><div class="row spread"><h3>([^<]*)<\/h3>/g,(m,lk,nm)=>{ const g=Object.values(GEAR).find(x=>x.n===nm&&x.lux); return g?`<div class="card lux${lk||''}"><div class="row spread"><h3>${nm} <em class="luxtag">명품</em></h3>`:m }) };
 
 /* ================= 처리할 일: 지금 처리하기 · 외면하면 대가 ================= */
-pendBar=function(){ const p=S.pend||[]; if(!p.length) return ''; const c={z:0,story:0,human:0,hunt:0}; p.forEach(x=>{ const k=x.k==='st'||x.k==='chain'?'story':x.k==='crew'?'human':x.k; c[k]=(c[k]||0)+1 });
+pendBar=function(){ const p=S.pend||[]; if(!p.length) return ''; const c={z:0,story:0,human:0,hunt:0}; p.forEach(x=>{ const k=x.k==='st'||x.k==='chain'||x.k==='zsp'?'story':x.k==='crew'?'human':x.k; c[k]=(c[k]||0)+1 });
   return `<div class="pendbar"><span class="tagx red">처리할 일 ${p.length}</span><span class="muted">${[c.hunt?`퇴치전 ${c.hunt}`:'',c.z?`감염자 ${c.z}`:'',c.story?`사건 ${c.story}`:'',c.human?`사람 ${c.human}`:''].filter(Boolean).join(' · ')}</span><button class="btn sm pri" data-act="pendNext" ${rt.enc?'disabled':''}>지금 처리하기</button><button class="btn sm ghost" data-act="pendSkip" data-all="0">외면하기</button>${p.length>1?`<button class="btn sm ghost" data-act="pendSkip" data-all="1">전부 외면</button>`:''}</div>` };
 function skipRisk(n,list){ return {res:Math.min(.4,.05+.04*n),money:Math.min(.25,.03*n),hp:4*n,mind:2*n,item:list.filter(x=>x.k==='z'||x.k==='hunt'||x.k==='human'||x.k==='crew').length} }
 ACT.pendSkip=el=>{ const all=el.dataset.all==='1', P=S.pend||[]; if(!P.length) return; const list=all?P.slice():[P[0]], R=skipRisk(list.length,list), m=S.money||0;
@@ -6517,7 +6517,7 @@ ACT.raidPick=el=>{ const id=el.dataset.id, p=rt.players.get(id), list=(p&&Array.
 /* ================= 파견: 돌아오지 않은 대원의 결말 ================= */
 const _resolveMission6=resolveMission; resolveMission=function(m){ const lost=(S.lostCrew||[]).filter(x=>x.mid===m.id), ids=m.crew.slice(); let lines=_resolveMission6(m); if(!Array.isArray(lines)) lines=[];
   const team=ids.map(crewById).filter(Boolean);
-  for(const c of team){ if(c.state!=='idle'||Math.random()>(.05+(c.risk?.08:0))*(1.4-(c.loy==null?30:c.loy)/100)) continue; S.crew=S.crew.filter(x=>x!==c); c.state='gone'; const st=folLose(.08); lines.push({k:'betray',t:`${c.name}은(는) 돌아오는 길에 무리를 이탈했다. 창고 열쇠도 함께 사라졌다.`,fx:['배신',...st],bad:3}); c.betray=1 }
+  for(const c of team){ if(c.state!=='idle'||(c.safeT||0)>Date.now()||Math.random()>(.05+(c.risk?.08:0))*(1.4-(c.loy==null?30:c.loy)/100)) continue; S.crew=S.crew.filter(x=>x!==c); c.state='gone'; const st=folLose(.08); lines.push({k:'betray',t:`${c.name}은(는) 돌아오는 길에 무리를 이탈했다. 창고 열쇠도 함께 사라졌다.`,fx:['배신',...st],bad:3}); c.betray=1 }
   for(const x of lost) lines.push({k:'taken',t:`${x.name}은(는) 돌아오지 않았다. 마지막 무전: ${x.by}님 무리에게 ${x.why==='charm'?'넘어갔다 (배신).':'붙잡혀 끌려갔다.'}`,fx:[x.why==='charm'?'배신':'납치'],bad:3});
   S.lostCrew=(S.lostCrew||[]).filter(x=>x.mid!==m.id);
   const sum=[]; for(const c of team){ if(c.state==='dead') sum.push(`${c.name} · 사망`); else if(c.state==='infected') sum.push(`${c.name} · 감염 (10분 안에 치료 필요)`); else if(c.betray) sum.push(`${c.name} · 배신`) } for(const x of lost) sum.push(`${x.name} · ${x.why==='charm'?'배신':'납치'} (${x.by})`);
@@ -7482,7 +7482,7 @@ setInterval(()=>{ try{ if(!S||!S.intro||rt.enc||rt.party||!$('modal').hidden||do
   if(asker&&Math.random()<.25+asker.aff/250){ return crewAsk(asker) }
   const giver=idle.filter(c=>c.aff>=50).sort(()=>Math.random()-.5)[0];
   if(giver&&Math.random()<.35){ const cheap=SHOP_BUY.filter(i=>i.k&&ITEMS[i.k]&&i.p<=60), fx=[]; if(Math.random()<.03){ const g=gainGear(null,crewNm(giver)); if(g) fx.push(GEAR[g].n); else { S.inv.ampoule=(S.inv.ampoule||0)+1; fx.push(ITEMS.ampoule.n) } } else { const it=stPick(cheap); S.inv[it.k]=(S.inv[it.k]||0)+1; fx.push(ITEMS[it.k].n) } markSave(); return whenFree(()=>outcome({n:crewNm(giver)},'선물',`${crewNm(giver)}이(가) 쭈뼛거리며 무언가를 내밀었다.\n"${(typeof crewGive==='function'?crewGive(giver):'…이거, 오다가 주웠어요.')}"`,fx,true)) }
-  const flake=idle.filter(c=>c.loy<15)[0]; if(flake&&Math.random()<.3){ S.crew=S.crew.filter(x=>x!==flake); const lost=folLose(.06); markSave(); hx('crewDead',0); return whenFree(()=>outcome({n:'캠프'},'탈주',`아침에 보니 ${crewNm(flake)}의 자리가 비어 있었다. 창고 문도 열려 있었다.`,['대원 이탈',...lost],false)) } }catch(e){} },20000);
+  const flake=idle.filter(c=>c.loy<15&&!((c.safeT||0)>Date.now()))[0]; if(flake&&Math.random()<.3){ S.crew=S.crew.filter(x=>x!==flake); const lost=folLose(.06); markSave(); hx('crewDead',0); return whenFree(()=>outcome({n:'캠프'},'탈주',`아침에 보니 ${crewNm(flake)}의 자리가 비어 있었다. 창고 문도 열려 있었다.`,['대원 이탈',...lost],false)) } }catch(e){} },20000);
 function crewAsk(c){ rt.modalLock=true; const want=stPick(['같이 밤하늘 좀 봐 줄래요?','오늘 하루만 옆에 있어 주면 안 돼요?','제 얘기 좀 들어 줄 수 있어요?','같이 밥 먹어요. 둘이서.','저 잘하고 있는 거 맞죠? 말해 줘요.']);
   openModal(`<div class="eyebrow">CREW <span class="dash"></span> ${esc(crewDesc(c))} · ${esc(lvN(AFF_N,c.aff))}</div><h2>${esc(crewNm(c))}이(가) 다가왔다</h2><p style="margin:0;line-height:1.7">"${esc(want)}"</p><div class="story-opts"><button class="btn opt" data-ca="1">응, 그러자</button><button class="btn opt" data-ca="0">지금은 안 돼</button></div>`);
   $('mbox').querySelectorAll('[data-ca]').forEach(b=>b.onclick=()=>{ const y=b.dataset.ca==='1', fx=[]; if(y){ cAdd(c,'aff',4); cAdd(c,'loy',3); mindAdd(4); fx.push('친밀도 +4','충성도 +3','정신 +4') } else { const a=ri(4,7), l=ri(3,6); cAdd(c,'aff',-a); cAdd(c,'loy',-l); fx.push(`친밀도 -${a}`,`충성도 -${l}`) } markSave();
@@ -10379,7 +10379,7 @@ function exReturn(e){ if(!e||!e.c) return false; const c=e.c, W=EX_WHY[e.why]||E
       <blockquote class="exq">${esc(stPick(W.t))}</blockquote>
       <p class="note">능력치 합 ${s}${all.length?` · 지금 가장 약한 대원 ${mn}`:''}${S.autoNoWeak&&s<=mn?' · 약한 사람 자동 거절이 켜져 있지만, 돌아온 대원은 직접 정해요':''}${full?' · 자리가 가득 차서 받으려면 한 명을 내보내야 해요':''}</p>
       <div class="row"><button class="btn pri" id="exYes">다시 받아 준다</button><button class="btn" id="exNo">돌려보낸다</button></div>`);
-    $('exYes').onclick=()=>{ rt.modalLock=false; closeModal(); c.state='idle'; delete c.tmp; c.loy=W.loy; c.hp=clamp(c.hp||60,30,100); c.loveT=0;
+    $('exYes').onclick=()=>{ rt.modalLock=false; closeModal(); c.state='idle'; delete c.tmp; c.loy=Math.max(30,W.loy); c.safeT=Date.now()+60*60000; c.hp=clamp(c.hp||60,30,100); c.loveT=0;
       if(crewAlive().length<CREW_MAX()){ const r=addCrew('돌아온 대원',null,c); toast(r?`${crewNm(c)}이(가) 다시 합류했어요 (충성 ${c.loy})`:'받지 못했어요.',true) }
       else { (rt.crewQ=rt.crewQ||[]).push({nc:c,origin:'돌아온 대원',back:1}); whenFree(crewSwapNext) }
       markSave(); schedulePub(2000); render() };
@@ -11945,8 +11945,8 @@ ACT.exHunt=el=>{ const id=el.dataset.id, e=exAlive().find(x=>x.c.id===id); if(!e
     <div class="story-opts"><button class="btn opt warn" id="exKill">죽인다 <small class="optlv">전투 · 정신 -6</small></button><button class="btn opt" id="exBuy" ${(S.money||0)<cost?'disabled':''}>돈으로 회유해 데려온다 <small class="optlv">$${fmt(cost)} · 성공 ${Math.round(pct*100)}%</small></button><button class="btn opt" id="exLeave">그냥 돌아선다</button></div>`);
   $('exLeave').onclick=()=>{ rt.modalLock=false; closeModal(); toast(`${nm}을(를) 두고 돌아섰다.`); render() };
   $('exBuy').onclick=()=>{ if((S.money||0)<cost) return; S.money-=cost; const ok=Math.random()<pct; let t, fx=[`$-${fmt(cost)}`];
-    if(ok){ exDrop(e); c.state='idle'; delete c.tmp; c.loy=clamp((W.loy||30)+10,10,70); c.aff=Math.max(0,(c.aff||0)-5); c.hp=clamp(c.hp||60,30,100); c.loveT=0; t=`${nm}은(는) 돈을 받아 쥐고 한참 말이 없었다. "…알았어. 이번엔 끝까지 갈게."`;
-      if(crewAlive().length<CREW_MAX()){ const r=addCrew('다시 데려온 대원',null,c); fx.push(r?`${nm} 재합류 (충성 ${c.loy})`:'자리가 없어 받지 못함') } else { (rt.crewQ=rt.crewQ||[]).push({nc:c,origin:'다시 데려온 대원',back:1}); fx.push('자리가 가득 차 누구를 내보낼지 골라야 해요'); setTimeout(()=>whenFree(crewSwapNext),400) } sfx('coin') }
+    if(ok){ exDrop(e); c.state='idle'; delete c.tmp; c.loy=clamp((W.loy||30)+20,40,75); c.aff=Math.max(0,(c.aff||0)-5); c.safeT=Date.now()+90*60000; c.hp=clamp(c.hp||60,30,100); c.loveT=0; t=`${nm}은(는) 돈을 받아 쥐고 한참 말이 없었다. "…알았어. 이번엔 끝까지 갈게."`;
+      if(crewAlive().length<CREW_MAX()){ const r=addCrew('다시 데려온 대원',null,c); fx.push(r?`${nm} 재합류 (충성 ${c.loy})`:'자리가 없어 받지 못함') } else { (rt.crewQ=rt.crewQ||[]).push({nc:c,origin:'다시 데려온 대원',back:1,hunt:{e,cost}}); fx.push('자리가 가득 차 누구를 내보낼지 골라야 해요 (안 받으면 돈은 돌려받아요)'); setTimeout(()=>whenFree(crewSwapNext),400) } sfx('coin') }
     else { const back=Math.round(cost*.5); addMoney(back); fx.push(`$${fmt(back)} 돌려받음`); t=`${nm}은(는) 돈을 세다가 웃었다. "이걸로 날 사겠다고?" 반만 던져 주고 등을 돌렸다.`; mindAdd(-3); fx.push('정신 -3') }
     $('mbox').innerHTML=`<div class="eyebrow">${ok?'RETURN':'REFUSED'}</div><h2>${esc(nm)}</h2><p style="margin:0;line-height:1.7">${esc(t)}</p><ul class="ev-eff">${fx.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><button class="btn pri" id="exOk">계속</button>`; $('exOk').onclick=()=>{ rt.modalLock=false; closeModal(); markSave(); render() } };
   $('exKill').onclick=()=>{ rt.modalLock=false; closeModal(); mindAdd(-6,'옛 대원에게 무기를 겨눴다'); const strong=sum>=26||e.why==='betray', k=strong&&ZOMBIES.enforcer?'enforcer':'raider';
@@ -12087,6 +12087,125 @@ const _cevListDraw114=cevListDraw; cevListDraw=function(){ _cevListDraw114.apply
     sm.prepend(wrap) });
   cevSelSync() };
 (()=>{ const st=document.createElement('style'); st.textContent=`.cevselbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 8px}.cevselbar .btn{margin-left:auto}.cevselw{display:inline-flex;align-items:center;padding:2px 6px 2px 0;cursor:pointer}.cevselw input{width:18px;height:18px;margin:0;cursor:pointer}.cev-i.picked{outline:2px solid var(--warn,#c33);outline-offset:-2px}`; document.head.append(st) })();
+
+/* ================= p115: 다시 데려온 대원 — 자리 없어서 안 받으면 돈 돌려받고 목록에 남김 · 떠난 대원 나이/성별 보정 ================= */
+const _crewSwap115=crewSwapNext; crewSwapNext=function(){ const it=(rt.crewQ||[])[0]; const r=_crewSwap115.apply(this,arguments); try{ if(it&&it.hunt&&$('swNo')){ $('swNo').addEventListener('click',()=>{ const H=it.hunt; if(!H||H.done) return; H.done=1; S.exCrew=(S.exCrew||[]).filter(x=>x.c.id!==H.e.c.id).concat(Object.assign(H.e,{huntLock:0,t:H.e.t})); addMoney(H.cost); toast(`${crewNm(H.e.c)}을(를) 받지 않았어요. 낸 돈 $${fmt(H.cost)}은 돌려받았어요.`,true); markSave() },true) } }catch(e){} return r };
+function exFix(e){ try{ const c=e&&e.c; if(!c||!c.origin) return; const w=roleWant(c.origin); if(w.sex&&c.sex!==w.sex) c.sex=w.sex; if(w.age&&c.age!==w.age) c.age=w.age }catch(x){} }
+const _exRow115=exRow; exRow=function(e){ exFix(e); return _exRow115.apply(this,arguments) };
+
+/* ================= p116: 조사 중 구역별 특수 사건 (직접 조작하는 미니 게임 10종) ================= */
+const SPX={}; let SPS=null;
+function spDraw(o){ /* o:{eb,t,body,btns:[{t,cls,dis,f,sub}]} */ rt.modalLock=true; if($('modal').hidden) openModal('<div></div>');
+  $('mbox').innerHTML=`<div class="eyebrow">${o.eb||'SPECIAL'} <span class="dash"></span> ${esc(o.place||'')}</div><h2>${esc(o.t)}</h2><div class="spx">${o.body||''}</div><div class="story-opts spxb">${(o.btns||[]).map((b,i)=>`<button class="btn opt ${b.cls||''}" data-sx="${i}" ${b.dis?'disabled':''}>${esc(b.t)}${b.sub?` <small class="optlv">${esc(b.sub)}</small>`:''}</button>`).join('')}</div>`;
+  $('mbox').querySelectorAll('[data-sx]').forEach(x=>x.onclick=()=>{ const b=o.btns[+x.dataset.sx]; if(b&&!b.dis) b.f() }) }
+function spGive(o){ const fx=[]; for(const k in o.res||{}){ const v=Math.round(o.res[k]); if(v>0){ gain(k,v); fx.push(`${RES[k].n} +${v}`) } else if(v<0){ const q=Math.min(S.res[k]||0,-v); S.res[k]-=q; if(q) fx.push(`${RES[k].n} -${q}`) } }
+  if(o.$){ if(o.$>0) addMoney(o.$); else S.money=Math.max(0,(S.money||0)+o.$); fx.push(`$${o.$>0?'':'-'}${fmt(Math.abs(o.$))}`) }
+  for(const k of o.items||[]) if(ITEMS[k]){ S.inv[k]=(S.inv[k]||0)+1; fx.push(ITEMS[k].n) }
+  if(o.hp){ S.hp=clamp(S.hp+o.hp,1,maxHp()); fx.push(`체력 ${o.hp>0?'+':''}${o.hp}`) } if(o.mind) fx.push(mindAdd(o.mind)); if(o.xp){ addXp(o.xp); fx.push(`XP +${o.xp}`) } if(o.st) fx.push(addSt(o.st,o.stm||20,true)); markSave(); return fx.filter(Boolean) }
+function spEnd(t,text,o,ok,after){ const fx=spGive(o||{}); try{ FXL.post(ok?{}:{hp:(o&&o.hp)||-10}) }catch(e){} $('mbox').innerHTML=`<div class="eyebrow">${ok?'RESULT':'FAILED'} <span class="dash"></span> ${esc(SPS&&SPS.place||'')}</div><h2>${esc(t)}</h2><p style="margin:0;line-height:1.7">${esc(text)}</p>${fx.length?`<ul class="ev-eff">${fx.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}<button class="btn pri" id="spOk">계속</button>`;
+  $('spOk').onclick=()=>{ rt.modalLock=false; closeModal(); SPS=null; render(); if(after) setTimeout(after,300) } }
+const spFight=(pool,n)=>{ const P=pool||(MAP[spZ()]||MAP[S.pos]).zp; return ()=>{ const q=[]; for(let i=1;i<(n||1);i++) q.push(pickZ(P)); startEnc({pool:P,src:'sp',queue:q}) } };
+const mtr=(v,cls)=>`<div class="spm ${cls||''}"><i style="width:${clamp(v,0,100)}%"></i></div>`;
+const spZ=()=>MAP[rt.spxZ]?rt.spxZ:S.pos; const spPl=()=>(MAP[spZ()]||{}).n||''; const dgOf=()=>Math.max(1,(MAP[spZ()]||{}).dg||1);
+/* 1. 폐건물: 무너지는 층 — 더 올라갈수록 많이 얻지만 언제 무너질지 모른다 */
+SPX.ruin=()=>{ const s=SPS={place:spPl(),floor:1,risk:ri(5,12),got:{scrap:0,wood:0},items:[]};
+  const hint=()=>s.risk<25?'바닥이 아직 단단하다.':s.risk<45?'발밑에서 삐걱 소리가 난다.':s.risk<65?'천장에서 먼지가 후두둑 떨어진다.':s.risk<80?'벽에 금이 쩍쩍 번진다. 계단이 휘었다.':'건물 전체가 신음한다. 지금 내려가야 한다.';
+  const draw=(msg)=>spDraw({eb:'COLLAPSE',place:s.place,t:`무너지는 건물 · ${s.floor}층`,body:`<p class="ch-p">${msg?esc(msg)+'<br>':''}${esc(hint())}</p><div class="spr"><span>붕괴 위험 (느낌)</span>${mtr(s.risk+ri(-8,8),'red')}</div><p class="note">챙긴 것: 고철 ${s.got.scrap} · 목재 ${s.got.wood}${s.items.length?' · '+s.items.map(k=>ITEMS[k].n).join(', '):''}</p>`,
+    btns:[{t:'한 층 더 올라간다',sub:'더 많이 · 더 위험',f:()=>{ if(Math.random()*100<s.risk){ sfx('bang'); FXL.shake(14,800); const keep={res:{scrap:Math.floor(s.got.scrap*.3),wood:Math.floor(s.got.wood*.3)},hp:-ri(15,28),xp:15}; hzLock(15,'잔해 밑에 깔렸다. 숨만 쉰다.'); return spEnd('무너졌다',`${s.floor+1}층 계단을 밟는 순간 바닥이 꺼졌다. 잔해 속에서 겨우 기어 나왔다. 챙긴 것 대부분이 묻혔다.`,keep,false) }
+      s.floor++; const m=dgOf()*(1+s.floor*.35); const a=Math.round(ri(3,7)*m), b=Math.round(ri(2,6)*m); s.got.scrap+=a; s.got.wood+=b; if(Math.random()<.18) s.items.push(stPick(['bandage','flare','cigs','painkiller','mapkit'].filter(k=>ITEMS[k]))); s.risk+=ri(9,17); sfx('rummage'); draw(`${s.floor}층. 고철 ${a}, 목재 ${b}를 챙겼다.`) }},
+     {t:'여기서 내려간다',f:()=>spEnd('무사히 내려왔다',`${s.floor}층까지 털고 내려왔다. 등 뒤에서 계단 하나가 무너졌다.`,{res:s.got,items:s.items,xp:10+s.floor*6},true)}]});
+  draw('계단참에 "붕괴 위험"이라고 적힌 테이프가 늘어져 있다. 위층에는 아무도 손대지 않은 것 같다.') };
+/* 2. 식량: 라벨 없는 통조림 — 냄새로 가려내고, 열어 볼지 정한다 */
+SPX.food=()=>{ const s=SPS={place:spPl(),cans:Array.from({length:6},()=>{ const r=Math.random(); return {k:r<.6?'good':r<.85?'rot':'rat',open:0,sniff:null} }),sn:3,food:0,bad:0};
+  const tag=c=>c.open?{good:'🥫 먹을 수 있다',rot:'🤢 썩었다',rat:'🐀 쥐 떼'}[c.k]:c.sniff?`👃 ${c.sniff}`:'? ? ?';
+  const draw=msg=>spDraw({eb:'PANTRY',place:s.place,t:'라벨 없는 통조림',body:`<p class="ch-p">${esc(msg||'창고 구석에 라벨이 떨어져 나간 통조림 여섯 개. 어떤 건 부풀어 있다. 통조림을 누르면 열어 본다. 먼저 냄새를 맡아 볼 수도 있다(3번).')}</p><div class="spcans">${s.cans.map((c,i)=>`<button class="btn sm spcan${c.open?' on':''}" data-can="${i}" ${c.open?'disabled':''}>${i+1}번<br><small>${esc(tag(c))}</small></button>`).join('')}</div><p class="note">냄새 맡기 ${s.sn}번 남음 · 얻은 식량 ${s.food}</p>`,
+    btns:[{t:s.mode==='sniff'?'냄새 맡기 취소':`냄새를 맡아 본다 (${s.sn})`,dis:!s.sn&&s.mode!=='sniff',f:()=>{ s.mode=s.mode==='sniff'?'':'sniff'; draw(s.mode==='sniff'?'냄새를 맡을 통조림을 고르세요.':'열어 볼 통조림을 누르세요.') }},{t:'챙긴 것만 들고 간다',f:()=>spEnd('창고를 나왔다',`통조림 ${s.cans.filter(c=>c.open&&c.k==='good').length}개를 챙겼다.`,{res:{food:s.food},xp:12},s.food>0)}]});
+  document.addEventListener('click',function h(e){ const b=e.target.closest&&e.target.closest('[data-can]'); if(!SPS||SPS!==s){ document.removeEventListener('click',h,true); return } if(!b) return; const c=s.cans[+b.dataset.can]; if(!c||c.open) return;
+    if(s.mode==='sniff'&&s.sn>0){ s.sn--; const ok=Math.random()<.45+ST('per')*.05; const k=ok?c.k:stPick(['good','rot','rat']); c.sniff={good:'괜찮은 냄새',rot:'시큼한 냄새',rat:'뭔가 바스락거린다'}[k]; s.mode=''; return draw(`${+b.dataset.can+1}번: ${c.sniff}. ${ok?'':'(확신은 없다)'}`) }
+    c.open=1; s.mode=''; const fin=()=>{ if(s.cans.every(x=>x.open)) setTimeout(()=>{ if(SPS===s) spEnd('통조림을 다 열었다',`식량 ${s.food}을(를) 챙겼다.`,{res:{food:s.food},xp:14},s.food>0) },900) }; setTimeout(fin,0); if(c.k==='good'){ const f=Math.round(ri(3,6)*dgOf()); s.food+=f; sfx('can'); return draw(`멀쩡한 콩 통조림이다. 식량 +${f}`) }
+    if(c.k==='rot'){ sfx('hurt'); S.hunger=Math.max(0,S.hunger-8); if(Math.random()<.35) addSt('sick',20,true); return draw('뚜껑을 따자 썩은 국물이 얼굴에 튀었다. 속이 뒤집힌다.') }
+    sfx('growl'); S.hp=Math.max(1,S.hp-6); const g=s.cans.find(x=>x.open&&x.k==='good'&&!x.lost); if(g){ g.lost=1; s.food=Math.max(0,s.food-3) } FXL.shake(5,300); draw('통조림이 아니라 쥐구멍이었다. 쥐 떼가 쏟아져 나와 손을 물고, 챙겨 둔 통조림 하나를 굴려 갔다.') },true);
+  draw() };
+/* 3. 의료: 디지털 약품 금고 — 단서로 비밀번호 3자리 맞히기 (자리·숫자 힌트) */
+SPX.med=()=>{ const code=[ri(0,9),ri(0,9),ri(0,9)], s=SPS={place:spPl(),code,guess:[0,0,0],tries:3,log:[]};
+  const cl=[]; cl.push(`첫 자리는 ${code[0]%2?'홀수':'짝수'}`); cl.push(`세 숫자를 더하면 ${code[0]+code[1]+code[2]}`); cl.push(code[1]>code[2]?'가운데 숫자가 마지막보다 크다':code[1]<code[2]?'가운데 숫자가 마지막보다 작다':'가운데 숫자와 마지막 숫자가 같다'); if(Math.random()<.5+ST('per')*.04) cl.push(`어딘가에 ${code[ri(0,2)]}이(가) 들어간다`);
+  const draw=msg=>spDraw({eb:'SAFE',place:s.place,t:'약품 금고',body:`<p class="ch-p">${esc(msg||'수술실 옆 약품 금고. 디지털 자물쇠는 아직 배터리가 살아 있다. 세 번 틀리면 경보가 울릴 것 같다.')}</p><div class="spclue"><b>벽과 차트에서 찾은 메모</b>${cl.map(x=>`<span>📝 ${esc(x)}</span>`).join('')}</div><div class="spdial">${s.guess.map((d,i)=>`<div><button class="btn sm" data-dd="${i}:1">▲</button><b class="num">${d}</b><button class="btn sm" data-dd="${i}:-1">▼</button></div>`).join('')}</div>${s.log.length?`<div class="splog">${s.log.map(x=>`<p>${esc(x)}</p>`).join('')}</div>`:''}<p class="note">남은 기회 ${s.tries}</p>`,
+    btns:[{t:'비밀번호 입력',cls:'pri',f:()=>{ const g=s.guess, right=g.filter((d,i)=>d===code[i]).length, near=[0,1,2].reduce((a,i)=>a+(g[i]!==code[i]&&code.some((c,j)=>j!==i&&c===g[i]&&g[j]!==code[j])?1:0),0);
+      if(right===3){ sfx('equip'); const it=['antibio','painkiller','medkit'].filter(k=>ITEMS[k]); if(Math.random()<.25&&ITEMS.serum) it.push('serum'); return spEnd('금고가 열렸다','삐빅. 초록불. 안에는 아무도 손대지 않은 약이 가지런히 남아 있었다.',{res:{med:Math.round(ri(2,4)*dgOf())},items:[stPick(it),stPick(it)],xp:30},true) }
+      s.tries--; s.log.unshift(`${g.join('')} → 자리까지 맞음 ${right} · 숫자만 맞음 ${near}`); sfx('alert'); FXL.flicker();
+      if(s.tries<=0){ sfx('alarm'); FXL.flash('rgba(200,0,0,.5)',600); return spEnd('경보가 울렸다','삐이이— 병동 전체에 경보가 울렸다. 복도 끝에서 환자복 차림의 놈들이 몰려온다.',{mind:-4,xp:8},false,spFight(null,2)) } draw('삐— 틀렸다. 화면이 붉게 깜빡인다.') }},{t:'포기하고 나간다',f:()=>spEnd('금고를 두고 나왔다','다음에 다시 올 수 있을지는 모르겠다.',{xp:5},false)}]});
+  document.addEventListener('click',function h(e){ if(SPS!==s){ document.removeEventListener('click',h,true); return } const b=e.target.closest&&e.target.closest('[data-dd]'); if(!b) return; const [i,d]=b.dataset.dd.split(':').map(Number); s.guess[i]=(s.guess[i]+d+10)%10; draw() },true);
+  draw() };
+/* 4. 장비: 무기고 자물쇠 — 바늘이 표시 칸에 들어올 때 멈추기 (3단) */
+SPX.arms=()=>{ const s=SPS={place:spPl(),stage:0,fail:0,pos:0,dir:1,zone:ri(15,70),zw:clamp(14+ST('agi')*1.6,14,34),sp:1.4+dgOf()*.25,raf:0};
+  const tick=()=>{ if(SPS!==s) return; s.pos+=s.dir*s.sp; if(s.pos>=100){ s.pos=100; s.dir=-1 } if(s.pos<=0){ s.pos=0; s.dir=1 } const n=document.getElementById('spNeedle'); if(n) n.style.left=s.pos+'%'; s.raf=requestAnimationFrame(tick) };
+  const draw=msg=>{ spDraw({eb:'ARMORY',place:s.place,t:`무기고 자물쇠 · ${s.stage+1}/3`,body:`<p class="ch-p">${esc(msg||'경찰서 무기고. 낡은 기계식 자물쇠다. 바늘이 초록 칸에 들어왔을 때 멈춰야 한다. 민첩할수록 칸이 넓다.')}</p><div class="sptrack"><i class="spzone" style="left:${s.zone}%;width:${s.zw}%"></i><i class="spneedle" id="spNeedle" style="left:${s.pos}%"></i></div><p class="note">실패 ${s.fail}/2 · 두 번 실패하면 자물쇠가 망가진다</p>`,
+    btns:[{t:'지금 멈춘다',cls:'pri',f:()=>{ const hit=s.pos>=s.zone&&s.pos<=s.zone+s.zw; if(hit){ s.stage++; sfx('click'); if(s.stage>=3){ cancelAnimationFrame(s.raf); const items=['ammo','grenade','flare'].filter(k=>ITEMS[k]); let extra=''; if(Math.random()<.35){ try{ const g=gainGear(null,'무기고'); if(g) extra=GEAR[g].n }catch(e){} } return spEnd('무기고가 열렸다',`철컥. 문이 열렸다. 선반 위에 아직 쓸 만한 것들이 남아 있다.${extra?' '+extra+'도 있다.':''}`,{res:{scrap:Math.round(ri(4,8)*dgOf())},items:[stPick(items),stPick(items)],xp:28},true) } s.zone=ri(10,75); s.zw=Math.max(10,s.zw-3); s.sp+=.5; return draw('딸깍. 다음 핀.') }
+      s.fail++; sfx('hurt'); FXL.shake(5,300); S.hp=Math.max(1,S.hp-6); if(s.fail>=2){ cancelAnimationFrame(s.raf); return spEnd('자물쇠가 망가졌다','핀이 부러졌다. 손등을 긁은 피가 자물쇠를 적신다. 이 문은 이제 안 열린다.',{xp:8},false) } draw('틀렸다. 튕겨 나온 핀에 손이 베였다. (체력 -6)') }},{t:'포기한다',f:()=>{ cancelAnimationFrame(s.raf); spEnd('그만뒀다','무기고를 두고 나왔다.',{xp:4},false) }}]}); cancelAnimationFrame(s.raf); s.raf=requestAnimationFrame(tick) };
+  draw() };
+/* 5. 연료: 사이펀 — 펌프질할수록 연료가 늘지만 유증기에 취한다 */
+SPX.fuel=()=>{ const s=SPS={place:spPl(),pumps:0,fuel:0,fume:0};
+  const draw=msg=>spDraw({eb:'SIPHON',place:s.place,t:'버려진 유조차',body:`<p class="ch-p">${esc(msg||'옆으로 누운 유조차. 호스를 꽂고 펌프질을 한다. 기름 냄새에 머리가 띵하다.')}</p><div class="spr"><span>모은 연료</span>${mtr(s.fuel*12)}<b class="num">${s.fuel}</b></div><div class="spr"><span>어지러움</span>${mtr(s.fume,'red')}</div>`,
+    btns:[{t:'한 번 더 펌프질',f:()=>{ s.pumps++; const f=Math.random()<.65?1:0; s.fuel+=f; s.fume+=ri(10,20)-Math.round(ST('end')*.8); sfx('rummage'); if(s.fume>=100){ hzLock(18,'세상이 빙글빙글 돈다. 기름 웅덩이에 얼굴을 묻었다.'); return spEnd('정신을 잃었다','눈을 떠 보니 호스가 빠져 기름이 다 쏟아져 있었다. 머리가 깨질 것 같다.',{res:{fuel:Math.floor(s.fuel/2)},hp:-10,st:'conc',stm:15,xp:10},false) } draw(f?'콸콸. 통이 조금 찼다.':'호스에서 공기만 빨려 나왔다.') }},{t:'멈추고 통을 챙긴다',f:()=>spEnd('연료를 챙겼다',`연료 ${s.fuel}통. 손에서 기름 냄새가 며칠은 갈 것 같다.`,{res:{fuel:s.fuel},xp:8+s.pumps*2},s.fuel>0)}]});
+  draw() };
+/* 6. 오염지대: 떼 사이로 잠입 — 소리 단서로 길 고르기 */
+SPX.horde=()=>{ const s=SPS={place:spPl(),step:0,det:0,rock:1,paths:null};
+  const roll=()=>{ const p=[0,1,2].map(()=>ri(0,2)); p[ri(0,2)]=0; s.paths=p; const acc=.55+ST('per')*.04; s.hint=p.map(d=>{ const v=Math.random()<acc?d:ri(0,2); return ['조용하다','신음이 몇 들린다','신음이 겹겹이 들린다'][v] }) };
+  roll(); const draw=msg=>spDraw({eb:'STEALTH',place:s.place,t:`떼 사이를 지나간다 · ${s.step+1}/5`,body:`<p class="ch-p">${esc(msg||'건너편 약국 앞에 짐가방 더미가 보인다. 그 사이를 수십 마리가 서성인다. 소리를 듣고 길을 골라야 한다.')}</p><div class="spr"><span>들킬 위험</span>${mtr(s.det,'red')}</div><div class="sppath">${['왼쪽 골목','가운데 차 사이','오른쪽 담장'].map((n,i)=>`<span><b>${n}</b><small>${esc(s.hint[i])}</small></span>`).join('')}</div>`,
+    btns:[0,1,2].map(i=>({t:['왼쪽 골목으로','차 사이로','담장을 따라'][i],f:()=>{ const d=s.paths[i]; s.det+=d*ri(15,25)+ri(0,6); sfx(d?'steps':'click'); if(d===2) FXL.flicker();
+      if(s.det>=100){ sfx('scream'); FXL.flash('rgba(200,0,0,.5)',500); return spEnd('들켰다','한 놈이 고개를 돌렸다. 곧 전부가 돌았다.',{mind:-5,xp:12},false,spFight(null,3)) }
+      s.step++; if(s.step>=5){ return spEnd('짐 더미에 닿았다','숨죽인 채 가방들을 뒤졌다. 피난 가던 사람들이 남긴 것들이다.',{res:{food:Math.round(ri(5,10)*dgOf()),scrap:Math.round(ri(4,8)*dgOf())},$:Math.round(ri(30,70)*dgOf()),items:[stPick(['bandage','painkiller','ampoule','cigs'].filter(k=>ITEMS[k]))],xp:40},true) } roll(); draw(d?'바로 옆에서 놈이 킁킁거렸다. 숨을 멈췄다.':'아무도 눈치채지 못했다.') }})).concat(s.rock?[{t:'돌을 던져 유인한다 (1번)',f:()=>{ s.rock=0; s.det=Math.max(0,s.det-25); sfx('bang'); draw('멀리 던진 돌에 놈들이 우르르 몰려갔다.') }}]:[])});
+  draw() };
+/* 7. 무리 구역: 주사위 내기 — 속임수를 쓸 수도 있다 */
+SPX.gang=()=>{ const s=SPS={place:spPl(),round:0,net:0};
+  const draw=msg=>{ const m=S.money||0; spDraw({eb:'GAMBLE',place:s.place,t:`드럼통 옆 주사위 판 · ${s.round}/3판`,body:`<p class="ch-p">${esc(msg||'무리 놈들이 드럼통 불가에서 주사위를 굴린다. "한 판 할래? 판돈은 달러. 지면 웃고 가, 속이면 손가락 두고 가."')}</p><p class="note">지금까지 ${s.net>=0?'+':''}$${fmt(s.net)} · 가진 돈 $${fmt(m)}</p>`,
+    btns:[20,50,100].map(b=>({t:`$${b} 건다`,dis:m<b||s.round>=3,f:()=>play(b,false)})).concat([{t:'속임수를 쓴다 ($50)',sub:'민첩',dis:m<50||s.round>=3,f:()=>play(50,true)},{t:'일어난다',f:()=>spEnd('판을 접었다',s.net>=0?`"운 좋은 놈이네." 그들이 침을 뱉었다. 주머니가 두둑하다.`:'"또 와." 그들이 웃었다. 주머니가 가볍다.',{xp:10},s.net>=0)}])}) };
+  const play=(b,cheat)=>{ s.round++; const me=ri(1,6)+ri(1,6)+(cheat?3:0), them=ri(1,6)+ri(1,6); sfx('dice');
+    if(cheat&&Math.random()<clamp(.35-ST('agi')*.03,.08,.35)){ S.money=Math.max(0,(S.money||0)-b*2); s.net-=b*2; sfx('hurt'); FXL.shake(10,500); const h=ri(10,18); S.hp=Math.max(1,S.hp-h);
+      if(Math.random()<.35) return spEnd('속임수가 들켰다',`소매에서 주사위가 굴러떨어졌다. 웃음이 멎었다. "데려가."`,{xp:6},false,()=>capStart('…자루가 씌워졌다. 놈들의 웃음소리가 멀어진다'));
+      return spEnd('속임수가 들켰다',`소매에서 주사위가 굴러떨어졌다. 주먹이 쏟아졌다. 판돈의 두 배를 뺏기고 쫓겨났다. (체력 -${h})`,{xp:6},false) }
+    if(me>them){ addMoney(b); s.net+=b; draw(`나 ${me} : 놈 ${them}. 이겼다. +$${b}`) } else if(me<them){ S.money=Math.max(0,(S.money||0)-b); s.net-=b; draw(`나 ${me} : 놈 ${them}. 졌다. -$${b}`) } else draw(`나 ${me} : 놈 ${them}. 비겼다.`); markSave() };
+  draw() };
+/* 8. 잠긴 창고: 경보 장치 해제 — 단서로 전선 자르는 순서 맞히기 */
+SPX.cache=()=>{ const C=['빨강','파랑','노랑','초록'], ord=C.slice().sort(()=>Math.random()-.5), s=SPS={place:spPl(),ord,cut:[],err:0};
+  const cl=[]; const ix=c=>ord.indexOf(c); cl.push(`${ord[0]}은(는) 가장 먼저 자른다`); const a=ord[1],b=ord[2]; cl.push(`${a}은(는) ${b}보다 먼저`); cl.push(`${ord[3]}은(는) ${Math.random()<.5?'마지막':'세 번째가 아니다'}`); if(Math.random()<.4+ST('per')*.04) cl.push(`${ord[2]}은(는) 두 번째가 아니다`);
+  const draw=msg=>spDraw({eb:'ALARM',place:s.place,t:'경보 장치',body:`<p class="ch-p">${esc(msg||'창고 문에 경보 장치가 달려 있다. 순서대로 전선 네 가닥을 끊어야 한다. 바닥에 찢어진 설명서 조각이 있다.')}</p><div class="spclue"><b>설명서 조각</b>${cl.map(x=>`<span>📄 ${esc(x)}</span>`).join('')}</div><p class="note">잘린 전선: ${s.cut.join(' → ')||'없음'} · 실수 ${s.err}/2</p>`,
+    btns:C.filter(c=>!s.cut.includes(c)).map(c=>({t:`${c} 전선을 끊는다`,f:()=>{ if(c===ord[s.cut.length]){ s.cut.push(c); sfx('click'); if(s.cut.length===4) return spEnd('경보가 꺼졌다','마지막 전선이 끊기자 붉은 불이 꺼졌다. 문이 스르르 열린다.',{res:{scrap:Math.round(ri(5,9)*dgOf()),elec:ri(1,2),food:Math.round(ri(3,6)*dgOf())},items:[stPick(['toolkit','flare','bandage','pick'].filter(k=>ITEMS[k]))],xp:30},true); return draw('딸깍. 불빛 하나가 꺼졌다.') }
+      s.err++; sfx('alert'); FXL.flash('rgba(200,0,0,.4)',400); if(s.err>=2){ sfx('alarm'); return spEnd('경보가 울렸다','삐이이이— 사이렌이 거리 전체에 울렸다. 사방에서 놈들이 몰려온다.',{mind:-4,xp:8},false,spFight(null,2)) } draw('찌직! 불꽃이 튀었다. 한 번만 더 틀리면 끝이다.') }})).concat([{t:'손대지 않고 떠난다',f:()=>spEnd('떠났다','경보를 건드리지 않고 돌아섰다.',{xp:4},false)}])});
+  draw() };
+/* 9. 둥지: 알주머니 태우기 — 어미가 돌아오기 전에 */
+SPX.nest=()=>{ const s=SPS={place:spPl(),sacs:3,mom:ri(5,20),burn:0};
+  const fuelOk=()=>(S.res.fuel||0)>=1||(S.inv.flare||0)>0;
+  const draw=msg=>spDraw({eb:'NEST',place:s.place,t:`둥지 · 남은 알주머니 ${s.sacs}`,body:`<p class="ch-p">${esc(msg||'지하 주차장 천장에 끈적한 알주머니 세 개가 매달려 있다. 안에서 무언가 꿈틀댄다. 어미는 사냥 나간 것 같다. 연료나 조명탄으로 태울 수 있다.')}</p><div class="spr"><span>어미가 돌아올 기척</span>${mtr(s.mom,'red')}</div><p class="note">연료 ${S.res.fuel||0} · 조명탄 ${S.inv.flare||0}</p>`,
+    btns:[{t:'불을 붙인다',sub:'연료 1 또는 조명탄 1',dis:!fuelOk(),f:()=>{ if((S.res.fuel||0)>=1) S.res.fuel--; else S.inv.flare--; s.sacs--; s.burn++; s.mom+=ri(20,35); sfx('hiss'); FXL.flash('rgba(255,140,0,.4)',500);
+      if(s.mom>=100){ sfx('scream'); return spEnd('어미가 돌아왔다','타는 냄새를 맡은 어미가 천장을 기어 내려왔다.',{xp:15+s.burn*10},false,()=>startEnc({z:ZOMBIES.mutant?'mutant':'brute',src:'sp'})) }
+      if(s.sacs<=0) return spEnd('둥지를 태웠다','마지막 알주머니가 비명을 지르며 오그라들었다. 재 속에서 반짝이는 것들을 주웠다.',{res:{elec:ri(1,3),med:ri(1,2)},$:Math.round(ri(40,80)*dgOf()),xp:60},true);
+      draw('알주머니가 터지며 타올랐다. 멀리서 대답하듯 울음소리가 들린다.') }},{t:'숨어서 기척을 살핀다',f:()=>{ const seen=Math.random()<.4+ST('per')*.05; s.mom+=seen?2:10; draw(seen?'환풍구 너머로 어미가 먹이를 뜯고 있는 게 보였다. 아직 시간은 있다.':'아무것도 보이지 않는다. 시간만 흘렀다.') }},{t:'빠져나간다',f:()=>spEnd('물러났다',s.burn?`알주머니 ${s.burn}개를 태우고 빠져나왔다.`:'둥지를 두고 빠져나왔다.',{res:{elec:s.burn>=2?1:0},xp:10+s.burn*10},s.burn>0)}]});
+  draw() };
+/* 10. 생존자 거점: 검문 심문 — 대답에 따라 신뢰가 오르내린다 */
+SPX.shelter=()=>{ const Q=[{q:'"어디서 왔지? 혼자야?"',a:[['솔직히 캠프 위치를 말한다',8,0],['혼자 떠돌고 있다고 둘러댄다',5,1],['"알 거 없잖아."',-10,0]]},{q:'"팔 걷어 봐. 물린 데 있나 보자."',inf:1,a:[['순순히 팔을 걷는다',10,0],['"믿어 줘. 없어."',-2,1],['총구를 노려본다',-12,0]]},{q:'"가방에 뭐 있어? 약 있으면 꺼내 봐."',a:[['약 하나를 꺼내 보여 준다',9,0],['"식량뿐이야."',3,1],['가방을 꽉 쥔다',-8,0]]},{q:'"감염된 동료 생기면 어떻게 할 거야?"',a:[['"내 손으로 끝낸다."',7,0],['"방법을 찾는다."',4,0],['대답하지 않는다',-5,0]]},{q:'"우리한테 뭘 줄 수 있지?"',a:[['일손을 보태겠다고 한다',8,0],['정보를 주겠다고 한다',5,1],['"그건 너희 하기 나름이지."',-6,0]]}].sort(()=>Math.random()-.5).slice(0,3);
+  const s=SPS={place:spPl(),i:0,trust:35,Q};
+  const draw=msg=>{ if(s.i>=s.Q.length) return finish(); const q=s.Q[s.i]; spDraw({eb:'CHECKPOINT',place:s.place,t:`거점 입구 검문 · ${s.i+1}/3`,body:`<p class="ch-p">${msg?esc(msg)+'<br>':''}${esc(q.q)}</p><div class="spr"><span>신뢰</span>${mtr(s.trust)}</div>`,
+    btns:q.a.map(([t,v,lie])=>({t,sub:lie?'거짓말 · 매력':'',f:()=>{ let d=v, m=''; if(q.inf&&stOn('inf')&&v>0){ sfx('alarm'); return spEnd('감염이 들켰다','팔의 검은 핏줄을 본 순간 총구가 일제히 올라왔다. "꺼져. 당장."',{hp:-12,mind:-6,xp:5},false) } if(lie){ if(Math.random()<.35+ST('cha')*.05){ m='그가 고개를 끄덕였다.' } else { d=-Math.abs(v)-6; m='"거짓말하는 눈이네." 그의 표정이 굳었다.' } } s.trust=clamp(s.trust+d+(ST('cha')-3),0,100); s.i++; sfx(d>0?'click':'sting'); draw(m) }}))}) };
+  const finish=()=>{ const t=s.trust; if(t>=60){ return spDraw({eb:'CHECKPOINT',place:s.place,t:'문이 열렸다',body:`<p class="ch-p">"좋아, 들어와." 거점 안에는 아이들 웃음소리가 들린다. 그들은 물자를 나눌 생각이 있다.</p><div class="spr"><span>신뢰</span>${mtr(t)}</div>`,btns:[{t:'식량과 약을 나눠 받는다',f:()=>spEnd('거점의 호의','"다음에 오면 너도 뭐 하나 가져와."',{res:{food:Math.round(ri(5,9)*dgOf()),water:Math.round(ri(4,8)*dgOf()),med:ri(1,2)},xp:30},true)},{t:'$40으로 붕대·진통제를 산다',dis:(S.money||0)<40,f:()=>spEnd('거래했다','그들은 정직하게 거래했다.',{$:-40,items:['bandage','painkiller','bandage'].filter(k=>ITEMS[k]),xp:20},true)},{t:'함께 지낼 사람을 묻는다',f:()=>{ const c=addCrew('거점에서 합류한 생존자',null); spEnd(c?'한 사람이 따라나섰다':'따라나설 사람이 없었다',c?`${crewNm(c)}이(가) 짐을 쌌다. "여긴 너무 좁아."`:'"우린 여기서 버틸 거야."',{xp:25},!!c) }}]}) }
+    if(t>=30) return spEnd('문 앞에서 돌려보내졌다','"오늘은 안 돼." 그래도 물 한 병을 문틈으로 밀어 주었다.',{res:{water:3},xp:12},false);
+    spEnd('쫓겨났다','"수상한 놈이야." 경고 사격이 발치에 박혔다. 도망치다 가방 하나를 떨어뜨렸다.',{res:{food:-ri(3,6)},hp:-6,xp:6},false) };
+  draw() };
+/* 트리거: 조사 중 구역 종류에 따라 특수 사건이 '처리할 일'로 생긴다 */
+const SPX_N={ruin:'무너지는 건물',food:'라벨 없는 통조림',med:'약품 금고',arms:'무기고 자물쇠',fuel:'버려진 유조차',horde:'떼 사이 잠입',gang:'주사위 판',cache:'경보 장치',nest:'둥지',shelter:'거점 검문'};
+const _scanOnce116=scanOnce; scanOnce=function(z,at){ const r=_scanOnce116.apply(this,arguments); try{ const n=MAP[z]; if(n&&SPX[n.t]&&!n.home&&lvlOf(S.xp)>=2&&!capOn()&&!(S.scan&&S.scan.forced)&&Date.now()-(S.spxT||0)>6*60000&&Math.random()<.045){ S.pend=S.pend||[]; if(S.pend.length<PEND_MAX&&!S.pend.some(x=>x.k==='zsp')){ S.pend.push({k:'zsp',z,t:at}); S.spxT=Date.now(); if(S.scan&&S.scan.log) S.scan.log.push(`특별한 것을 발견했다: ${SPX_N[n.t]} (처리할 일)`); try{ toast(`${n.n}에서 특별한 것을 발견했다 · ${SPX_N[n.t]}`,true) }catch(e){} } } }catch(e){} return r };
+function spxRun(t,z){ if(!SPX[t]) return; if(rt.enc) return toast('지금 전투 중입니다.'); rt.spxZ=z; try{ FXL.pre(t==='horde'||t==='nest'?'horror':t==='gang'?'threat':'mystery') }catch(e){} SPX[t](); }
+const _pendNext116=ACT.pendNext; ACT.pendNext=function(){ const p=(S.pend||[])[0]; if(p&&p.k==='zsp'){ if(rt.enc) return toast('지금 전투 중입니다.'); if(!$('modal').hidden) return; S.pend.shift(); markSave(); const n=MAP[p.z]; return spxRun(n&&n.t,p.z) } return _pendNext116.apply(this,arguments) };
+(()=>{ const st=document.createElement('style'); st.textContent=`
+.spx .spm{height:8px;background:var(--line);flex:1;min-width:80px}.spx .spm i{display:block;height:100%;background:var(--accent);transition:width .25s}.spx .spm.red i{background:#b33}
+.spx .spr{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px}.spx .spr span{min-width:96px;color:var(--muted)}
+.spcans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}.spcan{min-height:56px;line-height:1.3}.spcan.on{opacity:.7}
+.spclue{display:grid;gap:4px;border:1px dashed var(--line2);padding:8px 10px;margin:8px 0;font-size:13px}
+.spdial{display:flex;gap:14px;justify-content:center;margin:10px 0}.spdial>div{display:grid;gap:4px;justify-items:center}.spdial b{font-size:28px;min-width:30px;text-align:center}
+.splog{font-size:12.5px;color:var(--muted)}.splog p{margin:2px 0}
+.sptrack{position:relative;height:28px;background:var(--line);margin:12px 0;overflow:hidden}.sptrack .spzone{position:absolute;top:0;bottom:0;background:rgba(42,157,106,.55)}.sptrack .spneedle{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#e33}
+.sppath{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0}.sppath span{border:1px solid var(--line);padding:6px 8px;display:grid;gap:2px;font-size:13px}.sppath small{color:var(--muted)}
+@media (max-width:520px){.sppath{grid-template-columns:1fr}}`; document.head.append(st) })();
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
