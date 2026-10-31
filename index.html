@@ -12068,6 +12068,26 @@ const _crewAsk113=crewAsk; crewAsk=function(c){ crewInfo2(c); if(isKid(c)||c.age
     if(c.state==='dead'){ try{ sfx('sting'); FXL.blackout(1600,'…') }catch(e){} }
     $('mbox').innerHTML=`<div class="eyebrow">CREW</div><h2>${esc(crewNm(c))}</h2><p style="margin:0;line-height:1.7">${esc(r.t||'')}${said?`<br>"${esc(said)}"`:''}</p><ul class="ev-eff">${(r.fx||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul><button class="btn pri" id="apOk">확인</button>`; $('apOk').onclick=()=>{ rt.modalLock=false; closeModal(); render() } }) };
 
+/* ================= p114: 관리자 — 사건 여러 개 골라서 한 번에 지우기 ================= */
+rt.cevSel=rt.cevSel||{};
+function cevSelBar(){ const el=$('cevList'); if(!el||!rt.isAdmin) return; Object.keys(rt.cevSel).forEach(id=>{ if(!(rt.cev||[]).some(e=>e.id===id)) delete rt.cevSel[id] });
+  const n=Object.keys(rt.cevSel).length, sure=rt.cevDelSure&&Date.now()-rt.cevDelSure<6000; let bar=$('cevSelBar');
+  if(!bar){ const pk=$('cevPeekBar')||el; pk.insertAdjacentHTML('afterend','<div class="cevselbar" id="cevSelBar"></div>'); bar=$('cevSelBar') }
+  bar.innerHTML=`<button type="button" class="chipb" id="cevSelAll">보이는 사건 모두 선택</button><button type="button" class="chipb" id="cevSelNone" ${n?'':'disabled'}>선택 해제</button><span class="note">${n?`<b>${n}개</b> 선택됨`:'제목 왼쪽 네모를 눌러 고르세요'}</span><button type="button" class="btn sm warn" id="cevSelDel" ${n?'':'disabled'}>${sure?`정말 ${n}개를 지울까요? 한 번 더`:`선택한 ${n}개 삭제`}</button>`;
+  $('cevSelAll').onclick=()=>{ el.querySelectorAll('.cev-i').forEach(c=>{ if(c.hidden||getComputedStyle(c).display==='none') return; const id=c.querySelector('[data-id]')?.dataset.id; if(id) rt.cevSel[id]=1 }); cevSelSync() };
+  $('cevSelNone').onclick=()=>{ rt.cevSel={}; rt.cevDelSure=0; cevSelSync() };
+  $('cevSelDel').onclick=async()=>{ const ids=Object.keys(rt.cevSel); if(!ids.length) return; if(!sure){ rt.cevDelSure=Date.now(); return cevSelSync() } rt.cevDelSure=0; const b=$('cevSelDel'); if(b){ b.disabled=true; b.textContent='지우는 중…' }
+    let ok=0, bad=0; for(const id of ids){ try{ await rt.db.doc('cevents/'+id).delete(); ok++; delete rt.cevSel[id] }catch(e){ bad++ } } toast(`사건 ${ok}개를 지웠어요${bad?` · ${bad}개 실패`:''}`,true); setTimeout(()=>{ try{ cevListDraw() }catch(e){} },800) } }
+function cevSelSync(){ const el=$('cevList'); if(!el) return; el.querySelectorAll('.cevsel').forEach(x=>{ const on=!!rt.cevSel[x.dataset.sid]; if(x.checked!==on) x.checked=on; x.closest('.cev-i')?.classList.toggle('picked',on) }); cevSelBar() }
+const _cevListDraw114=cevListDraw; cevListDraw=function(){ _cevListDraw114.apply(this,arguments); const el=$('cevList'); if(!el||!rt.isAdmin) return;
+  el.querySelectorAll('.cev-i').forEach(card=>{ const sm=card.querySelector('.cevrow>summary'); if(!sm||sm.querySelector('.cevsel')) return; const id=card.querySelector('[data-id]')?.dataset.id; if(!id) return;
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.className='cevsel'; cb.dataset.sid=id; cb.title='골라서 한 번에 지우기'; cb.checked=!!rt.cevSel[id];
+    cb.addEventListener('click',e=>{ e.stopPropagation() }); cb.addEventListener('change',()=>{ if(cb.checked) rt.cevSel[id]=1; else delete rt.cevSel[id]; rt.cevDelSure=0; cevSelSync() });
+    const wrap=document.createElement('span'); wrap.className='cevselw'; wrap.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); cb.checked=!cb.checked; cb.dispatchEvent(new Event('change')) }); wrap.append(cb); cb.addEventListener('click',e=>e.stopPropagation());
+    sm.prepend(wrap) });
+  cevSelSync() };
+(()=>{ const st=document.createElement('style'); st.textContent=`.cevselbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 8px}.cevselbar .btn{margin-left:auto}.cevselw{display:inline-flex;align-items:center;padding:2px 6px 2px 0;cursor:pointer}.cevselw input{width:18px;height:18px;margin:0;cursor:pointer}.cev-i.picked{outline:2px solid var(--warn,#c33);outline-offset:-2px}`; document.head.append(st) })();
+
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
