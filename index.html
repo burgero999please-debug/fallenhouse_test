@@ -12216,6 +12216,97 @@ const _cevListDraw117=cevListDraw; cevListDraw=function(){ _cevListDraw117.apply
   const pk=$('cevPeekBar')||el; pk.insertAdjacentElement('beforebegin',box) };
 (()=>{ const st=document.createElement('style'); st.textContent=`.spxtest{border:1px dashed var(--line2);padding:6px 10px;margin:6px 0}.spxtest summary{cursor:pointer;font-size:13px}.spxtb{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}`; document.head.append(st) })();
 
+/* ================= p118: 펫과의 사건 (감염 말고) — 종류·친밀도에 따라 선택과 결과가 달라요 ================= */
+const pG=k=>PG[k]||'dog';
+const pNm=k=>petLabel(k)||PETS[k].n;
+const pHi=k=>petAff(k)>=50, pLo=k=>petAff(k)<20;
+const PSND={dog:'growl',cat:'hiss',bird:'radio',rod:'rummage',big:'steps',cold:'hiss',monkey:'steps',fox:'growl'};
+function pStart(k,eb){ SPS={place:`${petE(k)} ${pNm(k)}`}; try{ sfx(PSND[pG(k)]||'knock') }catch(e){} return SPS }
+function pAff(k,n){ affAdd(k,n); return `친밀도 ${n>0?'+':''}${n}` }
+function pEnd(k,t,text,o,ok,aff){ const extra=aff?[pAff(k,aff)]:[]; spEnd(t,text,o,ok); try{ if(extra.length){ const ul=$('mbox').querySelector('.ev-eff')||(()=>{ const u=document.createElement('ul'); u.className='ev-eff'; $('spOk').before(u); return u })(); extra.forEach(x=>{ const li=document.createElement('li'); li.textContent=x; ul.append(li) }) } }catch(e){} }
+function pLose(k,why){ delete S.pets[k]; if(S.pet===k) S.pet=''; if(S.petAff) delete S.petAff[k]; try{ slog(`${PETS[k].n}: ${why}`) }catch(e){} markSave() }
+const PEV2=[
+ /* 1. 사라졌다 */
+ {k:'lost',w:1.2,run:k=>{ const nm=pNm(k), hi=pHi(k); pStart(k);
+   spDraw({eb:'PET',place:SPS.place,t:`${nm}이(가) 사라졌다`,body:`<p class="ch-p">아침에 보니 ${esc(nm)}의 자리가 비어 있다. 담장 밑에 작은 구멍이 새로 나 있다.${hi?' 이렇게 말없이 사라질 애가 아닌데.':''}</p>`,btns:[
+    {t:'이름을 부르며 찾는다',sub:hi?'친밀도 높음':'',f:()=>{ if(Math.random()<(hi?.75:.35)){ return pEnd(k,'돌아왔다',`이름을 세 번째 부르는데 ${nm}이(가) 폐차 밑에서 튀어나와 품으로 뛰어들었다. 털에 피가 묻어 있다. 자기 피는 아니다.`,{mind:4,xp:10},true,5) } step2('소리 대신 바람만 돌아왔다. 흔적을 따라가 본다.') }},
+    {t:'흔적을 따라간다',sub:'감각',f:()=>step2(Math.random()<.4+ST('per')*.05?'진흙 위 발자국이 골목 안쪽으로 이어진다.':'발자국이 자꾸 끊긴다. 한참을 헤맸다.')},
+    {t:'돌아올 거라 믿고 기다린다',f:()=>{ if(Math.random()<(hi?.6:.25)) return pEnd(k,'돌아왔다',`해 질 무렵, ${nm}이(가) 무언가를 물고 돌아왔다. 아무 일도 없었다는 얼굴이다.`,{items:[stPick(['bandage','cigs','flare'].filter(x=>ITEMS[x]))],xp:6},true,2); if(!pLo(k)) return pEnd(k,'다음 날 돌아왔다',`밤새 돌아오지 않다가 다음 날 아침, ${nm}이(가) 다리를 절며 돌아왔다. 기다려 준 걸 아는지 한참 내 옆을 떠나지 않았다.`,{mind:-3,xp:6},true,3); pLose(k,'떠나서 돌아오지 않았다'); pEnd(k,'돌아오지 않았다',`밤이 깊도록 ${nm}은(는) 돌아오지 않았다. 담장 밑 구멍만 남았다. 아직 정이 덜 들었던 걸까.`,{mind:-10},false) }}]});
+   const step2=msg=>{ const r=Math.random(); const sc=r<.4?'zombie':r<.75?'trap':'kid';
+     const T={zombie:[`${nm}이(가) 무너진 상가 구석에 몰려 있다. 그 앞을 감염자 하나가 막고 있다.`,[{t:'뛰어들어 떼어 낸다',f:()=>{ rt.modalLock=false; closeModal(); SPS=null; affAdd(k,8); toast(`${nm}을(를) 구하러 뛰어들었다`,true); setTimeout(()=>startEnc({pool:MAP[S.pos].zp,src:'sp'}),300) }},{t:'돌을 던져 놈을 유인한다',f:()=>Math.random()<.55+ST('agi')*.04?pEnd(k,'구했다',`놈이 소리 쪽으로 고개를 돌린 사이 ${nm}이(가) 빠져나왔다.`,{xp:15},true,6):pEnd(k,'놈이 돌아섰다',`돌은 빗나갔고, 놈이 나를 봤다. ${nm}을(를) 안고 정신없이 달렸다.`,{hp:-12,xp:10},false,4)}]],
+       trap:[`${nm}의 다리가 녹슨 덫에 물려 있다. 낑낑대며 나를 본다.`,[{t:'맨손으로 덫을 벌린다',sub:'힘',f:()=>Math.random()<.5+ST('str')*.05?pEnd(k,'풀어 줬다',`손바닥이 찢어졌지만 덫이 벌어졌다. ${nm}이(가) 절뚝이며 내 손을 핥았다.`,{hp:-6,xp:15},true,8):pEnd(k,'겨우 풀었다','덫이 다시 닫히며 손을 물었다. 한참 만에 겨우 풀었다.',{hp:-14,xp:10},true,5)},{t:'공구로 조심스럽게 연다',f:()=>{ if((S.res.scrap||0)<5) return pEnd(k,'공구가 없다','쓸 만한 게 없어 결국 맨손으로 풀었다.',{hp:-10,xp:8},true,4); return pEnd(k,'풀어 줬다',`고철 조각을 지렛대 삼아 덫을 열었다. ${nm}이(가) 처음으로 배를 보이며 누웠다.`,{res:{scrap:-5},xp:15},true,7) }}]],
+       kid:[`${nm}이(가) 낯선 아이 품에 안겨 있다. 아이가 겁먹은 눈으로 나를 본다. "얘… 아저씨 거예요?"`,[{t:'"응, 우리 애야." 돌려받는다',f:()=>pEnd(k,'돌려받았다',`아이가 ${nm}을(를) 내밀며 울먹였다. 주머니의 사탕을 쥐여 주고 돌아섰다.`,{mind:-2,xp:10},true,3)},{t:'아이를 캠프로 데려간다',f:()=>{ const c=addCrew(`${nm}을(를) 안고 있던 아이`,null); return pEnd(k,c?'함께 돌아왔다':'자리가 없었다',c?`아이는 ${nm}을(를) 꼭 안은 채 따라왔다. 오늘부터 우리 식구다.`:'데려가고 싶었지만 자리가 없었다. 아이는 고개를 끄덕이고 사라졌다.',{xp:20},!!c,4) }},{t:`${nm}을(를) 아이에게 맡긴다`,f:()=>{ pLose(k,'아이에게 맡겼다'); pEnd(k,'아이에게 맡겼다',`아이의 얼굴이 환해졌다. ${nm}은(는) 한 번 뒤를 돌아보고, 아이를 따라갔다.`,{mind:6,xp:20},true) }}]]}[sc];
+     spDraw({eb:'PET',place:SPS.place,t:'찾았다',body:`<p class="ch-p">${esc(msg)}<br>${esc(T[0])}</p>`,btns:T[1]}) } }},
+ /* 2. 뭔가 물어 왔다 */
+ {k:'gift',g:['dog','cat','bird','rod','fox','monkey'],w:1.2,run:k=>{ const nm=pNm(k); pStart(k); const r=Math.random(); const what=r<.45?'item':r<.7?'cash':r<.85?'finger':'key';
+   const desc={item:'작은 꾸러미',cash:'구겨진 지폐 뭉치',finger:'…반지 낀 사람 손가락',key:'번호표가 달린 녹슨 열쇠'}[what];
+   spDraw({eb:'PET',place:SPS.place,t:`${nm}이(가) 뭔가 물어 왔다`,body:`<p class="ch-p">${esc(nm)}이(가) 꼬리를 세우고 다가와 발치에 무언가를 내려놓았다. ${esc(desc)}이다.</p>`,btns:[
+    {t:'칭찬하고 받아 둔다',f:()=>{ if(what==='finger'){ return pEnd(k,'…','반지는 빼서 챙겼다. 손가락은 땅에 묻었다. 이게 누구 것인지는 생각하지 않기로 했다.',{$:ri(30,80),mind:-6,xp:8},true,3) } if(what==='cash') return pEnd(k,'착하다',`${nm}의 머리를 쓰다듬었다. 지폐는 아직 쓸 데가 있다.`,{$:ri(20,60),xp:6},true,4); if(what==='key') return pEnd(k,'열쇠',`열쇠 번호표엔 "창고 7"이라고 적혀 있다. 어딘가 이 번호의 창고가 있을 것이다.`,{xp:8,items:['pick'].filter(x=>ITEMS[x])},true,3); return pEnd(k,'착하다',`꾸러미 안에 쓸 만한 게 들어 있다.`,{items:[stPick(['bandage','painkiller','vitamin','cigs'].filter(x=>ITEMS[x]))],xp:6},true,4) }},
+    {t:'어디서 났는지 따라가 본다',f:()=>{ if(Math.random()<.6) return pEnd(k,'숨겨진 은신처',`${nm}이(가) 앞장서 데려간 곳은 덤불에 가려진 지하 창고였다. 누군가 숨겨 둔 물자가 그대로 있다.`,{res:{food:ri(5,10),water:ri(4,8),scrap:ri(4,8)},$:ri(20,50),xp:25},true,6); return pEnd(k,'주인이 있었다',`${nm}이(가) 데려간 곳엔 총을 든 남자가 있었다. "도둑 고양이 주인이 너냐?" 물자를 내주고 겨우 빠져나왔다.`,{res:{food:-ri(3,6)},hp:-6,xp:10},false,2) }},
+    {t:'"그런 거 물어 오지 마."',f:()=>pEnd(k,'시무룩',`${nm}이(가) 귀를 접고 구석으로 갔다.`,{xp:2},false,-4)}]}) }},
+ /* 3. 밤중의 경고 */
+ {k:'warn',g:['dog','bird','big','fox','monkey'],w:1,run:k=>{ const nm=pNm(k), hi=pHi(k); pStart(k); FXL.pre('threat');
+   spDraw({eb:'PET',place:SPS.place,t:`${nm}이(가) 어둠을 향해 으르렁거린다`,body:`<p class="ch-p">새벽 세 시. ${esc(nm)}이(가) 털을 곤두세우고 담장 쪽을 노려본다. 아무것도 보이지 않는다. 그런데 ${esc(nm)}은(는) 멈추지 않는다.</p>`,btns:[
+    {t:'무기를 들고 확인하러 나간다',f:()=>{ const r=Math.random(); if(r<.45){ rt.modalLock=false; closeModal(); SPS=null; toast(hi?`${nm}이(가) 먼저 달려들어 놈의 다리를 물었다!`:'담장 너머에서 무언가가 넘어온다!',true); if(hi) affAdd(k,3); setTimeout(()=>{ startEnc({pool:MAP[S.pos].zp,src:'sp'}); if(hi&&rt.enc){ rt.enc.hp=Math.round(rt.enc.hp*.6) } },300); return } if(r<.75) return pEnd(k,'좀도둑','담장을 넘던 좀도둑이 손전등 빛에 놀라 가방을 떨어뜨리고 도망쳤다.',{res:{food:ri(3,6),scrap:ri(2,5)},$:ri(10,30),xp:15},true,4); return pEnd(k,'아무것도 없었다',`아무것도 없었다. 그런데 담장 위 이슬에 손바닥 자국이 여럿 찍혀 있었다.`,{mind:-4,xp:8},true,2) }},
+    {t:'불을 끄고 숨을 죽인다',f:()=>{ hzLock(12,'숨을 죽인다. 담장 너머에서 발소리가 멈췄다.'); return pEnd(k,'지나갔다',`한참 뒤 발소리가 멀어졌다. ${nm}이(가) 그제야 엎드렸다. 아침에 보니 담장 밖에 발자국이 수십 개였다.`,{xp:12,mind:-2},true,3) }},
+    {t:`${nm}을(를) 풀어 보낸다`,f:()=>{ if(Math.random()<(hi?.7:.4)) return pEnd(k,`${nm}이(가) 쫓아냈다`,`어둠 속에서 비명과 발소리가 멀어졌다. ${nm}이(가) 낡은 칼 한 자루를 물고 돌아왔다.`,{res:{scrap:ri(3,6)},xp:18},true,6); return pEnd(k,'다쳐서 돌아왔다',`한참 뒤 ${nm}이(가) 절뚝이며 돌아왔다. 옆구리에 칼자국이 있다.`,{mind:-5,xp:10},false,3) }}]}) }},
+ /* 4. 아프다 (감염 아님) */
+ {k:'ill',w:.9,run:k=>{ const nm=pNm(k); pStart(k); const why=stPick(['상한 고기를 주워 먹었는지 계속 토한다','유리 조각에 발바닥이 깊게 베였다','숨소리가 거칠고 코가 바짝 말라 있다']);
+   spDraw({eb:'PET',place:SPS.place,t:`${nm}이(가) 아프다`,body:`<p class="ch-p">${esc(nm)}이(가) ${esc(why)}. 감염은 아닌 것 같다. 하지만 이대로 두면 위험하다.</p>`,btns:[
+    {t:'약품을 쓴다',sub:'약품 1',dis:(S.res.med||0)<1,f:()=>{ S.res.med--; return pEnd(k,'나았다',`약을 으깨 물에 타 먹였다. 다음 날 ${nm}이(가) 내 베개 위에서 자고 있었다.`,{xp:12,mind:3},true,10) }},
+    {t:'밤새 곁에서 돌본다',f:()=>{ S.hunger=Math.max(0,S.hunger-10); if(Math.random()<.65) return pEnd(k,'버텼다',`밤새 물을 적셔 입가를 닦아 줬다. 새벽에 ${nm}이(가) 꼬리를 한 번 흔들었다.`,{mind:2,xp:10},true,8); return pEnd(k,'아직 기운이 없다',`고비는 넘겼지만 ${nm}은(는) 며칠 기운이 없을 것 같다.`,{mind:-3,xp:6},false,4) }},
+    {t:'알아서 낫길 기다린다',f:()=>(Math.random()<.5||petAff(k)>=30)?pEnd(k,'스스로 나았다','며칠 끙끙대더니 스스로 털고 일어났다. 다만 나를 보는 눈이 조금 달라졌다.',{xp:4},true,-3):(()=>{ pLose(k,'아프다가 숨을 거두었다'); return pEnd(k,'숨을 거뒀다',`${nm}은(는) 구석에서 조용히 숨을 거뒀다. 마지막까지 문 쪽을 보고 있었다.`,{mind:-14},false) })()}]}) }},
+ /* 5. 다른 동물과 대치 */
+ {k:'rival',w:1,run:k=>{ const nm=pNm(k); pStart(k); const foe=stPick(['굶주린 들개 두 마리','눈이 뿌연 너구리','털이 빠진 고양이 떼','까마귀 떼']);
+   spDraw({eb:'PET',place:SPS.place,t:'대치',body:`<p class="ch-p">골목에서 ${esc(foe)}와(과) 마주쳤다. ${esc(nm)}이(가) 앞으로 나서며 몸을 낮춘다. 상대도 물러설 생각이 없다.</p>`,btns:[
+    {t:pG(k)==='big'?`${nm}을(를) 데리고 물러난다`:`${nm}을(를) 안고 물러난다`,f:()=>pEnd(k,'물러났다',pG(k)==='big'?`${nm}의 목덜미를 잡고 천천히 뒷걸음질 쳤다. 녀석이 콧김을 거칠게 뿜었다.`:`${nm}을(를) 안고 천천히 뒷걸음질 쳤다. 품 안에서 ${nm}이(가) 계속 으르렁거렸다.`,{xp:5},true,2)},
+    {t:'같이 쫓아낸다',f:()=>Math.random()<.6+(pHi(k)?.15:0)?pEnd(k,'이겼다',`${nm}과(와) 나란히 소리를 지르며 달려들자 상대가 꼬리를 말고 달아났다. ${nm}이(가) 자랑스럽게 나를 올려다봤다.`,{xp:15},true,7):pEnd(k,'둘 다 물렸다',`달아나긴 했지만 ${nm}도 나도 몇 군데 물렸다.`,{hp:-10,xp:10},false,3)},
+    {t:'먹이를 던져 준다',sub:'식량 3',dis:(S.res.food||0)<3,f:()=>pEnd(k,'평화롭게',`던져 준 먹이에 상대가 덤벼들었다. 그 사이 조용히 지나갔다. ${nm}은(는) 조금 아쉬운 눈치다.`,{res:{food:-3},xp:8,mind:2},true,1)}]}) }},
+ /* 6. 놀아 달라고 조른다 — 세 번 던지기 */
+ {k:'play',g:['dog','cat','rod','fox','monkey','bird'],w:1.1,run:k=>{ const nm=pNm(k); pStart(k); const s={n:0,hit:0};
+   const draw=msg=>spDraw({eb:'PET',place:SPS.place,t:`${nm}이(가) 놀자고 조른다 · ${s.n}/3`,body:`<p class="ch-p">${esc(msg||`${nm}이(가) 낡은 테니스공을 물고 와 발치에 떨어뜨렸다. 눈이 반짝인다.`)}</p>`,btns:s.n>=3?[{t:'그만 놀고 쉰다',f:()=>pEnd(k,'신나게 놀았다',`${s.hit}번 제대로 물어 왔다. 오랜만에 소리 내서 웃었다.`,{mind:3+s.hit*2,xp:6+s.hit*3},true,3+s.hit*2)}]:[
+     {t:'멀리 던진다',f:()=>{ s.n++; const ok=Math.random()<.5; if(ok) s.hit++; if(!ok&&Math.random()<.3){ return pEnd(k,'공이 사라졌다',`공이 감염자 무리 쪽으로 굴러갔다. ${nm}을(를) 붙잡느라 진땀을 뺐다.`,{mind:-2,xp:5},false,1) } draw(ok?'공을 물고 쏜살같이 돌아왔다!':'엉뚱한 데로 달려가 한참 뒤에 돌아왔다.') }},
+     {t:'가까이 살짝 던진다',f:()=>{ s.n++; const ok=Math.random()<.85; if(ok) s.hit++; draw(ok?'폴짝 뛰어 공중에서 잡았다.':'공 대신 내 손을 물었다. 장난이다.') }},
+     {t:'던지는 척만 한다',f:()=>{ s.n++; draw(pHi(k)?`${nm}이(가) 속지 않고 내 손만 쳐다본다. 똑똑한 녀석.`:`${nm}이(가) 허공을 향해 달려갔다가 억울한 얼굴로 돌아왔다.`) }}]}); draw() }},
+ /* 7. 재주 가르치기 — 배우면 계속 효과 */
+ {k:'trick',g:['dog','bird','monkey','big','fox'],need:k=>!(S.petTr||{})[k],w:.8,run:k=>{ const nm=pNm(k); pStart(k); const s={t:0,ok:0};
+   const TR={fetch:['물어 오기','조사 때 얻는 양 +4%'],guard:['보초 서기','받는 피해 -2% · 습격 방어 +10%'],scout:['앞서 정찰하기','감염자 조우 -5%']};
+   const pick=()=>spDraw({eb:'PET',place:SPS.place,t:`${nm}에게 재주를 가르친다`,body:`<p class="ch-p">무엇을 가르칠까? 세 번 연습해서 두 번 성공하면 익힌다. 친밀도가 높을수록 잘 따라온다.</p>`,btns:Object.entries(TR).map(([key,[n,d]])=>({t:n,sub:d,f:()=>{ s.key=key; draw() }}))});
+   const draw=msg=>spDraw({eb:'PET',place:SPS.place,t:`${TR[s.key][0]} 연습 · ${s.t}/3`,body:`<p class="ch-p">${esc(msg||'간식을 손에 쥐고 시범을 보인다.')}</p><p class="note">성공 ${s.ok}/2</p>`,btns:[{t:'연습한다',f:()=>{ s.t++; const p=.35+petAff(k)/200; if(Math.random()<p){ s.ok++; sfx('click') } if(s.ok>=2){ S.petTr=S.petTr||{}; S.petTr[k]=s.key; markSave(); return pEnd(k,'익혔다',`${nm}이(가) "${TR[s.key][0]}"을(를) 익혔다! ${TR[s.key][1]} (함께 다닐 때)`,{xp:20},true,6) } if(s.t>=3) return pEnd(k,'아직 못 익혔다',`${nm}이(가) 지쳐서 엎드렸다. 다음에 다시 해 보자.`,{xp:6},false,2); draw(Math.random()<.5?'고개를 갸웃한다.':'반쯤 따라 했다!') }}]});
+   pick() }},
+ /* 8. 낯선 사람이 탐낸다 */
+ {k:'buyer',w:.8,run:k=>{ const nm=pNm(k); pStart(k); const price=Math.round((150+lvlOf(S.xp)*15)*(['big','bird'].includes(pG(k))?1.5:1));
+   spDraw({eb:'PET',place:SPS.place,t:'탐내는 사람',body:`<p class="ch-p">총을 멘 남자가 ${esc(nm)}을(를) 한참 쳐다본다. "그 녀석 팔 생각 없어? $${fmt(price)}. 이 바닥에서 이 값 쳐주는 사람 없다." 그의 눈이 웃지 않는다.</p>`,btns:[
+    {t:`$${fmt(price)}에 판다`,f:()=>{ pLose(k,'팔았다'); return pEnd(k,'팔았다',`${nm}이(가) 끌려가며 몇 번이나 뒤를 돌아봤다. 돈은 묵직했다.`,{$:price,mind:-12,xp:5},false) }},
+    {t:'정중히 거절한다',sub:'매력',f:()=>Math.random()<.55+ST('cha')*.05?pEnd(k,'물러갔다',`"아깝네." 남자는 침을 뱉고 돌아섰다. ${nm}이(가) 내 다리 뒤에 숨었다.`,{xp:10},true,5):(()=>{ rt.modalLock=false; closeModal(); SPS=null; toast('"좋게 말할 때 줬어야지." 남자가 총을 겨눴다!',true); setTimeout(()=>startEnc({z:'raider',src:'sp'}),300) })()},
+    {t:`"${nm}은(는) 가족이야."`,f:()=>pEnd(k,'가족',`남자가 코웃음을 쳤다. "이 세상에 가족 같은 소리." 그래도 그는 그냥 지나갔다. ${nm}이(가) 내 손등에 머리를 비볐다.`,{mind:4,xp:8},true,8)}]}) }},
+ /* 9. 악몽 */
+ {k:'dream',w:.8,run:k=>{ const nm=pNm(k); pStart(k);
+   spDraw({eb:'PET',place:SPS.place,t:'잠결의 떨림',body:`<p class="ch-p">밤중에 ${esc(nm)}이(가) 잠든 채 몸을 떨며 낑낑댄다. 다리를 허공에 젓는다. 무언가에게서 도망치는 꿈인 것 같다.</p>`,btns:[
+    {t:pG(k)==='big'?'옆에 누워 목을 쓰다듬는다':pG(k)==='cold'?'담요로 감싸 준다':'꼭 안아 준다',f:()=>pEnd(k,'잠잠해졌다',`${pG(k)==='big'?'목덜미를 쓰다듬자':pG(k)==='cold'?'담요로 감싸 주자':'품에 안자'} 떨림이 천천히 멎었다. 그 밤엔 나도 오랜만에 악몽을 꾸지 않았다.`,{mind:6,xp:6},true,6)},{t:'조용히 이름을 불러 깨운다',f:()=>pEnd(k,'눈을 떴다',`${nm}이(가) 눈을 뜨고 나를 확인하더니 한숨을 쉬고 다시 잠들었다.`,{mind:3,xp:4},true,3)},{t:'그냥 둔다',f:()=>pEnd(k,'아침',`아침에 보니 ${nm}이(가) 문 앞에서 밤을 지새운 얼굴로 앉아 있었다.`,{xp:2},false,-2)}]}) }},
+ /* 10. 새: 하늘 정찰 · 큰 동물: 짐 나르기 · 변온 동물: 허물·겨울잠 */
+ {k:'scout',g:['bird'],w:1.2,run:k=>{ const nm=pNm(k); pStart(k);
+   spDraw({eb:'PET',place:SPS.place,t:`${nm}을(를) 하늘로 날려 보낸다?`,body:`<p class="ch-p">${esc(nm)}이(가) 창틀에 앉아 바깥을 본다. 날려 보내면 주변을 둘러보고 올 것 같다. 돌아올지는 친밀도에 달렸다.</p>`,btns:[
+    {t:'날려 보낸다',f:()=>{ if(Math.random()<.55+petAff(k)/250){ S.petBuff={until:Date.now()+30*60000,gather:.12}; markSave(); return pEnd(k,'돌아왔다',`한참 뒤 ${nm}이(가) 돌아와 어깨에 앉았다. 녀석이 맴돌던 쪽에 버려진 물자가 많아 보였다. (30분 동안 조사 획득량 +12%)`,{xp:15},true,5) } return pEnd(k,'늦게 돌아왔다',`해가 질 때까지 돌아오지 않다가 밤늦게 지친 얼굴로 돌아왔다.`,{mind:-3,xp:6},false,-2) }},{t:'붙잡아 둔다',f:()=>pEnd(k,'곁에 남았다',`${nm}이(가) 아쉬운 듯 날개를 접었다.`,{xp:2},true,1)}]}) }},
+ {k:'carry',g:['big'],w:1.2,run:k=>{ const nm=pNm(k); pStart(k);
+   spDraw({eb:'PET',place:SPS.place,t:`${nm}에게 짐을 실을까?`,body:`<p class="ch-p">${esc(nm)}이(가) 등 뒤로 다가와 코로 가방을 밀어 본다. 짐을 실으면 더 많이 나를 수 있지만, 무거운 짐에 지칠 수도 있다.</p>`,btns:[
+    {t:'짐을 가득 싣는다',f:()=>{ S.petBuff={until:Date.now()+40*60000,gather:.2}; markSave(); return pEnd(k,'든든하다',`${nm}의 등에 자루를 묶었다. (40분 동안 조사 획득량 +20%) 녀석이 콧김을 뿜었다.`,{xp:10},true,-2) }},{t:'가볍게만 싣는다',f:()=>{ S.petBuff={until:Date.now()+40*60000,gather:.1}; markSave(); return pEnd(k,'적당히',`가벼운 자루 하나만 실었다. (40분 동안 조사 획득량 +10%)`,{xp:8},true,3) }},{t:'쉬게 해 준다',f:()=>pEnd(k,'쉬었다',`${nm}이(가) 햇볕 아래 길게 누웠다.`,{xp:4},true,4)}]}) }},
+ {k:'shed',g:['cold'],w:1.2,run:k=>{ const nm=pNm(k); pStart(k);
+   spDraw({eb:'PET',place:SPS.place,t:`${nm}이(가) 이상하다`,body:`<p class="ch-p">${esc(nm)}이(가) 하루 종일 구석에서 꼼짝도 하지 않는다. 피부가 하얗게 일어나 있다. 허물을 벗으려는 걸까, 아니면…</p>`,btns:[
+    {t:'따뜻한 곳으로 옮겨 준다',f:()=>pEnd(k,'허물을 벗었다',`밤새 따뜻한 돌 옆에 두었더니 아침에 반짝이는 허물이 남아 있었다. 상인들이 비싸게 쳐줄 것이다.`,{$:ri(40,90),xp:12},true,6)},{t:'물을 뿌려 준다',f:()=>pEnd(k,'조금 나아졌다','물기가 돌자 조금 움직이기 시작했다.',{xp:6},true,3)},{t:'건드리지 않는다',f:()=>pEnd(k,'잠들었다',`${nm}은(는) 이틀을 꼬박 잤다. 깨어나서는 아무 일 없었다는 듯 굴었다.`,{xp:3},true,0)}]}) }},
+];
+/* 재주·버프 효과 */
+const _gearV118=gearV; gearV=function(key){ let v=_gearV118(key); try{ const T=(S.petTr||{})[S.pet]; if(S.pet&&T){ if(key==='gather'&&T==='fetch') v+=.04; if(key==='def'&&T==='guard') v=Math.min(.6,v+.02); if(key==='raidDef'&&T==='guard') v+=.1 } if(key==='gather'&&S.petBuff&&Date.now()<S.petBuff.until&&S.pet) v+=S.petBuff.gather||0 }catch(e){} return v };
+const _evM118=evM; evM=function(key){ let v=_evM118(key); try{ if(key==='enc'&&S.pet&&(S.petTr||{})[S.pet]==='scout') v*=.95 }catch(e){} return v };
+/* 언제 나오나: 펫을 데리고 다니면 15~30분마다 */
+function petEv2(force,which){ const k=S.pet; if(!k||!PETS[k]||k==='ghost'||k==='human') return false; const L=PEV2.filter(e=>(!e.g||e.g.includes(pG(k)))&&(!e.need||e.need(k))&&(!which||e.k===which)); if(!L.length) return false;
+  S.petEvLast=S.petEvLast||[]; const W=L.map(e=>e.w*(S.petEvLast.includes(e.k)?.2:1)); let r=Math.random()*W.reduce((a,b)=>a+b,0), E=L[0]; for(let i=0;i<L.length;i++){ r-=W[i]; if(r<0){ E=L[i]; break } }
+  S.petEvLast=[E.k].concat(S.petEvLast).slice(0,4); markSave(); E.run(k); return true }
+setInterval(()=>{ try{ if(!S||!S.intro||!S.pet||rt.enc||rt.party||!$('modal').hidden||document.getElementById('intro')||capOn()||hzLocked()) return; const now=Date.now(), d=new Date(now).toDateString(); if(S.petEv2Day===d) return; if(!S.petEv2T||S.petEv2TD!==d){ S.petEv2T=now+ri(20,60)*60000; S.petEv2TD=d; return } if(now<S.petEv2T) return; if(petEv2()) S.petEv2Day=d }catch(e){} },15000);
+/* 관리자 시험 버튼에 펫 사건도 */
+const _cevListDraw118=cevListDraw; cevListDraw=function(){ _cevListDraw118.apply(this,arguments); const b=$('spxTest'); if(!b||b.querySelector('.ptest')) return; const d=document.createElement('div'); d.className='spxtb ptest'; d.innerHTML=`<b style="width:100%;font-size:12.5px">펫 사건 (지금 데리고 다니는 펫으로)</b>${PEV2.map(e=>`<button type="button" class="btn sm" data-pev2="${e.k}">${({lost:'사라졌다',gift:'물어 왔다',warn:'밤중 경고',ill:'아프다',rival:'대치',play:'놀아 줘',trick:'재주 배우기',buyer:'탐내는 사람',dream:'악몽',scout:'하늘 정찰(새)',carry:'짐 나르기(큰 동물)',shed:'허물(파충류)'})[e.k]||e.k}</button>`).join('')}`; b.append(d);
+  d.querySelectorAll('[data-pev2]').forEach(x=>x.onclick=()=>{ if(!S.pet) return toast('데리고 다니는 펫이 없어요.'); rt.modalLock=false; closeModal(); setTimeout(()=>{ if(!petEv2(true,x.dataset.pev2)) toast('이 펫 종류에는 없는 사건이에요.') },250) }) };
+
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
 {const r=offline(Date.now()-(S.t||Date.now())); S.t=Date.now(); render(); renderChat(true); if(r) setTimeout(()=>offlineToast(r),300)}
