@@ -3176,7 +3176,7 @@ function resolveMission(m){
   const tp=team.reduce((a,c)=>a+power(c),0), avg=k=>team.reduce((a,c)=>a+c.st[k],0)/team.length;
   const n=1+Math.floor(node.dg/2)+(Math.random()<.5?1:0);
   for(let i=0;i<n;i++){
-    const w=MEV.map(e=>{ const k=e[0]; return k==='death'?.15*node.dg*(1-avg('agi')*.06):k==='infect'?.35*node.dg*(1-avg('agi')*.05):k==='injury'?.5*node.dg:k==='capture'||k==='subdue'?.6*(1+avg('str')*.05):k==='recruit'?.5*(1+avg('cha')*.06):k==='loot'?1.3*(1+avg('per')*.04):k==='raid'?.6:k==='pet'?.18:k==='col'?.4:k==='none'?.3:1 });
+    const w=MEV.map(e=>{ const k=e[0]; return k==='death'?.15*node.dg*(1-avg('agi')*.06):k==='infect'?.2*node.dg*(1-avg('agi')*.05):k==='injury'?.5*node.dg:k==='capture'||k==='subdue'?.6*(1+avg('str')*.05):k==='recruit'?.3*(1+avg('cha')*.06):k==='loot'?1.3*(1+avg('per')*.04):k==='raid'?.6:k==='pet'?.07:k==='col'?.4:k==='none'?.3:1 });
     let x=Math.random()*w.reduce((a,b)=>a+b,0), j=0; for(;j<MEV.length-1;j++){ x-=w[j]; if(x<0) break }
     const [k,txt,arg,arg2]=MEV[j], c=stPick(team.filter(t=>t.state!=='dead')), name=c?c.name:'대원', t=txt.replace('{a}',name), r={k,t,fx:[]};
     if(!c) break;
@@ -5347,7 +5347,7 @@ const _pre0=FXL.pre; FXL.pre=function(m){ if(m==='horror'&&Date.now()-(rt.horT||
 const _chainEnd1=chainEnd; chainEnd=function(ch,ctx,r){ r=r||{}; r.fx=(r.fx||[]).slice();
   if(r.mind) r.fx.push(mindAdd(r.mind)); if(r.st) for(const [k,min] of r.st) r.fx.push(addSt(k,min,true)); if(r.cure) for(const k of r.cure) r.fx.push(cureSt(k)); if(r.hg){ S.hunger=clamp(S.hunger+r.hg,0,100); r.fx.push(`허기 ${r.hg>0?'+':''}${r.hg}`) }
   if(r.killCrew) r.fx.push(mindAdd(-12)); if(r.sfx==='scream') r.fx.push(mindAdd(-4)); else if(r.sfx==='sob') r.fx.push(mindAdd(-2));
-  const t=[].concat(r.t||'').join(' '); if(/물렸|물린|이빨이 박/.test(t)&&(r.hp||0)<0&&Math.random()<.35) r.fx.push(addSt('inf',20,true));
+  const t=[].concat(r.t||'').join(' '); if(/물렸|물린|이빨이 박/.test(t)&&(r.hp||0)<0&&Math.random()<.2) r.fx.push(addSt('inf',20,true));
   r.fx=r.fx.filter(Boolean); return _chainEnd1(ch,ctx,r) };
 /* 전투: 물림 → 감염, 큰 타격 → 부상, 공포스러운 적 → 정신 */
 const _hit0=hit; hit=function(d,why){ const b=S.hp, e=rt.enc; _hit0(d,why); const lost=b-S.hp; if(!e||S.hp<=0) return;
@@ -5864,7 +5864,7 @@ const CEV_TRIG={random:'무작위 (조사·탐색 중)',arrive:'특정 지점에
 const s_=(v,n)=>typeof v==='string'?v.slice(0,n):'';
 const n_=(v,a,b)=>clamp(Math.round(+v||0),a,b);
 const pick_=(m,v)=>Object.prototype.hasOwnProperty.call(m,v)?v:'';
-function cevRes(r){ r=r&&typeof r==='object'?r:{}; return {t:s_(r.t,600),hp:n_(r.hp,-200,200),hpP:n_(r.hpP,-100,100),mind:n_(r.mind,-100,100),hg:n_(r.hg,-100,100),$:n_(r.$,-5000,5000),xp:n_(r.xp,0,2000),it:ITEMS[r.it]?r.it:'',iq:n_(r.iq,0,20),st:STS[r.st]?r.st:'',sm:n_(r.sm,0,120),cure:STS[r.cure]?r.cure:'',z:ZOMBIES[r.z]?r.z:'',crew:!!r.crew,kill:!!r.kill,move:!!r.move,go:n_(r.go==null?-1:r.go,-1,7),sfx:pick_(CEV_SFX,r.sfx),fx:pick_(CEV_FX,r.fx)} }
+function cevRes(r){ r=r&&typeof r==='object'?r:{}; return {t:s_(r.t,600),hp:n_(r.hp,-200,200),hpP:n_(r.hpP,-100,100),lock:n_(r.lock,0,120),mapd:n_(r.mapd,0,30),fscan:n_(r.fscan,0,10),hallu:n_(r.hallu,0,120),cap:!!r.cap,to:MAP[r.to]&&!MAP[r.to].home?r.to:'',mind:n_(r.mind,-100,100),hg:n_(r.hg,-100,100),$:n_(r.$,-5000,5000),xp:n_(r.xp,0,2000),it:ITEMS[r.it]?r.it:'',iq:n_(r.iq,0,20),st:STS[r.st]?r.st:'',sm:n_(r.sm,0,120),cure:STS[r.cure]?r.cure:'',z:ZOMBIES[r.z]?r.z:'',crew:!!r.crew,kill:!!r.kill,move:!!r.move,go:n_(r.go==null?-1:r.go,-1,7),sfx:pick_(CEV_SFX,r.sfx),fx:pick_(CEV_FX,r.fx)} }
 function cevStep(s){ s=s&&typeof s==='object'?s:{}; return {p:(Array.isArray(s.p)?s.p:[]).map(x=>s_(x,600)).filter(Boolean).slice(0,6),mood:pick_(CEV_MOOD,s.mood)||'tense',sfx:pick_(CEV_SFX,s.sfx),fx:pick_(CEV_FX,s.fx),
   o:(Array.isArray(s.o)?s.o:[]).slice(0,4).map(x=>({n:s_(x&&x.n,80),pos:posArr(x&&x.pos),ck:pick_(CEV_STAT,x&&x.ck),ok:cevRes(x&&x.ok),no:cevRes(x&&x.no)})).filter(x=>x.n)} }
 function cevClean(id,d){ if(!d||typeof d!=='object') return null; const st=(Array.isArray(d.steps)?d.steps:[]).slice(0,8).map(cevStep).filter(s=>s.o.length); if(!st.length) return null; const T=d.trig&&typeof d.trig==='object'?d.trig:{};
@@ -5928,12 +5928,12 @@ function cevListDraw(){ const el=$('cevList'); if(!el) return; if(!rt.db){ el.in
 function resFields(pfx,r,label,nSteps){ r=r||cevRes({}); const go={'-1':'여기서 끝'}; for(let i=0;i<nSteps;i++) go[i]=`단계 ${i+1}로`;
   return `<fieldset class="cev-r"><legend>${label}</legend><label>결과 문장<textarea data-f="${pfx}.t" rows="2" maxlength="600">${esc(r.t)}</textarea></label>
   <div class="cev-g"><label>다음<select data-f="${pfx}.go">${optHtml(go,r.go)}</select></label><label>효과음<select data-f="${pfx}.sfx">${optHtml(CEV_SFX,r.sfx)}</select></label><label>화면 연출<select data-f="${pfx}.fx">${optHtml(CEV_FX,r.fx)}</select></label>
-  <label>체력<input type="number" data-f="${pfx}.hp" value="${r.hp}"></label><label>체력 %<input type="number" data-f="${pfx}.hpP" value="${r.hpP||0}" min="-100" max="100" title="최대 체력의 몇 %를 회복(+)하거나 잃는지(-)"></label><label>정신<input type="number" data-f="${pfx}.mind" value="${r.mind}"></label><label>허기<input type="number" data-f="${pfx}.hg" value="${r.hg}"></label><label>돈<input type="number" data-f="${pfx}.$" value="${r.$}"></label><label>XP<input type="number" data-f="${pfx}.xp" value="${r.xp}" min="0"></label>
+  <label>체력<input type="number" data-f="${pfx}.hp" value="${r.hp}"></label><label>체력 %<input type="number" data-f="${pfx}.hpP" value="${r.hpP||0}" min="-100" max="100" title="최대 체력의 몇 %를 회복(+)하거나 잃는지(-)"></label><label>행동 불가(초)<input type="number" data-f="${pfx}.lock" value="${r.lock||0}" min="0" max="120"></label><label>지도 먹통(분)<input type="number" data-f="${pfx}.mapd" value="${r.mapd||0}" min="0" max="30"></label><label>강제 조사(회)<input type="number" data-f="${pfx}.fscan" value="${r.fscan||0}" min="0" max="10"></label><label>환청(초)<input type="number" data-f="${pfx}.hallu" value="${r.hallu||0}" min="0" max="120"></label><label>끌려갈 곳<select data-f="${pfx}.to"><option value="">없음</option>${Object.keys(MAP).filter(k=>!MAP[k].home).map(k=>`<option value="${k}"${r.to===k?' selected':''}>${esc(MAP[k].n)}</option>`).join('')}</select></label><label>정신<input type="number" data-f="${pfx}.mind" value="${r.mind}"></label><label>허기<input type="number" data-f="${pfx}.hg" value="${r.hg}"></label><label>돈<input type="number" data-f="${pfx}.$" value="${r.$}"></label><label>XP<input type="number" data-f="${pfx}.xp" value="${r.xp}" min="0"></label>
   <label>아이템<select data-f="${pfx}.it"><option value="">없음</option>${optHtml(Object.fromEntries(Object.keys(ITEMS).map(k=>[k,ITEMS[k].n])),r.it)}</select></label><label>개수<input type="number" data-f="${pfx}.iq" value="${r.iq}" min="0" max="20"></label>
   <label>상태 이상 걸기<select data-f="${pfx}.st"><option value="">없음</option>${optHtml(Object.fromEntries(Object.keys(STS).map(k=>[k,STS[k].n])),r.st)}</select></label><label>몇 분<input type="number" data-f="${pfx}.sm" value="${r.sm}" min="0" max="120"></label>
   <label>상태 이상 치료<select data-f="${pfx}.cure"><option value="">없음</option>${optHtml(Object.fromEntries(Object.keys(STS).map(k=>[k,STS[k].n])),r.cure)}</select></label>
   <label>전투<select data-f="${pfx}.z"><option value="">없음</option>${optHtml(Object.fromEntries(Object.keys(ZOMBIES).map(k=>[k,ZOMBIES[k].n])),r.z)}</select></label></div>
-  <div class="row cev-chk"><label><input type="checkbox" data-f="${pfx}.crew" ${r.crew?'checked':''}> 대원 합류</label><label><input type="checkbox" data-f="${pfx}.kill" ${r.kill?'checked':''}> 대원 한 명 사망</label><label><input type="checkbox" data-f="${pfx}.move" ${r.move?'checked':''}> 정신을 잃고 다른 곳으로</label></div></fieldset>` }
+  <div class="row cev-chk"><label><input type="checkbox" data-f="${pfx}.crew" ${r.crew?'checked':''}> 대원 합류</label><label><input type="checkbox" data-f="${pfx}.kill" ${r.kill?'checked':''}> 대원 한 명 사망</label><label><input type="checkbox" data-f="${pfx}.move" ${r.move?'checked':''}> 정신을 잃고 다른 곳으로</label><label><input type="checkbox" data-f="${pfx}.cap" ${r.cap?'checked':''}> 다른 무리에 포로로 끌려감</label></div></fieldset>` }
 const blankO=()=>({n:'',pos:{},ck:'',ok:cevRes({}),no:cevRes({})});
 function cevForm(e){ rt.cevE=e?JSON.parse(JSON.stringify(e)):{t:'',tag:'INCIDENT',d:'',lv:1,once:false,pos:{},trig:{k:'random',w:2,node:'',stat:'hp',pct:30,st:'leg',lv:5},steps:[{p:[],mood:'tense',sfx:'',fx:'',o:[blankO(),blankO()]}]}; rt.cevS=0;
   const draw=()=>{ const D=rt.cevE, si=Math.min(rt.cevS,D.steps.length-1), St=D.steps[si], T=D.trig;
@@ -6601,9 +6601,9 @@ ACT.rcpAll=el=>{ const open=el.dataset.o==='1'; document.querySelectorAll('detai
 const _renderCraft6=renderCraft; renderCraft=function(){ const h=_renderCraft6(); return `<div class="row rcptool"><span class="note">재료 목록</span><button class="btn sm ghost" data-act="rcpAll" data-o="1">모두 펼치기</button><button class="btn sm ghost" data-act="rcpAll" data-o="0">모두 접기</button></div>`+h };
 
 /* ================= 펫: 이모지 · 이름 · 따라다니기 ================= */
-const PET_E={dog:'🐕',cat:'🐈',crow:'🐦‍⬛',ferret:'🦦',goat:'🐐',hawk:'🦅',owl:'🦉',horse:'🐎',raccoon:'🦝',turtle:'🐢'};
+const PET_E={dog:'🐕',cat:'🐈',crow:'🐦',ferret:'🦦',goat:'🐐',hawk:'🦅',owl:'🦉',horse:'🐎',raccoon:'🦝',turtle:'🐢'};
 const PET_NEW={
-  blackcat:{n:'검은 고양이',e:'🐈‍⬛',fx:{crit:3,event:.05}}, rat:{n:'시궁쥐',e:'🐀',fx:{gather:.06,rare:1}}, rabbit:{n:'산토끼',e:'🐇',fx:{dodge:3}},
+  blackcat:{n:'검은 고양이',e:'🐈',fx:{crit:3,event:.05}}, rat:{n:'시궁쥐',e:'🐀',fx:{gather:.06,rare:1}}, rabbit:{n:'산토끼',e:'🐇',fx:{dodge:3}},
   boar:{n:'새끼 멧돼지',e:'🐗',fx:{def:.05,hp:10}}, hen:{n:'암탉',e:'🐓',fx:{hunger:-.1}}, parrot:{n:'앵무새',e:'🦜',fx:{human:.15}},
   snake:{n:'구렁이',e:'🐍',fx:{disarm:.06}}, wolf:{n:'늑대',e:'🐺',fx:{atk:.08,stealth:-.1}}, fox:{n:'여우',e:'🦊',fx:{plunder:.03}},
   bat:{n:'박쥐',e:'🦇',fx:{rare:2,xp:.04}}, hamster:{n:'햄스터',e:'🐹',fx:{mind:.15}}, duck:{n:'청둥오리',e:'🦆',fx:{gather:.05,hunger:-.05}},
@@ -6630,7 +6630,7 @@ function petInfect(){ const k=S.pet; if(!k||!PETS[k]) return; const lb=petLabel(
   $('mbox').querySelectorAll('[data-pi]').forEach(b=>b.onclick=()=>{ if(b.disabled) return; const fx=[], t=opts[+b.dataset.pi].f(fx); $('mbox').innerHTML=`<div class="eyebrow">PET</div><h2><span class="pemo">${e}</span> ${esc(lb)}</h2><p style="margin:0;line-height:1.7">${esc(t)}</p>${fx.length?`<ul class="ev-eff">${fx.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}<button class="btn pri" id="piOk">확인</button>`; $('piOk').onclick=()=>{ rt.modalLock=false; closeModal(); markSave(); render() } }) }
 setInterval(()=>{ try{ if(!S||!S.intro||!S.pet||rt.enc||rt.party||!$('modal').hidden||document.getElementById('intro')) return; const now=Date.now(); if(!S.petEvT){ S.petEvT=now+ri(18,35)*60000; return } if(now<S.petEvT) return; S.petEvT=now+ri(20,40)*60000; if(Math.random()<.45) petInfect() }catch(e){} },10000);
 const _knockedOut6=knockedOut; knockedOut=function(){ const k=S.pet; const r=_knockedOut6(); if(k&&Math.random()<.2){ const fx=[]; petDie(k,'주인을 지키다 죽었습니다',fx); setTimeout(()=>toast(`${petE(k)} 쓰러진 나를 지키던 펫이 죽었다…`,true),2500) } return r };
-const _scanOnce6=scanOnce; scanOnce=function(z,at){ const r=_scanOnce6(z,at); if(Math.random()<.006){ const left=Object.keys(PETS).filter(x=>!(S.pets||{})[x]); if(left.length) whenFree(()=>{ const k=gainPet(); if(k) toast(`${petE(k)} 길 잃은 동물이 따라온다!`,true) }) } return r };
+const _scanOnce6=scanOnce; scanOnce=function(z,at){ const r=_scanOnce6(z,at); if(Math.random()<.0025){ const left=Object.keys(PETS).filter(x=>!(S.pets||{})[x]); if(left.length) whenFree(()=>{ const k=gainPet(); if(k) toast(`${petE(k)} 길 잃은 동물이 따라온다!`,true) }) } return r };
 /* 남의 펫: 강제 입양 · 약탈 */
 function petRaidIn(by,r){ S.petSeen=S.petSeen||[]; if(S.petSeen.includes(r.id)) return; S.petSeen.push(r.id); S.petSeen=S.petSeen.slice(-60); const k=r.pet; if(!k||!S.pets?.[k]) return; const lb=petLabel(k); petLose(k);
   whenFree(()=>outcome({n:'캠프'},r.how==='adopt'?'펫을 빼앗겼다':'펫을 도둑맞았다',`${nameOf(by)}님이 ${petE(k)} ${lb}을(를) ${r.how==='adopt'?'돈을 던져 주고 억지로 데려갔다':'몰래 훔쳐 갔다'}.`,[`${petE(k)} ${lb} 잃음`],false)) }
@@ -8508,7 +8508,7 @@ PCA('b_mask','B',8,'가면 파티의 발코니','mystery','생존자 가면무�
 /* ---------- 동행 사건: 각자 고른 행동을 보이고, 결과는 한 사람씩 턴으로 ---------- */
 const _onPact36=onPact; onPact=function(m){ const P=rt.party, d=m.data||{}; if(P&&d.kind==='vote'&&P.ev&&d.id===P.ev.id&&m.by){ P.choice=P.choice||{}; P.choice[m.by]=clamp(d.c|0,0,3); setTimeout(()=>partyRender(),0) } return _onPact36(m) };
 const _pVote36=ACT.pVote; ACT.pVote=el=>{ const P=rt.party; _pVote36(el); if(P&&P.ev&&P.ev.my!=null){ P.choice=P.choice||{}; P.choice[rt.myId]=P.ev.my; partyRender() } };
-const effTxt=o=>{ if(!o) return '변화 없음'; const a=[]; if(o.hp) a.push(`체력 ${o.hp>0?'+':''}${o.hp}`); for(const k in o.res||{}){ const v=o.res[k]|0; if(v&&RES[k]) a.push(`${RES[k].n} ${v>0?'+':''}${v}`) } if(o.money) a.push(`$${o.money}`); if(o.item&&ITEMS[o.item]) a.push(ITEMS[o.item].n); if(o.hunger) a.push(`허기 ${o.hunger}`); if(o.xp) a.push(`XP +${o.xp}`); return a.join(' · ')||'변화 없음' };
+const effTxt=o=>{ if(!o) return '변화 없음'; const a=[]; if(o.hp) a.push(`체력 ${o.hp>0?'+':''}${o.hp}`); for(const k in o.res||{}){ const v=o.res[k]|0; if(v&&RES[k]) a.push(`${RES[k].n} ${v>0?'+':''}${v}`) } if(o.money) a.push(`$${o.money}`); if(o.item&&ITEMS[o.item]) a.push(ITEMS[o.item].n); if(o.hunger) a.push(`허기 ${o.hunger}`); if(o.mind) a.push(`정신 ${o.mind}`); if(o.xp) a.push(`XP +${o.xp}`); return a.join(' · ')||'변화 없음' };
 const _onPev36=onPev; onPev=function(m){ const P=rt.party, d=m.data||{};
   if(P&&m.by===P.leader&&d.type==='ev'){ P.choice={}; P.evMem={id:d.id,k:d.k} }
   const em=P&&(P.ev&&P.ev.id===d.id?P.ev:P.evMem&&P.evMem.id===d.id?P.evMem:null);
@@ -8927,6 +8927,7 @@ const CEV_GUIDE=`[양식 설명]
 
 [효과] 체력 -10 · 체력 30% (최대 체력의 30% 회복, -20%는 20% 피해) · 정신 5 · 허기 -10 · 달러 30 · XP 15 · 아이템 붕대 2 · 상태 출혈 10(분) · 치료 출혈
        전투 비틀거리는 감염자 · 대원 합류 · 대원 사망 · 기절 이동 · 소리 비명 · 연출 암전
+       행동 불가 30(초, 화면이 멈춤) · 지도 먹통 3(분, 이동 불가) · 강제 조사 3(회, 멈출 수 없음) · 환청 30(초) · 끌려감 장소이름 · 포로 (다른 무리에 끌려가 탈출 조건을 채워야 함)
        다음 2 (2단계로) · 끝 (여기서 마침. 안 쓰면 끝)`;
 function cevParse(txt){ const out=[], errs=[]; const blocks=String(txt||'').replace(/\r/g,'').split(/^===\s*이벤트\s*[:：]\s*/m).slice(1);
   for(const b of blocks){ const lines=b.split('\n'); const title=lines.shift().trim(); const E={t:title,tag:'INCIDENT',pos:[],lv:1,once:false,trig:{k:'random',w:2},steps:[],d:''}; let st=null, op=null, id='';
@@ -8936,6 +8937,12 @@ function cevParse(txt){ const out=[], errs=[]; const blocks=String(txt||'').repl
         else if(p==='끝') r.go=-1;
         else if((m=p.match(/^(체력|정신|허기|달러|XP|경험치)\s*([+-]?\d+)$/i))){ const k={체력:'hp',정신:'mind',허기:'hg',달러:'$',XP:'xp',xp:'xp',경험치:'xp'}[m[1]]; r[k]=+m[2] }
         else if((m=p.match(/^체력\s*([+-]?\d+)\s*%$/))) r.hpP=+m[1];
+        else if((m=p.match(/^행동\s*불가\s*(\d+)\s*초?$/))) r.lock=+m[1];
+        else if((m=p.match(/^지도\s*먹통\s*(\d+)\s*분?$/))) r.mapd=+m[1];
+        else if((m=p.match(/^강제\s*조사\s*(\d+)\s*회?$/))) r.fscan=+m[1];
+        else if((m=p.match(/^환청\s*(\d+)\s*초?$/))) r.hallu=+m[1];
+        else if(p==='포로'||p==='포로로 끌려감') r.cap=true;
+        else if((m=p.match(/^끌려감\s+(.+)$/))){ const k=Object.keys(MAP).find(q=>MAP[q].n===m[1].trim()); if(k) r.to=k; else errs.push(`「${title}」 ${line}: 장소 '${m[1]}'을(를) 못 찾았어요`) }
         else if((m=p.match(/^아이템\s+(.+?)\s+(\d+)$/))){ const k=byName(ITEMS,m[1]); if(k){ r.it=k; r.iq=+m[2] } else errs.push(`「${title}」 ${line}: 아이템 '${m[1]}'을(를) 못 찾았어요`) }
         else if((m=p.match(/^상태\s+(.+?)\s+(\d+)$/))){ const k=byName(STS,m[1]); if(k){ r.st=k; r.sm=+m[2] } else errs.push(`「${title}」 ${line}: 상태 '${m[1]}'을(를) 못 찾았어요`) }
         else if((m=p.match(/^치료\s+(.+)$/))){ const k=byName(STS,m[1]); if(k) r.cure=k; else errs.push(`「${title}」 ${line}: 상태 '${m[1]}'을(를) 못 찾았어요`) }
@@ -8972,7 +8979,7 @@ function cevParse(txt){ const out=[], errs=[]; const blocks=String(txt||'').repl
     E.steps.forEach((s,i)=>s.o.forEach(o=>{ if(!o.ck) o.no=o.ok; [o.ok,o.no].forEach(r=>{ if(r.go>=E.steps.length){ errs.push(`「${title}」 ${i+1}단계 '${o.n}': ${r.go+1}단계가 없어요`); r.go=-1 } }) }));
     out.push({id:id||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),e:E}) }
   return {list:out,errs} }
-function cevToText(e){ const R=r=>{ const a=[r.t||'…']; if(r.hp) a.push(`체력 ${r.hp}`); if(r.hpP) a.push(`체력 ${r.hpP}%`); if(r.mind) a.push(`정신 ${r.mind}`); if(r.hg) a.push(`허기 ${r.hg}`); if(r.$) a.push(`달러 ${r.$}`); if(r.xp) a.push(`XP ${r.xp}`); if(r.it&&r.iq) a.push(`아이템 ${ITEMS[r.it].n} ${r.iq}`); if(r.st&&r.sm) a.push(`상태 ${STS[r.st].n} ${r.sm}`); if(r.cure) a.push(`치료 ${STS[r.cure].n}`); if(r.z) a.push(`전투 ${ZOMBIES[r.z].n}`); if(r.crew) a.push('대원 합류'); if(r.kill) a.push('대원 사망'); if(r.move) a.push('기절 이동'); if(r.sfx) a.push(`소리 ${CEV_SFX[r.sfx]}`); if(r.fx) a.push(`연출 ${CEV_FX[r.fx]}`); a.push(r.go>=0?`다음 ${r.go+1}`:'끝'); return a.join(' | ') };
+function cevToText(e){ const R=r=>{ const a=[r.t||'…']; if(r.hp) a.push(`체력 ${r.hp}`); if(r.hpP) a.push(`체력 ${r.hpP}%`); if(r.lock) a.push(`행동 불가 ${r.lock}`); if(r.mapd) a.push(`지도 먹통 ${r.mapd}`); if(r.fscan) a.push(`강제 조사 ${r.fscan}`); if(r.hallu) a.push(`환청 ${r.hallu}`); if(r.cap) a.push('포로'); if(r.to&&MAP[r.to]) a.push(`끌려감 ${MAP[r.to].n}`); if(r.mind) a.push(`정신 ${r.mind}`); if(r.hg) a.push(`허기 ${r.hg}`); if(r.$) a.push(`달러 ${r.$}`); if(r.xp) a.push(`XP ${r.xp}`); if(r.it&&r.iq) a.push(`아이템 ${ITEMS[r.it].n} ${r.iq}`); if(r.st&&r.sm) a.push(`상태 ${STS[r.st].n} ${r.sm}`); if(r.cure) a.push(`치료 ${STS[r.cure].n}`); if(r.z) a.push(`전투 ${ZOMBIES[r.z].n}`); if(r.crew) a.push('대원 합류'); if(r.kill) a.push('대원 사망'); if(r.move) a.push('기절 이동'); if(r.sfx) a.push(`소리 ${CEV_SFX[r.sfx]}`); if(r.fx) a.push(`연출 ${CEV_FX[r.fx]}`); a.push(r.go>=0?`다음 ${r.go+1}`:'끝'); return a.join(' | ') };
   const T=e.trig||{}, tr=T.k==='arrive'&&MAP[T.node]?`도착 ${MAP[T.node].n}`:T.k==='level'?`레벨 ${T.lv}`:T.k==='manual'?'직접':`무작위 ${T.w||2}`;
   let s=`=== 이벤트: ${e.t}\n아이디: ${e.id}\n태그: ${e.tag||'INCIDENT'}\n포지션: ${(e.pos||[]).join(', ')}\n레벨: ${e.lv||1}\n발생: ${tr}\n한 번만: ${e.once?'예':'아니오'}\n${e.d&&DOF[e.d]?`구역: ${DOF[e.d].n}\n`:''}`;
   (e.steps||[]).forEach((st,i)=>{ s+=`\n--- ${i+1}\n분위기: ${CEV_MOOD[st.mood]||'긴장'}\n${st.sfx?`소리: ${CEV_SFX[st.sfx]}\n`:''}${st.fx?`연출: ${CEV_FX[st.fx]}\n`:''}${(st.p||[]).join('\n')}\n\n`;
@@ -9659,7 +9666,8 @@ const _renderBody57=renderBody; renderBody=function(){ _renderBody57.apply(this,
  .modal.drawer .mbox>.dhandle{display:flex;justify-content:center;align-items:center;height:22px;margin:0 -18px 0;flex:none;position:sticky;top:-6px;z-index:2;background:var(--panel-solid);touch-action:none;cursor:grab}
  .modal.drawer .mbox>.dhandle i{width:40px;height:4px;border-radius:2px;background:var(--line2)}
  .modal.drawer .mbox>.dlgx{top:-6px;margin-top:-28px}
- .modal.drawer .mbox>.dact{position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom,0px));background:var(--panel-solid);padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));margin-bottom:calc(-16px - env(safe-area-inset-bottom,0px));z-index:2;box-shadow:0 -10px 14px -12px rgba(0,0,0,.35)}
+ .modal.drawer .mbox>button.dact{position:sticky;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2;box-shadow:0 0 0 10px var(--panel-solid),0 -6px 18px 4px rgba(0,0,0,.25)}
+ .modal.drawer .mbox>.dact:not(button){position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom,0px));background:var(--panel-solid);padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));margin-bottom:calc(-16px - env(safe-area-inset-bottom,0px));z-index:2;box-shadow:0 -10px 14px -12px rgba(0,0,0,.35)}
  body.mopen .content{overflow:hidden}
 }
 @media (min-width:761px){.mbox>.dhandle{display:none}}
@@ -10037,7 +10045,9 @@ const _gcDraw68=gcDraw; gcDraw=function(){ const r=_gcDraw68.apply(this,argument
     S.gifts.push(g); S.gifts=S.gifts.slice(-30); addXp(2); sfx('send'); toast(`${nameOf(G.to)}님에게 ${it.n}을(를) 보냈어요.`,true); G.msg=''; markSave(); flushPub(); render(); gcDraw() }); return r };
 (()=>{ const st=document.createElement('style'); st.textContent=`.chatcard.fit{height:var(--chatH,auto)}
 .btn.herob{background:color-mix(in srgb,var(--muted) 60%,transparent)!important;border-color:color-mix(in srgb,var(--muted) 70%,transparent)!important;color:#fff!important}
-.btn.herob:hover{background:color-mix(in srgb,var(--muted) 72%,transparent)!important}`; document.head.append(st) })();
+.btn.herob:hover{background:color-mix(in srgb,var(--muted) 72%,transparent)!important}
+:root[data-theme="light"] .btn.herob{background:color-mix(in srgb,var(--muted) 92%,#000)!important;border-color:color-mix(in srgb,var(--muted) 92%,#000)!important}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .btn.herob{background:color-mix(in srgb,var(--muted) 92%,#000)!important;border-color:color-mix(in srgb,var(--muted) 92%,#000)!important}}`; document.head.append(st) })();
 
 /* 지도: 누를 때 생기던 큰 초점 테두리 제거 (선택 표시는 지점의 링으로 충분) */
 (()=>{ const st=document.createElement('style'); st.textContent=`svg :focus,svg :focus-visible,svg [tabindex]:focus,.citymap g:focus,.citymap g:focus-visible,.ptm g:focus{outline:none!important}
@@ -11261,6 +11271,602 @@ const _cevListDraw104=cevListDraw; cevListDraw=function(){ _cevListDraw104.apply
       cards.slice(r0,r0+3).forEach(c=>{ const x=c.querySelector(':scope > .cevrow'); if(!x) return; const id=x.querySelector('[data-id]')?.dataset.id; if(id) rt.cevPeek[id]=d.open; if(x.open!==d.open) x.open=d.open }) }) });
   requestAnimationFrame(()=>el.querySelectorAll('.cevrow[open] .cr-ed').forEach(t=>{ t.style.height='auto'; t.style.height=(t.scrollHeight+4)+'px' })) };
 addEventListener('resize',()=>{ document.querySelectorAll('.cevrow[open] .cr-ed').forEach(t=>{ t.style.height='auto'; t.style.height=(t.scrollHeight+4)+'px' }) });
+
+/* ================= p105: 영입 창 성별·나이 거르기 · 영입/펫 감염 빈도 낮춤 ================= */
+const RC_KS=[['여','어린이','여자아이'],['남','어린이','남자아이'],['여','청소년','소녀'],['남','청소년','소년'],['여','어른','여자'],['남','어른','남자'],['여','노인','할머니'],['남','노인','할아버지']];
+const rcKey=c=>{ crewInfo(c); return c.sex+c.age };
+function rcSkipHtml(cls){ const K=S.rcSkip||{}, n=RC_KS.filter(([a,b])=>K[a+b]).length;
+  return `<details class="rcskip ${cls||''}"${n?' open':''}><summary>정원이 찼을 때 이런 사람은 비교 창 없이 돌려보내기${n?` · ${n}개 선택됨`:''}</summary><div class="rcgrid">${RC_KS.map(([a,b,l])=>`<label><input type="checkbox" data-act-change="rcSkip" data-k="${a+b}" ${K[a+b]?'checked':''}> ${l}</label>`).join('')}</div></details>` }
+ACT.rcSkip=el=>{ S.rcSkip=S.rcSkip||{}; const k=el.dataset.k; if(el.checked) S.rcSkip[k]=1; else delete S.rcSkip[k]; markSave(); const L=RC_KS.find(x=>x[0]+x[1]===k); toast(el.checked?`${L?L[2]:''}은(는) 앞으로 창 없이 돌려보내요.`:`${L?L[2]:''}도 다시 물어볼게요.`) };
+const _crewSwap105=crewSwapNext; crewSwapNext=function(){ const Q=rt.crewQ||[], it=Q[0];
+  if(it&&it.nc&&!it.back&&S.rcSkip&&S.rcSkip[rcKey(it.nc)]){ Q.shift(); toast(`${it.nc.name}(${crewDesc(it.nc)})은(는) 고른 조건이라 창 없이 돌려보냈어요.`); try{ slog(`${it.nc.name}(${crewDesc(it.nc)})을(를) 조건에 따라 돌려보냈다`) }catch(e){} if(Q.length) setTimeout(()=>whenFree(crewSwapNext),300); return }
+  const r=_crewSwap105.apply(this,arguments); const aw=$('awChk'); if(aw&&!$('mbox').querySelector('.rcskip')) aw.closest('label').insertAdjacentHTML('afterend',rcSkipHtml('inmodal')); return r };
+const _viewCrew105=viewCrew; viewCrew=function(){ const h=_viewCrew105.apply(this,arguments); const i=h.indexOf('<section class="pcard autoc"'); const b=rcSkipHtml(); return i>=0?h.slice(0,i)+b+h.slice(i):h+b };
+/* 사람 만날 확률 전체 0.6배 */
+const _evM105=evM; evM=function(k){ const v=_evM105(k); return k==='human'?v*.6:v };
+/* 펫 감염 사건: 3번 중 1번꼴로만 */
+const _petInf105=petInfect; petInfect=function(){ if(S.pet==='ghost') return; if(Math.random()<.65) return; return _petInf105.apply(this,arguments) };
+(()=>{ const st=document.createElement('style'); st.textContent=`.rcskip{margin:8px 0;border:1px solid var(--line);padding:6px 10px}.rcskip summary{cursor:pointer;font-size:13px}.rcgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 10px;margin-top:6px}.rcgrid label{display:flex;gap:6px;align-items:center;font-size:13px}@media (max-width:520px){.rcgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}`; document.head.append(st) })();
+
+/* ================= p106: 임시 동행 — 접속자가 없어도 내 대원(또는 거리의 사람)과 나가기 ================= */
+rt.npcNm=rt.npcNm||{};
+const _nameOf106=nameOf; nameOf=function(id){ if(typeof id==='string'&&id.startsWith('npc-')){ const P=rt.party, I=P&&P.npc&&P.npc.info[id]; return I?I.name:(rt.npcNm[id]||'동행자') } return _nameOf106.apply(this,arguments) };
+const NPC_TONE={blunt:'dry',cynic:'dry',brag:'bold',calm:'bold',timid:'scared',chatty:'scared',warm:'kind',pious:'kind'};
+const NPC_STREET=[['떠돌이 정비공','해리','남','어른'],['전직 소방관','마리','여','어른'],['배낭 멘 대학생','준','남','청소년'],['말수 적은 사냥꾼','로이','남','어른'],['목발 짚은 간호사','엘라','여','어른'],['무표정한 택배 기사','덕','남','어른'],['군복 입은 할머니','루스','여','노인'],['자전거 탄 소녀','니나','여','청소년'],['수염 덥수룩한 목사','벤','남','노인'],['문신한 바텐더','케이','여','어른']];
+const NPC_CAT={horde:'danger',sniper:'danger',dogs:'danger',bridge:'danger',acid:'danger',mutant:'danger',ambush:'danger',collapse:'danger',gas:'danger',fire:'danger',toll:'danger',flood:'danger',blackout:'danger',kidnap:'danger',hurt:'help',child:'help',radio:'help',trader:'help',truck:'loot',gun:'loot',bunker:'loot',airdrop:'loot'};
+/* 사건마다 말투별 한마디 */
+const NPC_EV={
+ truck:{dry:['짐칸부터 확인하자. 소리 내지 말고.'],bold:['내가 문 연다. 뒤 봐 줘.'],scared:['저 안에서 뭐가 긁는 소리 안 났어요?'],kind:['구호 트럭이네요. 누가 남겨 둔 게 있을지도.']},
+ horde:{dry:['수가 많다. 싸울 거면 지금 정해.'],bold:['좁은 골목으로 끌어들이자. 하나씩 잡는다.'],scared:['저, 저거 다 이쪽으로 와요…!'],kind:['다들 붙어 있어요. 아무도 혼자 떨어지지 마요.']},
+ hurt:{dry:['물려서 저러는 건지부터 봐.'],bold:['내가 상처 볼게. 엄호해.'],scared:['…저 사람, 팔에 그거 피 맞죠?'],kind:['물 조금만 나눠 줘요. 저 사람 입술이 다 텄어요.']},
+ sniper:{dry:['고개 숙여. 위에서 본다.'],bold:['창문 셋째 줄이다. 연기 피우고 뛰자.'],scared:['방금 거 저 맞을 뻔했어요…'],kind:['다들 차 뒤로요. 천천히, 천천히.']},
+ gun:{dry:['셔터 부수면 놈들 다 온다. 뒷문.'],bold:['총만 있으면 오늘 밤은 편하게 잔다.'],scared:['여기 주인… 안에 있는 거 아니죠?'],kind:['쓸 만큼만 가져가요. 다음 사람 몫도 남겨 두고.']},
+ dogs:{dry:['눈 피하지 마. 등 보이면 끝이다.'],bold:['막대기 들어. 앞에 놈부터.'],scared:['개, 개는 진짜 싫어요…'],kind:['쟤들도 굶어서 저래요. 먹을 걸 던져 볼까요?']},
+ bridge:{dry:['한 명씩. 무게 나눠.'],bold:['단번에 뛰면 돼. 내가 먼저 간다.'],scared:['아래 보지 마… 아래 보지 마…'],kind:['손 잡아요. 제가 끝까지 잡고 있을게요.']},
+ radio:{dry:['녹음 방송은 미끼일 때가 많아.'],bold:['가 보자. 아니면 그때 부수면 되지.'],scared:['극장… 거기 사람 있는 거 맞을까요?'],kind:['정말 사람들이 있다면 좋겠어요.']},
+ bunker:{dry:['해치 닫히면 못 나온다. 하나는 위에 남아.'],bold:['내려간다. 불 비춰.'],scared:['안에서 숨소리 들리면 바로 올라와요, 네?'],kind:['누군가 가족이랑 숨으려던 곳 같아요.']},
+ acid:{dry:['피부에 닿으면 탄다. 덮어.'],bold:['조금 따끔한 거야. 그냥 가자.'],scared:['손등이… 따가워요, 이거 괜찮은 거예요?'],kind:['처마 밑으로 와요. 같이 비 피해요.']},
+ trader:{dry:['값 깎아. 저 노인 웃는 거 장사꾼 웃음이다.'],bold:['쓸 만한 거 있으면 내가 산다.'],scared:['저 할아버지 수레에서 이상한 냄새 나요…'],kind:['이런 데서 장사를 하시다니, 대단하시네요.']},
+ mutant:{dry:['저건 생각을 한다. 흩어지면 하나씩 당해.'],bold:['동시에 친다. 셋 셀게.'],scared:['쟤가… 우리를 세고 있어요.'],kind:['다들 서로 보이는 곳에 있어요. 제발.']},
+ ambush:{dry:['엎드려!'],bold:['머리 감싸! 지나가면 반격한다!'],scared:['아악! 위에서, 위에서 떨어져요!'],kind:['괜찮아요? 다친 데 없어요?']},
+ collapse:{dry:['벽 잡아. 바닥 믿지 마.'],bold:['손 줘! 끌어올린다!'],scared:['바닥이… 바닥이 없어요!'],kind:['천천히, 제 손 놓지 마요.']},
+ gas:{dry:['소매로 입 막고 뛰어.'],bold:['바람 부는 쪽으로! 따라와!'],scared:['숨이… 숨이 안 쉬어져요…'],kind:['천 적셔 줄게요. 이걸로 입 막아요.']},
+ kidnap:{dry:['데려간 쪽 방향 봤어?'],bold:['쫓아가서 찾아온다.'],scared:['방금… 방금 사람이 없어졌어요…'],kind:['찾을 수 있어요. 꼭 찾아요.']},
+ airdrop:{dry:['다른 놈들도 봤을 거다. 빨리.'],bold:['내가 지붕 탄다.'],scared:['저거 떨어지는 소리에 놈들 다 왔을 거예요…'],kind:['나눠요. 다 같이 쓸 수 있게.']},
+ child:{dry:['…아이 혼자? 주변에 어른 흔적부터 봐.'],bold:['꼬마, 우리 뒤에 꼭 붙어 있어.'],scared:['아이 손이 너무 차가워요…'],kind:['괜찮아, 엄마 찾아 줄게. 이름이 뭐야?']},
+ fire:{dry:['연기 아래로 낮게.'],bold:['뚫는다! 숨 참아!'],scared:['뜨, 뜨거워요!'],kind:['옷 적셔요, 얼른!']},
+ toll:{dry:['괜히 영웅 노릇 하지 마. 내고 지나가.'],bold:['…이번만 참는다.'],scared:['총, 총구가 이쪽 보고 있어요.'],kind:['다들 손 보이게 들어요. 다치면 안 돼요.']},
+ flood:{dry:['맨홀 구멍 조심. 발밑 더듬어.'],bold:['헤치고 간다. 따라와.'],scared:['물속에서 뭐가 다리를 스쳤어요…!'],kind:['식량 높이 들어요. 젖으면 못 먹어요.']},
+ blackout:{dry:['등 맞대.'],bold:['소리 나는 쪽으로 휘둘러!'],scared:['아무것도 안 보여요… 어디 있어요?!'],kind:['제 목소리 따라와요. 여기예요.']},
+};
+const NPC_GEN={dry:{danger:['조용히. 숨소리도 줄여.'],help:['도와줄 거면 빨리 정해.'],loot:['챙길 것만 챙기고 빠지자.']},bold:{danger:['내가 앞에 선다.'],help:['내가 갈게.'],loot:['내가 먼저 들어간다.']},scared:{danger:['저, 저 무서워요…'],help:['괜찮을까요…?'],loot:['빨리 챙기고 가요…']},kind:{danger:['다들 괜찮아요? 제 뒤로요.'],help:['도울 수 있으면 도와요.'],loot:['다 같이 나눠요.']}};
+const NPC_KID={danger:['저거 뭐야…? 나 무서워.','대장 옷자락 잡아도 돼?'],help:['저 사람 도와주자, 응?'],loot:['나도 하나 들 수 있어!']};
+const NPC_OLD={danger:['허, 이 나이에 별꼴을 다 보는군.','젊은이들, 내 걱정은 말게.'],help:['우리도 저런 처지였지. 도와주세.'],loot:['쓸 만한 건 늙은이 눈에 더 잘 보인다네.']};
+const NPC_RES={dry:{ok:['됐다. 움직이자.','나쁘지 않네.'],bad:['…다친 데 묶어. 계속 간다.','운이 없었다.']},bold:{ok:['봤지? 별거 아니라니까.','다음도 이렇게만 가자.'],bad:['…다음엔 내가 더 앞에 설게.','젠장, 오늘은 몸이 무겁네.']},scared:{ok:['사, 살았다…','다행이에요, 진짜 다행이에요.'],bad:['괜찮아요? 피, 피가…','나 때문인가요…?']},kind:{ok:['다들 무사해서 다행이에요.','잘했어요, 다들.'],bad:['상처 좀 봐요. 제가 감아 줄게요.','괜찮아요, 이 정도면 나아요.']}};
+const NPC_CHAT={dry:['응.','알았어.','…그래.','나중에 얘기해. 지금은 주변 봐.'],bold:['맡겨.','그거 좋지!','걱정 마, 내가 있잖아.'],scared:['네, 네!','저도 그렇게 생각해요…','조, 조용히 말해요. 놈들이 들어요.'],kind:['그래요.','고마워요.','무리하지 마요.']};
+const NPC_HI={dry:['가자.','짐 가볍게 해. 오래 안 걸린다.'],bold:['앞은 내가 맡는다.','오늘은 좀 쓸 만한 걸 건져 보자.'],scared:['저, 저도 가요? …네, 따라갈게요.','소리 나면 바로 숨어요, 알았죠?'],kind:['물 챙겼어요? 하나 더 있어요.','같이 나가니까 든든하네요.']};
+const NPC_BYE={dry:['시간 됐다. 돌아가자.'],bold:['오늘은 여기까지.'],scared:['이제 돌아가요… 네?'],kind:['다들 수고했어요. 돌아가요.']};
+const NPC_PLEA={dry:{m:'kill',x:['변하기 전에 끝내. 부탁이다.']},bold:{m:'kill',x:['내가 나를 알아. 변하면 너희를 문다. 끝내.']},scared:{m:'beg',x:['아직 괜찮아요… 진짜예요, 열도 안 나요…','살려 줘요… 제발…']},kind:{m:'beg',x:['조금만 기다려 줘요. 아직 나예요.']}};
+const NPC_INFME={dry:['…규칙은 알지.'],bold:['버텨. 아직 눈은 사람이야.'],scared:['아, 안 돼요… 대장…'],kind:['방법이 있을 거예요. 포기하지 마요.']};
+const NPC_RAID={dry:['한 놈이다. 같이 친다.'],bold:['내가 어그로 끈다!'],scared:['저, 저렇게 큰 건 처음 봐요…'],kind:['다치면 바로 뒤로 빠져요!']};
+function npcLine(I,set,cat){ const t=I.tone; if(I.age==='어린이'&&cat) return npcU(NPC_KID[cat]||NPC_KID.danger); if(I.age==='노인'&&cat&&Math.random()<.6) return npcU(NPC_OLD[cat]||NPC_OLD.danger); const L=set[t]||set.dry; return stPick(Array.isArray(L)?L:(L[cat]||L.danger||[])) }
+function npcSay(P,id,x,ms){ setTimeout(()=>{ if(rt.party!==P||!x) return; pDeliver(P,'pchat',{data:{x,pid:P.id,mid:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)},by:id,isMe:false}) },ms||ri(900,2600)) }
+function npcPact(P,id,d){ pDeliver(P,'pact',{data:Object.assign({pid:P.id,mid:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)},d),by:id,isMe:false}) }
+function npcMake(c,i){ const id='npc-'+Date.now().toString(36)+i+Math.random().toString(36).slice(2,5);
+  if(c){ crewInfo(c); return {id,name:crewNm(c),crew:c.id,per:c.per,age:c.age,sex:c.sex,tone:NPC_TONE[c.per]||'dry',pw:power(c)} }
+  const s=npcU(NPC_STREET); return {id,name:`${s[1]} (${s[0]})`,crew:null,per:'',age:s[3],sex:s[2],tone:stPick(['dry','bold','scared','kind']),pw:ri(9,16)} }
+async function npcGo(crewIds,fill){ if(rt.party) return toast('이미 동행 중이에요.'); if(rt.enc) return toast('전투 중이에요.'); if(resting()||S.hp<=0) return toast('지금 몸으로는 나갈 수 없어요.');
+  const cs=crewIds.map(crewById).filter(Boolean).slice(0,P_SIZE-1); const L=cs.map((c,i)=>npcMake(c,i)); if(fill) while(L.length<P_SIZE-1){ let x; do{ x=npcMake(null,L.length) }while(L.some(y=>y.name===x.name)); L.push(x) }
+  if(!L.length) return toast('함께 나갈 사람을 골라 주세요.');
+  if(!rt.myId) rt.myId='me-local';
+  rt.modalLock=false; closeModal(); await partyOpen('pt-npc'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),rt.myId); const P=rt.party; if(!P) return;
+  P.npc={ids:L.map(x=>x.id),info:Object.fromEntries(L.map(x=>[x.id,x])),st:{}}; L.forEach(x=>{ rt.npcNm[x.id]=x.name; P.npc.st[x.id]={} });
+  plog(L.some(x=>x.crew)?'내 대원들과 함께 나섰다.':'거리에서 만난 사람들과 잠시 같이 움직이기로 했다.','me');
+  npcBeat(true); L.forEach((x,i)=>npcSay(P,x.id,npcLine(x,NPC_HI),1500+i*1600)); render() }
+function npcBeat(force){ const P=rt.party; if(!P||!P.npc) return; const now=Date.now(); if(!force&&now-(P.npc.hbT||0)<1900) return; P.npc.hbT=now;
+  P.npc.ids.forEach((id,i)=>{ const I=P.npc.info[id], a=(i+1)*2.1; npcPact(P,id,{kind:'hb',nick:I.name,x:+(P.me.x+Math.cos(a)*1.1).toFixed(2),y:+(P.me.y+Math.sin(a)*1.1).toFixed(2),hp:I.hp==null?100:I.hp,w:'blunt',inf:P.inf===id?1:0,lvl:lvlOf(S.xp)}) }) }
+function npcPick(I,ev){ const n=(ev&&ev.o||[0]).length; if(n<=1) return 0; const k=ev.k;
+  if(k==='kidnap') return I.tone==='scared'?n-1:1;
+  if(I.tone==='bold') return Math.random()<.8?0:ri(0,n-1);
+  if(I.tone==='scared') return Math.random()<.7?n-1:ri(0,n-1);
+  if(I.tone==='kind') return NPC_CAT[k]==='help'||k==='airdrop'?(k==='airdrop'?1:0):ri(0,n-1);
+  return ri(0,n-1) }
+setInterval(()=>{ try{ const P=rt.party; if(!P||!P.npc) return; const now=Date.now(), N=P.npc; npcBeat(false);
+  /* 사건 */
+  if(P.ev&&N.ev!==P.ev.id){ N.ev=P.ev.id; N.evK=P.ev.k; const ev=PEV.find(e=>e.k===P.ev.k); let spoke=0;
+    N.ids.forEach((id,i)=>{ const I=N.info[id], st=N.st[id]; if(P.dead[id]) return; st.vAt=now+ri(2500,7000)+i*700; st.vd=null;
+      if(spoke<2&&Math.random()<.7){ spoke++; const set=NPC_EV[P.ev.k]; npcSay(P,id,set&&I.age!=='어린이'&&!(I.age==='노인'&&Math.random()<.25)?npcU(set[I.tone]||set.dry):npcLine(I,NPC_GEN,NPC_CAT[P.ev.k]||'danger'),ri(800,2200)+i*1200) } }) }
+  if(P.ev&&P.ev.id===N.ev){ const ev=PEV.find(e=>e.k===P.ev.k); N.ids.forEach(id=>{ const st=N.st[id]; if(P.dead[id]||st.vd===P.ev.id||now<st.vAt) return; if(P.kid&&P.kid.tg===id&&now<P.kid.until) return; if(P.evTg===id) return; st.vd=P.ev.id; npcPact(P,id,{kind:'vote',id:P.ev.id,c:npcPick(N.info[id],ev),w:'blunt',p:clamp(Math.round(N.info[id].pw*1.2),4,40)}) }) }
+  if(!P.ev&&N.ev&&!N.evDone){ }
+  if(!P.ev&&N.ev&&N.evR!==N.ev){ N.evR=N.ev; if(Math.random()<.55){ const id=stPick(N.ids.filter(x=>!P.dead[x])); if(id){ const I=N.info[id], last=(P.log||[]).slice(-3).map(x=>x.x).join(' '), bad=N.lastBad!=null?N.lastBad:/-\d|피|밀렸|다쳤|물어|부상|빼앗/.test(last); npcSay(P,id,npcRes(I,N.evK,bad),ri(1500,3200)) } } }
+  /* 이동 제안 */
+  if(P.prop&&P.prop.v){ N.ids.forEach(id=>{ const st=N.st[id]; if(P.dead[id]||P.prop.v[id]!=null) return; if(st.pr!==P.prop.id){ st.pr=P.prop.id; st.prAt=now+ri(1500,4000); return } if(now>=st.prAt){ npcPact(P,id,{kind:'mv',id:P.prop.id,ok:N.info[id].tone==='scared'?Math.random()<.7:true}) } }) }
+  /* 감염 */
+  const S2=P.infS; if(S2){ const tg=P.inf;
+    if(tg&&N.info[tg]&&S2.ph==='plea'){ const st=N.st[tg], key='r'+S2.r; if(st.pl!==key){ if(!st.plAt||st.plK!==key){ st.plK=key; st.plAt=now+ri(3000,7000) } else if(now>=st.plAt){ st.pl=key; const pl=NPC_PLEA[N.info[tg].tone]||NPC_PLEA.dry; npcPact(P,tg,{kind:'plea',m:pl.m,x:npcU(pl.x),r:S2.r}) } } }
+    if(tg===rt.myId&&N.infMe!==S2.r){ N.infMe=S2.r; if(S2.r===1){ const id=stPick(N.ids.filter(x=>!P.dead[x])); if(id) npcSay(P,id,npcU(NPC_INFME[N.info[id].tone]||NPC_INFME.dry),ri(1200,3000)) } }
+    if(S2.ph==='vote'&&S2.kv){ N.ids.forEach(id=>{ if(id===tg||P.dead[id]||S2.kv[id]) return; const st=N.st[id], key='k'+S2.r; if(st.kvK!==key){ st.kvK=key; st.kvAt=now+ri(2500,8000); return } if(now<st.kvAt||st.kvDone===key) return; st.kvDone=key; const I=N.info[id], p={dry:.6,bold:.55,scared:.35,kind:.15}[I.tone]||.4, mine=tg===rt.myId; npcPact(P,id,{kind:'kv',k:Math.random()<(mine&&I.crew?p*.6:p),w:'blunt',r:S2.r}) }) } }
+  /* 레이드 */
+  const R=P.raid; if(R){ if(N.raid!==R.id){ N.raid=R.id; const id=stPick(N.ids.filter(x=>!P.dead[x])); if(id) npcSay(P,id,npcU(NPC_RAID[N.info[id].tone]||NPC_RAID.dry),ri(800,2000)) }
+    const dmgOf=id=>Math.round((N.info[id].pw*1.3+lvlOf(S.xp)*1.1+6)*rand(.8,1.2));
+    if(R.tb){ if(R.phase==='input'){ N.ids.forEach(id=>{ const st=N.st[id], A=R.acts[R.round]||{}; if(P.dead[id]||A[id]||((P.down||{})[id]>now)) return; if(P.kid&&P.kid.tg===id&&now<P.kid.until) return; const key=R.id+':'+R.round; if(st.rk!==key){ st.rk=key; st.rAt=now+ri(1200,3500); return } if(now<st.rAt) return; const pow=Math.random()<.25; npcPact(P,id,{kind:'ract',id:R.id,r:R.round,d:Math.round(dmgOf(id)*(pow?1.4:1)),lb:pow?'강타':'공격'}) }) } }
+    else N.ids.forEach(id=>{ const st=N.st[id]; if(P.dead[id]) return; if(now>=(st.hitAt||0)){ st.hitAt=now+ri(2600,4200); npcPact(P,id,{kind:'rhit',id:R.id,d:dmgOf(id)}) } }) }
+  /* 끝나기 직전 */
+  if(P.on&&P.start&&!N.bye&&P.start+P_MAX-now<15000&&!P.ev&&!P.raid&&!P.inf){ N.bye=1; const id=stPick(N.ids.filter(x=>!P.dead[x])); if(id) npcSay(P,id,npcU(NPC_BYE[N.info[id].tone]||NPC_BYE.dry),500) }
+ }catch(e){} },1000);
+/* 내가 말하면 가끔 대답 */
+const _pSend106=ACT.pSend; ACT.pSend=function(){ const P=rt.party, n0=P?P.chat.length:0; const r=_pSend106.apply(this,arguments); try{ if(P&&P.npc&&P.chat.length>n0&&Math.random()<.6){ const L=P.npc.ids.filter(x=>!P.dead[x]&&!(P.kid&&P.kid.tg===x&&Date.now()<P.kid.until)); if(L.length){ const id=stPick(L), I=P.npc.info[id], x=(P.chat[P.chat.length-1]||{}).x||''; npcSay(P,id,/\?|？|까$|니$|요\?/.test(x)&&I.tone!=='scared'?npcU(['글쎄.','음… 가 보면 알겠지.','난 잘 모르겠어.','그건 대장이 정해.','…생각 좀 해 볼게.']):npcU(NPC_CHAT[I.tone]||NPC_CHAT.dry),ri(1400,3200)) } } }catch(e){} return r };
+/* 끝난 NPC 동행은 다시 들어가기 대상이 아님 */
+const _pBackUi106=pBackUi; pBackUi=function(){ if(S.pty&&/^pt-npc/.test(S.pty.id||'')&&!(rt.party&&rt.party.id===S.pty.id)){ delete S.pty } return _pBackUi106.apply(this,arguments) };
+const _pBack106=ACT.pBack; ACT.pBack=function(){ if(S.pty&&/^pt-npc/.test(S.pty.id||'')){ delete S.pty; pBackUi(); return toast('대원들과의 동행은 이미 끝났어요.') } return _pBack106.apply(this,arguments) };
+/* 고르는 창 */
+ACT.npcParty=()=>{ if(rt.party) return toast('이미 동행 중이에요.'); const C=crewAlive().filter(c=>c.state!=='kid'&&c.state!=='dead').map(c=>{ crewInfo(c); return c });
+  rt.npcSel=rt.npcSel||{}; Object.keys(rt.npcSel).forEach(k=>{ if(!crewById(k)) delete rt.npcSel[k] });
+  const draw=()=>{ const n=Object.keys(rt.npcSel).filter(k=>rt.npcSel[k]).length, max=P_SIZE-1;
+    $('mbox').innerHTML=`<div class="eyebrow">PARTY <span class="dash"></span> 접속자 없이</div><h2>누구와 나갈까?</h2><p class="ch-p">${C.length?`함께 나갈 대원을 ${max}명까지 골라요. 파견 중인 대원도 길에서 합류한 것처럼 같이 움직여요. 대원들은 성격에 맞는 말을 하고, 사건마다 스스로 고르고 레이드에서도 함께 싸워요.`:'아직 대원이 없어요. 거리에서 만난 사람들과 잠시 같이 움직여요.'}</p>
+      ${C.length?`<div class="npcl">${C.map(c=>`<label class="npcc${rt.npcSel[c.id]?' on':''}"><input type="checkbox" data-npc="${esc(c.id)}" ${rt.npcSel[c.id]?'checked':''} ${!rt.npcSel[c.id]&&n>=max?'disabled':''}><b>${esc(crewNm(c))}</b><small>${esc(crewDesc(c))} · ${esc((PERS[c.per]||{}).n||'')}${c.state==='away'?' · 파견 중':''}</small></label>`).join('')}</div>
+      <label class="npcfill"><input type="checkbox" id="npcFill" ${rt.npcFill!==false?'checked':''}> 빈자리는 거리의 사람으로 채우기</label>`:''}
+      <div class="row"><button class="btn pri" id="npcGo" type="button" ${C.length&&!n?'disabled':''}>${C.length?`${n?n+'명과 ':''}출발 (5분)`:'거리의 사람들과 출발 (5분)'}</button>${C.length?'<button class="btn" id="npcStreet" type="button">대원 없이 거리의 사람과</button>':''}<button class="btn ghost" id="npcX" type="button">닫기</button></div>`;
+    $('mbox').querySelectorAll('[data-npc]').forEach(x=>x.onchange=()=>{ rt.npcSel[x.dataset.npc]=x.checked; draw() });
+    const f=$('npcFill'); if(f) f.onchange=()=>{ rt.npcFill=f.checked };
+    $('npcGo').onclick=()=>{ const ids=Object.keys(rt.npcSel).filter(k=>rt.npcSel[k]); npcGo(ids,!C.length||rt.npcFill!==false) };
+    const st=$('npcStreet'); if(st) st.onclick=()=>npcGo([],true);
+    $('npcX').onclick=()=>{ rt.modalLock=false; closeModal() } };
+  rt.modalLock=true; openModal('<div></div>'); draw() };
+const npcBtn=()=>rt.party?'':`<div class="npcrow"><button class="btn sm" data-act="npcParty" type="button">${crewAlive().length?'내 대원과 나가기':'거리의 사람과 나가기'}</button><span class="note">접속자가 없어도 5분 동안 함께 움직여요.</span></div>`;
+const _partyCard106=partyCard; partyCard=function(){ const h=_partyCard106.apply(this,arguments); if(rt.party) return h; const i=h.lastIndexOf('</div>'); return i>=0?h.slice(0,i)+npcBtn()+h.slice(i):h+npcBtn() };
+const _recBar106=recBar; recBar=function(){ const h=_recBar106.apply(this,arguments); if(rt.party) return h; const i=h.lastIndexOf('</section>'); return i>=0?h.slice(0,i)+npcBtn()+h.slice(i):h };
+(()=>{ const st=document.createElement('style'); st.textContent=`.npcrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}.npcl{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin:8px 0}.npcc{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:center;border:1px solid var(--line);padding:8px 10px;cursor:pointer}.npcc input{grid-row:span 2}.npcc small{color:var(--muted);font-size:12px}.npcc.on{border-color:var(--accent,#2a9)}.npcfill{display:flex;gap:6px;align-items:center;font-size:13px;margin:4px 0 10px}`; document.head.append(st) })();
+
+/* ================= p107: 공포 연출 — 행동 불가 · 지도 먹통 · 강제 조사 · 끌려감(장소 이동) · 환청 ================= */
+const HZ_LOCK_TX=['숨소리도 내면 안 된다.','움직이지 마. 아직 바로 밖에 있다.','손가락 하나 까딱할 수 없다.','심장 소리가 너무 크다. 들킬 것 같다.'];
+const HZ_HALLU=['누가 내 이름을 불렀다.','등 뒤에서 숨소리가 들린 것 같다.','무전기: "…거기 있는 거 알아…"','어디선가 아이가 웃는다.','창문에 손자국이 하나 더 늘었다.','발소리가 내 걸음에 맞춰 멈춘다.','"문 열어 줘." 문 같은 건 없는데.'];
+function hzLockUi(){ const left=(S.lockUntil||0)-Date.now(); let el=$('hzLock');
+  if(left<=0){ if(el){ el.remove(); FXL.tension(0) } return }
+  if(!el){ el=document.createElement('div'); el.id='hzLock'; el.setAttribute('role','alert'); el.innerHTML=`<div class="hzl-in"><p class="hzl-t"></p><b class="hzl-n num"></b><small>지금은 아무것도 할 수 없다</small></div>`; document.body.append(el); el.querySelector('.hzl-t').textContent=S.lockTx||stPick(HZ_LOCK_TX); FXL.tension(.8); try{ sfx('hbeat') }catch(e){} }
+  const n=el.querySelector('.hzl-n'), v=Math.ceil(left/1000)+'초'; if(n.textContent!==v) n.textContent=v }
+function hzLock(sec,tx){ sec=clamp(sec|0,3,120); S.lockUntil=Math.max(S.lockUntil||0,Date.now()+sec*1000); S.lockTx=tx||stPick(HZ_LOCK_TX); const el=$('hzLock'); if(el) el.remove(); markSave(); hzLockUi(); FXL.flicker() }
+const hzLocked=()=>Date.now()<(S.lockUntil||0);
+const hzMapOff=()=>Date.now()<(S.mapDown||0);
+function hzMapDown(min){ min=clamp(min|0,1,30); S.mapDown=Math.max(S.mapDown||0,Date.now()+min*60000); markSave(); FXL.staticOn(900); setTimeout(()=>toast(`지도 화면이 지직거리더니 꺼졌다. ${min}분 동안 지도를 쓸 수 없다.`,true),700); render() }
+function hzHallu(sec){ sec=clamp(sec|0,5,120); const end=Date.now()+sec*1000; rt.halluEnd=Math.max(rt.halluEnd||0,end); if(rt.halluT) return;
+  const tick=()=>{ if(Date.now()>=rt.halluEnd){ rt.halluT=0; document.body.classList.remove('hz-hallu'); return } document.body.classList.add('hz-hallu'); const r=Math.random();
+    if(r<.45){ toast(stPick(HZ_HALLU)); try{ sfx(stPick(['whisper','knock','distant','steps'])) }catch(e){} } else if(r<.7) FXL.flicker(); else FXL.staticOn(300);
+    rt.halluT=setTimeout(tick,ri(4000,8000)) }; rt.halluT=setTimeout(tick,1200) }
+function hzMoveTo(k,why){ if(!MAP[k]||rt.party||S.travel) return false; if(S.scan) try{ finishScan(true) }catch(e){ S.scan=null }
+  FXL.blackout(2600,why||'…무언가에 끌려갔다', ()=>{ S.pos=k; S.visited=S.visited||{}; S.visited[k]=1; markSave(); render(); toast(`정신을 차려 보니 ${MAP[k].n}였다.`,true); try{ slog(`끌려가 정신을 차려 보니 ${MAP[k].n}였다.`) }catch(e){} }); return true }
+function hzScan(N){ N=clamp(N|0,1,10); const go=()=>{ if(S.travel||rt.party){ return } const z=S.pos, n=MAP[z]; if(!n||n.home) return; if(S.scan) try{ finishScan(true) }catch(e){ S.scan=null }
+    const per=Math.round(n.sec); S.scan={z,n:N,i:0,s:Date.now(),per:Math.min(per,Math.floor(SCAN_MAX/N)),got:{},cash:0,ings:[],finds:[],log:[],miss:0,forced:1}; toast(`몸이 멋대로 ${n.n}을(를) 뒤지기 시작했다 · ${N}회 · 멈출 수 없다`,true); try{ sfx('rummage') }catch(e){} markSave(); render() };
+  whenFree(go) }
+function hzApply(r){ if(!r) return; try{
+  if(r.to&&MAP[r.to]) setTimeout(()=>hzMoveTo(r.to),900);
+  if(r.lock) setTimeout(()=>hzLock(r.lock),r.to?3800:300);
+  if(r.mapd) setTimeout(()=>hzMapDown(r.mapd),r.to?4200:600);
+  if(r.hallu) hzHallu(r.hallu);
+  if(r.fscan) setTimeout(()=>hzScan(r.fscan),r.to?4000:800) }catch(e){} }
+const _cevApplyNow107=cevApplyNow; cevApplyNow=function(r,e){ const out=_cevApplyNow107.apply(this,arguments); hzApply(r); const fx=Array.isArray(out)?out:null; if(fx&&r){ if(r.lock) fx.push(`행동 불가 ${r.lock}초`); if(r.mapd) fx.push(`지도 먹통 ${r.mapd}분`); if(r.fscan) fx.push(`강제 조사 ${r.fscan}회`); if(r.to&&MAP[r.to]) fx.push(`끌려감: ${MAP[r.to].n}`) } return out };
+const _cevFinal107=cevFinal; cevFinal=function(r,e,fail){ const out=_cevFinal107.apply(this,arguments); hzApply(r); try{ out.fx=out.fx||[]; if(r.lock) out.fx.push(`행동 불가 ${r.lock}초`); if(r.mapd) out.fx.push(`지도 먹통 ${r.mapd}분`); if(r.fscan) out.fx.push(`강제 조사 ${r.fscan}회`); if(r.to&&MAP[r.to]) out.fx.push(`끌려감: ${MAP[r.to].n}`) }catch(x){} return out };
+/* 행동 막기 */
+const _canAct107=canAct; canAct=function(){ return !hzLocked()&&_canAct107.apply(this,arguments) };
+const _whyCant107=whyCant; whyCant=function(){ if(hzLocked()) return `움직일 수 없다 · ${Math.ceil((S.lockUntil-Date.now())/1000)}초`; return _whyCant107.apply(this,arguments) };
+const _mapGo107=ACT.mapGo; ACT.mapGo=function(el){ if(hzLocked()) return toast('지금은 움직일 수 없다.'); if(hzMapOff()) return toast(`지도가 먹통이다. 어디가 어딘지 모르겠다 · ${mmss(S.mapDown-Date.now())}`); return _mapGo107.apply(this,arguments) };
+const _scanStop107=ACT.scanStop; ACT.scanStop=function(){ if(S.scan&&S.scan.forced) return toast('멈출 수 없다. 손이 말을 듣지 않는다.'); return _scanStop107.apply(this,arguments) };
+const _viewMap107=viewMap; viewMap=function(){ const h=_viewMap107.apply(this,arguments); if(!hzMapOff()) return h; const ban=`<div class="hzmap"><b>NO SIGNAL</b><span>지도 화면이 먹통이다. 이동할 수 없다 · <span class="num" id="hzMapT">${mmss(S.mapDown-Date.now())}</span></span></div>`; const i=h.indexOf('<div class="mapwrap'); return i>=0?h.slice(0,i)+ban+'<div class="hzoff">'+h.slice(i)+'</div>':ban+h };
+setInterval(()=>{ try{ if(!S) return; hzLockUi(); const t=$('hzMapT'); if(t){ if(hzMapOff()) t.textContent=mmss(S.mapDown-Date.now()); else { S.mapDown=0; render() } } }catch(e){} },500);
+document.addEventListener('keydown',e=>{ if($('hzLock')){ e.preventDefault(); e.stopPropagation() } },true);
+/* 글 양식 · 고치기 화면 */
+const hzPlace=n=>{ n=String(n||'').trim(); return Object.keys(MAP).find(k=>MAP[k].n===n)||(MAP[n]?n:'') };
+/* 기본 공포 사건 (관리자 사건과 별개로 가끔 섞여 나와요) */
+const HZ_TXT=`=== 이벤트: 무전기 속 내 목소리
+태그: SIGNAL
+레벨: 2
+--- 1
+분위기: 미스터리
+소리: 잡음
+연출: 지직거림
+허리춤의 무전기에서 잡음 사이로 목소리가 흘러나온다.
+…내 목소리다. 내가 한 적 없는 말을 하고 있다.
+
+> 끝까지 듣는다
+  결과: 목소리가 내가 서 있는 곳의 이름을 또박또박 읊었다. 그 순간 지도 화면이 하얗게 타 버렸다. | 지도 먹통 3 | 환청 40 | 정신 -6 | XP 15 | 끝
+> 배터리를 뽑는다
+  결과: 배터리를 뽑았는데도 한동안 잡음이 들렸다. | 정신 -3 | XP 6 | 끝
+
+=== 이벤트: 문 너머의 숨소리
+태그: HIDE
+레벨: 2
+--- 1
+분위기: 공포
+소리: 문 두드림
+연출: 깜빡임
+쉬던 건물의 문 너머에서 무언가 킁킁거린다.
+문틈 아래로 그림자가 오락가락한다.
+
+> 숨을 참고 버틴다 [체력]
+  성공: 숨을 멈췄다. 한참 뒤에야 그림자가 물러났다. | 행동 불가 25 | XP 20 | 끝
+  실패: 숨이 터졌다. 문이 안쪽으로 휘었다. | 행동 불가 12 | 전투 비틀거리는 감염자 | 끝
+> 창문으로 빠져나간다 [민첩]
+  성공: 창틀에 손을 베였지만 빠져나왔다. 정신없이 달렸다. | 체력 -5 | 기절 이동 | XP 15 | 끝
+  실패: 발이 걸렸다. 무언가가 발목을 잡아끌었다. | 체력 -12 | 기절 이동 | 끝
+
+=== 이벤트: 멈추지 않는 손
+태그: POSSESSED
+레벨: 3
+--- 1
+분위기: 공포
+소리: 속삭임
+정신을 차리니 손이 혼자 서랍을 뒤지고 있다.
+멈추라고 생각하는데, 손은 멈추지 않는다.
+
+> 손이 하는 대로 둔다
+  결과: 손은 한참을 더 뒤졌다. 무엇을 찾는지는 손만 안다. | 강제 조사 3 | 정신 -5 | 끝
+> 손목을 깨문다
+  결과: 피 맛이 나고서야 손이 멈췄다. | 체력 -8 | 정신 -2 | XP 8 | 끝
+
+=== 이벤트: 지도에 없는 골목
+태그: LOST
+레벨: 3
+--- 1
+분위기: 미스터리
+연출: 지직거림
+분명 지도대로 걸었는데 같은 가로등을 세 번째 지나고 있다.
+가로등 아래 누군가 서 있다. 얼굴이 없다.
+
+> 가로등으로 다가간다
+  결과: 가까이 가자 아무도 없었다. 눈을 떠 보니 낯선 곳이었다. | 기절 이동 | 지도 먹통 2 | 정신 -6 | XP 20 | 끝
+> 눈을 감고 뒤로 걷는다 [감각]
+  성공: 숫자를 세며 걸었다. 눈을 떴을 때는 아는 길이었다. | XP 18 | 끝
+  실패: 눈을 떴을 땐 지도가 온통 뭉개져 있었다. | 지도 먹통 4 | 정신 -4 | 끝
+
+=== 이벤트: 뒤따르는 발소리
+태그: FOLLOWED
+레벨: 2
+--- 1
+분위기: 긴장
+소리: 발소리
+내가 멈추면 발소리도 멈춘다. 내가 걸으면 다시 따라온다.
+
+> 돌아본다
+  결과: 천천히 고개를 돌렸다. | 다음 2
+> 뛴다 [민첩]
+  성공: 골목 세 개를 지나서야 발소리가 끊겼다. | XP 15 | 끝
+  실패: 넘어졌다. 손바닥이 다 까졌다. 발소리가 바로 뒤에서 멈췄다. | 체력 -10 | 행동 불가 15 | 끝
+
+--- 2
+분위기: 공포
+연출: 암전
+아무도 없다. 그런데 바닥에 내 그림자가 둘이다.
+
+> 숨을 죽이고 기다린다
+  결과: 그림자 하나가 천천히 멀어졌다. 한동안 손끝 하나 움직일 수 없었다. | 행동 불가 30 | 환청 30 | XP 20 | 끝
+`;
+let HZ_EV=null; const hzEvents=()=>{ if(HZ_EV) return HZ_EV; try{ HZ_EV=cevParse(HZ_TXT).list.map(({e},i)=>cevClean('hz'+i,Object.assign({on:true},e))).filter(Boolean) }catch(e){ HZ_EV=[] } return HZ_EV };
+const _openStoryChain107=openStoryChain; openStoryChain=function(){ try{ if(!rt.party&&lvlOf(S.xp)>=2&&Math.random()<.12){ const L=hzEvents().filter(e=>lvlOf(S.xp)>=(e.lv||1)&&e.id!==S.hzLast); if(L.length){ const e=stPick(L); S.hzLast=e.id; return runChain(cevChain(e)) } } }catch(x){} return _openStoryChain107.apply(this,arguments) };
+(()=>{ const st=document.createElement('style'); st.textContent=`
+#hzLock{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;background:radial-gradient(ellipse at center,rgba(0,0,0,.35),rgba(0,0,0,.92));cursor:not-allowed;animation:hzIn .6s ease}
+#hzLock .hzl-in{text-align:center;color:#e9e4dc;display:grid;gap:8px;padding:24px}
+#hzLock .hzl-t{margin:0;font-size:clamp(18px,4.6vw,30px);letter-spacing:.04em;animation:hzBreath 2.4s ease-in-out infinite}
+#hzLock .hzl-n{font-size:15px;color:#c33}
+#hzLock small{color:#9a948c;font-size:12px}
+@keyframes hzIn{from{opacity:0}to{opacity:1}}
+@keyframes hzBreath{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.03)}}
+.hzmap{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1px solid #7a1f1f;background:rgba(122,31,31,.12);padding:8px 12px;margin:0 0 8px}
+.hzmap b{color:#c33;letter-spacing:.2em}
+.hzoff{position:relative;pointer-events:none;user-select:none}
+.hzoff svg{filter:blur(3px) grayscale(1) contrast(1.8) brightness(.55);animation:hzJit 1.8s steps(2) infinite}
+@keyframes hzJit{0%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}50%{transform:translate(1px,-1px)}75%{transform:translate(2px,2px)}}
+body.hz-hallu .shell{animation:hzSway 6s ease-in-out infinite}
+@keyframes hzSway{0%,100%{filter:none}50%{filter:hue-rotate(-12deg) saturate(.7) contrast(1.1)}}
+@media (prefers-reduced-motion: reduce){.hzoff svg,body.hz-hallu .shell,#hzLock .hzl-t{animation:none}}`; document.head.append(st) })();
+
+/* ================= p108: 동행 대사 다양화 · 동행 사건 15종 추가 · 포로 생활과 탈출 ================= */
+/* ---------- 1. 같은 말 반복 막기 ---------- */
+function npcU(arr){ arr=(arr||[]).filter(Boolean); if(!arr.length) return ''; const P=rt.party, N=P&&P.npc; if(!N) return stPick(arr); N.used=N.used||new Set(); const fresh=arr.filter(x=>!N.used.has(x)); const x=stPick(fresh.length?fresh:arr); N.used.add(x); return x }
+npcLine=function(I,set,cat){ const t=I.tone; if(I.age==='어린이'&&cat) return npcU(NPC_KID[cat]||NPC_KID.danger); if(I.age==='노인'&&cat&&Math.random()<.3) return npcU(NPC_OLD[cat]||NPC_OLD.danger); const L=set[t]||set.dry; return npcU(Array.isArray(L)?L:(L[cat]||L.danger||[])) };
+const npcAdd=(T,o)=>{ for(const k in o){ T[k]=T[k]||{}; for(const t in o[k]) T[k][t]=(T[k][t]||[]).concat(o[k][t]) } };
+npcAdd(NPC_EV,{
+ truck:{dry:['적십자 마크라고 안전한 건 아니다.','문 열기 전에 귀부터 대 봐.'],bold:['식량이면 대박이고, 놈들이면 운동이고.'],scared:['문틈에서 손가락 같은 게 보였어요…'],kind:['약이 있으면 아픈 사람들한테 가져가요.']},
+ horde:{dry:['저 수면 도망이 답이다. 근데 다 같이.','발 맞춰. 흩어지면 하나씩 먹힌다.'],bold:['앞줄만 넘기면 뒤는 알아서 무너져.'],scared:['신음 소리가… 사방에서 들려요.','숨을 데, 숨을 데 없어요?'],kind:['다들 손 잡아요. 놓치면 안 돼요.']},
+ hurt:{dry:['함정일 수도 있다. 주변에 다른 놈 없는지 봐.'],bold:['일으켜. 내가 업는다.'],scared:['저 사람 눈이… 좀 이상하지 않아요?'],kind:['괜찮아요, 우리 나쁜 사람들 아니에요.']},
+ sniper:{dry:['총알 아끼는 놈이다. 한 발씩 노린다.'],bold:['저 높이면 사각이 있다. 붙어서 뛰어.'],scared:['머, 머리 숙여요! 다들!'],kind:['다친 사람 없어요? 천천히 대답해요.']},
+ gun:{dry:['탄약부터. 총은 무겁다.'],bold:['이거면 다음 놈은 거리에서 끝낸다.'],scared:['진열장에… 핏자국이 있어요.'],kind:['누가 지키려던 가게였나 봐요.']},
+ dogs:{dry:['개는 무리 우두머리부터 친다.'],bold:['짖는 놈은 겁먹은 놈이다. 앞으로!'],scared:['이빨… 이빨에 뭐가 묻어 있어요.'],kind:['쟤들도 누군가의 개였을 텐데.']},
+ bridge:{dry:['녹슨 데 밟지 마. 볼트 박힌 쪽으로.'],bold:['떨어져도 아래 놈들 위로 떨어진다. 푹신하겠지.'],scared:['흔들려요, 흔들린다고요!'],kind:['천천히 와요. 기다릴게요.']},
+ radio:{dry:['같은 말만 반복하는 방송은 사람이 꺼 줄 사람이 없다는 뜻이다.'],bold:['극장이면 출입구가 둘이다. 문제없어.'],scared:['녹음 목소리… 끝에 울음소리 섞여 있지 않았어요?'],kind:['누군가 아직 사람들을 부르고 있네요.']},
+ bunker:{dry:['통조림 날짜부터 봐.'],bold:['선반 다 비운다. 우리가 먼저 왔으니까.'],scared:['안쪽 문은 열지 마요… 긁는 소리 났어요.'],kind:['여기 주인, 돌아오지 못했나 봐요.']},
+ acid:{dry:['장비 덮어. 녹슨다.'],bold:['비 좀 맞는다고 안 죽어.'],scared:['머리카락이… 타는 냄새 나요.'],kind:['제 우비 같이 써요.']},
+ trader:{dry:['수레 바퀴 자국이 깊다. 물건이 많아.'],bold:['좋은 거 있으면 다 사 버리자.'],scared:['저 할아버지 손톱이 검어요…'],kind:['물 한 병 드릴까요, 할아버지?']},
+ mutant:{dry:['저 놈은 덫을 놓을 줄 안다. 발밑 봐.'],bold:['머리가 좋은 놈일수록 머리를 노린다.'],scared:['방금… 방금 웃었어요, 저거.'],kind:['다들 제 목소리 들리는 곳에 있어요.']},
+ ambush:{dry:['맞은 데 확인. 빨리.'],bold:['쏟아진 놈들 정리한다!'],scared:['귀, 귀가 안 들려요…'],kind:['피 나요! 이쪽 봐요!']},
+ collapse:{dry:['먼지 가라앉을 때까지 숨 얕게.'],bold:['다들 이름 불러! 대답해!'],scared:['갇혔어요, 우리 갇힌 거예요?'],kind:['다친 데 말해요. 다 들어요.']},
+ gas:{dry:['눈 비비지 마. 더 탄다.'],bold:['30초만 참아. 뚫는다.'],scared:['눈이, 눈이 안 떠져요…'],kind:['제 어깨 잡아요. 끌고 갈게요.']},
+ kidnap:{dry:['자루 씌운 솜씨 봐라. 한두 번 한 게 아냐.'],bold:['그놈들 소굴, 오늘 날린다.'],scared:['다음은 우리 차례 아니에요…?'],kind:['기다려요, 꼭 데리러 갈게요.']},
+ airdrop:{dry:['낙하산 색 봐. 군용이면 함정일 수도 있다.'],bold:['지붕은 내가 탄다. 받아.'],scared:['저 위에서 누가 내려다보는 것 같아요.'],kind:['약품 상자면 정말 좋겠다.']},
+ child:{dry:['애 신발이 너무 깨끗하다. 조심해.'],bold:['꼬마, 업혀. 빨리 간다.'],scared:['인형… 인형 눈이 우리를 보는 것 같아요.'],kind:['배고프지? 이거 먹어.']},
+ fire:{dry:['바람 방향 바뀐다. 왼쪽.'],bold:['불길 사이 틈 있다! 지금!'],scared:['연기 속에서 누가 소리 질러요…'],kind:['물병 하나 남았어요. 머리에 부어요.']},
+ toll:{dry:['얼굴 기억해 둬. 나중에 쓸모 있다.'],bold:['…다음에 만나면 가만 안 둔다.'],scared:['저 사람들 웃는 게 더 무서워요.'],kind:['다친 사람만 없으면 돼요.']},
+ flood:{dry:['물 먹지 마. 무슨 물인지 모른다.'],bold:['가슴까지 차기 전에 빠진다!'],scared:['발에 뭐가 감겼어요! 머리카락 같은 거!'],kind:['제 손 잡아요. 미끄러워요.']},
+ blackout:{dry:['눈 감고 소리만 들어.'],bold:['어둠은 저놈들한테도 똑같다!'],scared:['누가 제 발목 만졌어요… 누구예요?'],kind:['괜찮아요, 여기 있어요. 계속 말할게요.']},
+});
+npcAdd(NPC_HI,{dry:['오래 안 걸린다. 짐 가볍게.','뒤는 내가 본다.'],bold:['오늘 사냥감은 크게 잡자.','앞장은 나다. 불만 없지?'],scared:['저, 혹시 무서우면 말해도 되죠?','물이랑 붕대 챙겼어요. 두 번 확인했어요.'],kind:['다녀와서 같이 밥 먹어요.','다들 신발 끈 묶었어요?']});
+npcAdd(NPC_CHAT,{dry:['됐어. 집중해.','그건 나중에.','…흠.'],bold:['당연하지.','그 정도는 일도 아냐.','말보다 몸이 먼저야.'],scared:['저, 저만 그렇게 생각한 거 아니죠?','소리 좀 줄여요…','알았어요, 알았어요.'],kind:['그 말 들으니 좀 낫네요.','같이 있으니까 괜찮아요.','네, 그렇게 해요.']});
+npcAdd(NPC_BYE,{dry:['더 있으면 운을 다 쓴다.'],bold:['다음엔 더 깊이 들어가자.'],scared:['다리가 아직 떨려요. 돌아가요.'],kind:['오늘 같이 와 줘서 고마워요.']});
+npcAdd(NPC_RAID,{dry:['패턴 봐. 세 번 휘두르고 쉰다.','다리를 노려.'],bold:['저 덩치 쓰러뜨리면 다들 한 잔씩이다!','내가 정면이다!'],scared:['지, 진짜 저걸 잡아요?','제가 뒤에서 도울게요…!'],kind:['다치면 꼭 말해요!','숨 고르고, 같이 쳐요!']});
+const NPC_WHY={dry:{act:['{o}. 그게 제일 남는다.','{o}. 따지지 말고.'],avoid:['{o}. 오늘 죽을 이유는 없다.','{o}. 욕심은 화를 부른다.'],mid:['{o}. 이게 덜 위험해.']},bold:{act:['{o}! 내가 앞이다.','{o}. 망설이면 늦어.'],avoid:['…{o}. 이번만 물러선다.'],mid:['{o}. 머리 쓰자.']},scared:{act:['{o}… 다들 한다면 저도요.'],avoid:['{o}! 제발요!','{o}… 저 무서워요.'],mid:['{o}… 이게 제일 안전해 보여요.']},kind:{act:['{o}. 누군가는 해야 하니까요.'],avoid:['{o}. 다치는 사람 없게요.'],mid:['{o}. 이게 다 같이 사는 길 같아요.']}};
+const NPC_RES2={danger:{dry:{ok:['살았다. 숨 돌리고 움직이자.','생각보다 쉬웠다.'],bad:['상처 묶어. 피 냄새 맡고 온다.','계산이 틀렸다.']},bold:{ok:['봤지? 우리 강해.','다음 거 와라.'],bad:['…빚 하나 진 거다, 저 놈들한테.','이 정도 상처는 훈장이야.']},scared:{ok:['살았어요… 진짜 살았어요.','손이 아직도 떨려요.'],bad:['피… 피가 멈추지 않아요.','다음엔 그냥 도망쳐요, 네?']},kind:{ok:['다행이에요, 다들 무사해서.','서로 잘 지켰어요.'],bad:['붕대 여기요. 꽉 묶어요.','많이 아파요? 조금만 버텨요.']}},
+ help:{dry:{ok:['이번엔 진짜였네.','손해는 아니었다.'],bad:['그러니까 의심부터 하랬잖아.']},bold:{ok:['좋은 일 하니까 기분 좋네.'],bad:['…다음엔 내가 먼저 확인한다.']},scared:{ok:['저 사람, 괜찮겠죠?'],bad:['역시 함정이었어요…']},kind:{ok:['고맙다는 말 들으니 좋네요.','언젠가 우리도 도움받겠죠.'],bad:['그래도 도우려던 게 잘못은 아니에요.']}},
+ loot:{dry:{ok:['가방 정리해. 무거운 거 뒤로.','이 정도면 이틀은 버틴다.'],bad:['헛걸음이다.','건질 게 없었다.']},bold:{ok:['오늘 장사 잘했다!','다 털었다.'],bad:['다음엔 더 큰 데 간다.']},scared:{ok:['이걸로 며칠은 괜찮겠죠?'],bad:['빈손이에요… 위험하기만 했어요.']},kind:{ok:['캠프 사람들 좋아하겠어요.'],bad:['괜찮아요, 다치진 않았잖아요.']}}};
+const NPC_IDLE={dry:['{z}. 예전엔 사람이 바글거렸지.','발소리 줄여.','저 창문, 아까부터 커튼이 흔들린다.'],bold:['{z}엔 쓸 만한 게 남았을까.','심심하네. 한 놈쯤 나와도 되는데.'],scared:['방금 저 골목에서 뭐 지나가지 않았어요?','{z}… 여기 느낌 안 좋아요.','계속 누가 보는 것 같아요.'],kind:['{z}, 예전에 친구랑 와 본 적 있어요.','다들 물 마셔요. 목 마르면 판단 흐려져요.']};
+function npcRes(I,k,bad){ const cat=NPC_CAT[k]||'danger'; if(I.age==='어린이') return npcU(bad?['아파… 근데 안 울어.','무서웠어…']:['우리 이겼어?','나도 도왔지?']); const T=(NPC_RES2[cat]||NPC_RES2.danger)[I.tone]||NPC_RES2.danger.dry; return npcU(T[bad?'bad':'ok']) }
+/* 투표 이유 · 결과 반응 · 한가할 때 잡담 */
+const _onPact108=onPact; onPact=function(m){ const r=_onPact108.apply(this,arguments); try{ const P=rt.party, d=(m&&m.data)||{}, N=P&&P.npc; if(N&&N.info[m.by]&&d.kind==='vote'&&P.ev&&d.id===P.ev.id&&Math.random()<.5){ const ev=PEV.find(e=>e.k===P.ev.k), I=N.info[m.by]; if(ev&&ev.o.length>1&&!ev.forced){ const c=clamp(d.c|0,0,ev.o.length-1), w=c===0?'act':c===ev.o.length-1?'avoid':'mid', T=NPC_WHY[I.tone]||NPC_WHY.dry, L=T[w]||T.act; if(I.age!=='어린이') npcSay(P,m.by,npcU(L).replace('{o}',ev.o[c].replace(/\s*\(.*\)$/,'')),ri(500,1500)) } } }catch(e){} return r };
+setInterval(()=>{ try{ const P=rt.party, N=P&&P.npc; if(!N||!P.on||P.ev||P.raid||P.inf) return; const now=Date.now(); if(!N.idleT){ N.idleT=now+ri(50,90)*1000; return } if(now<N.idleT) return; N.idleT=now+ri(60,110)*1000; const id=stPick(N.ids.filter(x=>!P.dead[x])); if(!id) return; const I=N.info[id], z=(MAP[P.at]||MAP[S.pos]||{}).n||'이 동네'; npcSay(P,id,npcU(NPC_IDLE[I.tone]||NPC_IDLE.dry).replace('{z}',z),300) }catch(e){} },3000);
+/* ---------- 2. 동행 사건 15종 ---------- */
+const PEV108=[
+ {k:'mannequin',n:'마네킹 가게',d:'진열창 속 마네킹 하나가 천천히 고개를 돌렸다. 다른 마네킹들은 그대로다.',o:['다 같이 진열창을 부순다','눈 마주치지 말고 지나간다'],mode:'major',w:.8},
+ {k:'elevator',n:'멈춘 엘리베이터',d:'정전된 상가 엘리베이터 안에서 똑, 똑, 두드리는 소리. 일정한 박자다.',o:['문을 비틀어 연다','못 들은 척한다'],mode:'major',w:.8},
+ {k:'pharmacy',n:'약국 금고',d:'약국 안쪽, 의사 가운을 걸친 시체 옆에 작은 금고가 놓여 있다.',o:['자물쇠를 딴다','시체 주머니만 뒤진다','지나간다'],mode:'major',w:.9},
+ {k:'tunnel',n:'캄캄한 지하차도',d:'지름길은 물이 고인 지하차도뿐이다. 안쪽에서 바람 소리인지 숨소리인지 모를 소리가 난다.',o:['손전등 켜고 지나간다','불 끄고 벽을 짚고 간다','멀리 돌아간다'],mode:'indiv',w:.9},
+ {k:'wedding',n:'웨딩홀',d:'하객석을 채운 정장 차림 감염자들이 모두 같은 방향, 비어 있는 단상을 보고 있다.',o:['뒤쪽 축의금 테이블을 턴다','조용히 지나간다'],mode:'major',w:.7,dg:2},
+ {k:'freezer',n:'냉동 창고',d:'정육 공장 냉동 창고 문이 반쯤 열려 있다. 안은 아직 차갑다. 고기 냄새가 아니다.',o:['안으로 들어간다','문을 닫고 지나간다'],mode:'major',w:.8},
+ {k:'crows',n:'까마귀 떼',d:'까마귀 수백 마리가 한 사람을 덮고 있다. 그 사람 손에 가방이 들려 있다.',o:['쫓아내고 가방을 챙긴다','멀리 돌아간다'],mode:'indiv',w:.8},
+ {k:'carhorn',n:'울리는 경적',d:'주차장의 차 한 대가 혼자 경적을 울리기 시작했다. 사방에서 놈들이 고개를 든다.',o:['달려가 경적을 끈다','흩어져 숨는다'],mode:'indiv',w:.9},
+ {k:'school',n:'학교 방송실',d:'초등학교 방송실 불이 켜져 있다. 스피커에서 아이 목소리가 출석을 부른다. 우리 이름이다.',o:['방송실로 올라간다','전선을 끊고 지나간다'],mode:'major',w:.6,dg:2},
+ {k:'traps',n:'덫 지대',d:'발밑에 낚싯줄이 걸렸다. 누군가 이 거리 전체에 덫을 깔아 두었다.',o:['한 발씩 확인하며 건넌다'],w:.7,forced:1},
+ {k:'stalker',n:'따라오는 그림자',d:'세 블록째, 같은 그림자가 같은 거리를 두고 따라온다.',o:['골목에 매복한다','걸음을 재촉한다'],mode:'major',w:.8},
+ {k:'deal',n:'다른 무리의 거래',d:'총을 내린 무리가 손을 든다. "싸우지 말고 바꾸자. 우린 약이 있고 너흰 식량이 있잖아."',o:['식량을 주고 약을 받는다','거절하고 지나간다'],mode:'indiv',w:.8},
+ {k:'surgery',n:'불 켜진 수술실',d:'폐병원 3층 수술실에만 불이 켜져 있다. 유리 너머로 누군가 수술을 하고 있다.',o:['들어가 본다','계단으로 빠져나간다'],mode:'major',w:.6,dg:2},
+ {k:'lullaby',n:'자장가',d:'어디선가 자장가가 들린다. 가까워질수록 노랫말이 이상하다. 우리가 어디로 가는지 부르고 있다.',o:['소리 나는 쪽으로 간다','귀를 막고 지나간다'],mode:'major',w:.6},
+ {k:'cage',n:'우리에 갇힌 사람',d:'다른 무리가 철창 우리를 두고 떠났다. 안의 남자가 속삭인다. "열쇠는 저 위 경비실에 있어."',o:['경비실에서 열쇠를 가져온다','철창을 부순다','지나간다'],mode:'major',w:.8},
+];
+PEV.push(...PEV108); PEV108.forEach(e=>{ NPC_CAT[e.k]={mannequin:'danger',elevator:'help',pharmacy:'loot',tunnel:'danger',wedding:'loot',freezer:'loot',crows:'loot',carhorn:'danger',school:'danger',traps:'danger',stalker:'danger',deal:'help',surgery:'danger',lullaby:'danger',cage:'help'}[e.k] });
+npcAdd(NPC_EV,{
+ mannequin:{dry:['마네킹 뒤에 사람이다. 숨 쉬는 거 봤어.','눈 마주치지 마.'],bold:['저거 부숴 보면 알겠지.','움직이면 감염자, 안 움직이면 플라스틱.'],scared:['방금 손가락… 움직였어요.','저 마네킹들 처음보다 가까이 와 있지 않아요?'],kind:['그냥 바람에 돌아간 거예요. …그렇죠?']},
+ elevator:{dry:['박자가 일정하다. 사람이 하는 짓이다.','열면 뭐든 나온다. 각오해.'],bold:['쇠지레 줘. 연다.'],scared:['저 안에서 며칠이나 있었을까요…','안 열면 안 돼요?'],kind:['누가 갇혀 있으면 어떡해요.']},
+ pharmacy:{dry:['금고면 마약류다. 비싸게 팔린다.','가운 주머니부터.'],bold:['자물쇠 따위.'],scared:['그 의사 선생님… 손이 움찔했어요.'],kind:['항생제 있으면 좋겠다.']},
+ tunnel:{dry:['불 켜면 우리가 보인다. 끄면 우리도 못 본다.','물 깊이부터 재.'],bold:['빨리 지나가면 그만이야.'],scared:['저 안에서 누가 우리 이름 불렀어요…','돌아가요. 제발요.'],kind:['다들 앞사람 어깨 잡아요.']},
+ wedding:{dry:['저 놈들 소리에 반응 안 한다. 뭔가 기다리는 거다.'],bold:['축의금 봉투 두툼하겠는데.'],scared:['신부는… 신부는 어디 있어요?'],kind:['…행복한 날이었을 텐데.']},
+ freezer:{dry:['냉동이면 안 썩었다. 식량이다.','문 닫히면 안에서 못 연다. 하나는 밖에 있어.'],bold:['추위 정도야.'],scared:['저 비닐 속에 사람 모양이…'],kind:['제가 문 붙잡고 있을게요.']},
+ crows:{dry:['까마귀는 죽은 것만 먹는다. …대부분은.'],bold:['훠이! 비켜!'],scared:['저 사람 손가락이 움직였어요!'],kind:['저분 가방… 가족사진이 있을지도 몰라요.']},
+ carhorn:{dry:['배터리 단자 뽑으면 끝난다.','누가 일부러 켠 거다.'],bold:['내가 끈다. 엄호해.'],scared:['다 고개 들었어요, 다요!'],kind:['다들 흩어지지 말고 낮게요.']},
+ school:{dry:['녹음이 아니다. 우리 이름을 알 리가 없잖아.','전선부터 끊어.'],bold:['누가 장난하는지 보러 가자.'],scared:['방금… 제 이름 불렀어요.','출석 부르면 대답하면 안 돼요, 절대로.'],kind:['아이가 정말 있다면요?']},
+ traps:{dry:['줄 밟지 마. 위에 깡통 매달렸다.','설치한 놈은 근처에서 보고 있다.'],bold:['덫 놓은 놈 찾아서 그대로 돌려준다.'],scared:['발, 발을 못 떼겠어요.'],kind:['제 발자국만 그대로 밟아요.']},
+ stalker:{dry:['거리 일정하다. 사람이다.','모퉁이 돌면 기다리자.'],bold:['잡아서 누군지 본다.'],scared:['아까부터 계속… 계속이에요.'],kind:['혹시 혼자라서 따라오는 거면요?']},
+ deal:{dry:['약 유통기한 확인해.','손은 총 근처에서 떼지 마.'],bold:['수상하면 바로 엎는다.'],scared:['저 사람들 웃는 거 진짜예요?'],kind:['싸우지 않고 끝나면 제일 좋죠.']},
+ surgery:{dry:['전기가 들어온다는 건 발전기가 있다는 거다.','수술 받는 쪽이 사람인지부터 봐.'],bold:['의사면 쓸모 있지. 데려가자.'],scared:['수술대 위 사람이… 우리를 봤어요.','메스 소리가 멈췄어요.'],kind:['혹시 다친 사람을 치료하는 거라면…']},
+ lullaby:{dry:['노래가 우리 걸음에 맞춰 바뀐다. 덫이다.'],bold:['노래하는 놈 입을 막아 주지.'],scared:['방금 가사에… 저희 캠프 이름 나왔어요.','귀 막아도 들려요…'],kind:['엄마가 불러 주던 노래랑 비슷해요.']},
+ cage:{dry:['다른 무리 포로다. 풀어 주면 그 무리랑 원수 된다.'],bold:['경비실 하나쯤.','쇠창살 휘는 거 봐라.'],scared:['저 사람 데리러 그 무리가 돌아오면요?'],kind:['우리가 지나치면 저 사람 끝이에요.']},
+});
+const _lr108=leaderResolve; leaderResolve=function(){ const P=rt.party, e=P&&P.ev; if(!e||!PEV108.some(x=>x.k===e.k)) return _lr108.apply(this,arguments);
+  const ev=PEV.find(x=>x.k===e.k), ids=aliveIds(), V=P.votes||{}, per={}, dg=DOF[P.d].dg, k=e.k, L=V[P.leader]||Object.values(V)[0];
+  ids.forEach(id=>{ if(!V[id]) V[id]=L?{c:L.c,w:'blunt',p:6,auto:1}:{c:ev.o.length-1,w:'blunt',p:6,auto:1} });
+  const cnt=ev.o.map((_,i)=>ids.filter(id=>V[id].c===i).length), maj=cnt.indexOf(Math.max(...cnt)), R=(a,b)=>Math.round(ri(a,b)*(1+(dg-1)*.4)*1.5), all=f=>ids.forEach(id=>per[id]=f(id)), pick=()=>stPick(ids); let t='';
+  if(k==='mannequin'){ if(maj===0){ if(Math.random()<.55){ all(()=>({res:{scrap:R(4,8)},item:Math.random()<.3?'cigs':null,xp:16})); t='유리가 쏟아졌다. 고개를 돌린 건 진열창 뒤에 숨어 있던 소년이었다. 녀석은 비명을 지르며 달아났고, 가게 안 물건은 우리 차지가 됐다.' } else { all(()=>({hp:-ri(8,16),mind:-4,xp:10})); t='유리가 깨지자 마네킹들 사이에서 놈들이 일제히 일어섰다. 몇은 가발을 쓴 채였다.' } } else { all(()=>({mind:-2,xp:4})); t='모퉁이를 돌 때까지 등 뒤에서 플라스틱 관절 꺾이는 소리가 따라왔다.' } }
+  else if(k==='elevator'){ if(maj===0){ if(Math.random()<.5){ all(()=>({res:{food:R(3,6),water:R(3,6)},xp:20})); t='안에는 깡마른 여자가 숟가락으로 벽을 두드리고 있었다. "열흘…" 그녀는 가방 속 비상식량을 전부 내밀고 기절했다.' } else { all(()=>({hp:-ri(10,18),xp:12})); t='문이 열리자마자 바짝 마른 손들이 튀어나왔다. 두드리던 건 맨 뒤에 선 놈의 이마였다.' } } else { all(()=>({mind:-5,xp:2})); t='돌아서자 박자가 빨라졌다. 우리가 계단을 다 내려갈 때까지 멈추지 않았다.' } }
+  else if(k==='pharmacy'){ if(maj===0){ const ok=Math.random()<.6; all(()=>ok?{res:{med:R(1,3)},item:stPick(['antibio','painkiller','vitamin']),xp:20}:{hp:-ri(6,12),res:{med:R(1,1)},xp:12}); t=ok?'딸깍. 금고 안에는 항생제와 진통제가 줄지어 있었다.':'자물쇠를 따는 동안 가운 입은 시체가 일어나 앉았다. 겨우 떼어 내고 약 한 줌만 챙겼다.' } else if(maj===1){ all(()=>({money:R(10,25),item:Math.random()<.4?'bandage':null,xp:8})); t='가운 주머니에서 지폐와 붕대, 그리고 "미안하다"고 적힌 쪽지가 나왔다.' } else { all(()=>({xp:2})); t='약국 문을 닫았다. 안에서 금고 다이얼이 저절로 돌아가는 소리가 났다.' } }
+  else if(k==='tunnel'){ ids.forEach(id=>{ const c=V[id].c; per[id]=c===0?(Math.random()<.5?{xp:14,res:{scrap:R(2,5)}}:{hp:-ri(10,20),xp:10}):c===1?(Math.random()<.7?{xp:18,mind:-3}:{hp:-ri(14,24),mind:-6,xp:8}):{hunger:-10,xp:4} }); t='지하차도를 빠져나왔을 때, 들어갈 때보다 발소리가 하나 더 많았다. 뒤를 돌아본 사람은 없었다.' }
+  else if(k==='wedding'){ if(maj===0){ const ok=Math.random()<.6; all(()=>ok?{money:R(25,55),item:Math.random()<.3?'cigs':null,xp:24}:{hp:-ri(12,22),money:R(5,15),xp:14}); t=ok?'봉투를 쓸어 담는 동안 하객들은 끝까지 단상만 보고 있었다. 나오는 길에 보니 단상 위에 면사포만 놓여 있었다.':'봉투 하나가 바닥에 떨어진 순간, 하객 전원이 동시에 우리 쪽으로 고개를 돌렸다.' } else { all(()=>({xp:5,mind:-2})); t='문을 닫기 직전, 웨딩 행진곡이 오르간으로 울리기 시작했다.' } }
+  else if(k==='freezer'){ if(maj===0){ const ok=Math.random()<.65; all(()=>ok?{res:{food:R(8,15)},xp:18}:{hp:-ri(10,20),res:{food:R(3,6)},xp:12}); t=ok?'비닐 속은 다행히 돼지고기였다. 얼어붙은 손으로 가방을 채웠다.':'안쪽 비닐 포대 하나가 꿈틀거렸다. 얼어 있던 놈은 느렸지만, 문이 바람에 닫히기 시작했다.' } else { all(()=>({xp:3})); t='문을 닫았다. 안쪽에서 손바닥으로 철문을 두드리는 소리가 오래 이어졌다.' } }
+  else if(k==='crows'){ ids.forEach(id=>{ per[id]=V[id].c===0?(Math.random()<.65?{money:R(10,30),item:stPick(['bandage','flare','cigs']),xp:14}:{hp:-ri(6,14),xp:8}):{xp:4} }); t='까마귀들이 한꺼번에 날아올랐다. 남은 건 빈 눈구멍으로 우리를 올려다보는 얼굴과 가방 하나였다.' }
+  else if(k==='carhorn'){ const go=ids.filter(id=>V[id].c===0), ok=go.length&&Math.random()<.6+go.length*.1; ids.forEach(id=>{ per[id]=V[id].c===0?(ok?{xp:22,res:{fuel:R(1,2)}}:{hp:-ri(14,24),xp:12}):(ok?{xp:8}:{hp:-ri(4,10),xp:6}) }); t=go.length?(ok?`${go.map(nameOf).join(', ')}이(가) 보닛을 열고 배터리를 뜯어냈다. 정적. 운전석 아래 웅크린 건 이미 오래전에 죽은 개였다.`:'경적을 끄러 간 사람이 놈들에게 둘러싸였다. 겨우 끌어냈다.'):'다들 숨었다. 경적은 배터리가 다 될 때까지 울렸고, 그동안 놈들이 우리 머리 위를 지나갔다.' }
+  else if(k==='school'){ if(maj===0){ const ok=Math.random()<.5; all(()=>ok?{xp:30,item:'mapkit',mind:-3}:{hp:-ri(12,22),mind:-8,xp:16}); t=ok?'방송실엔 아무도 없었다. 낡은 카세트에서 출석부가 돌고 있었다. 마지막 이름은 아직 녹음되지 않은 빈칸이었다. 책상 위에 이 동네 지도가 있었다.':'방송실 문을 열자 출석이 멈췄다. 책상 아래에서 작은 손이 내 발목을 잡았다.' } else { all(()=>({xp:6,mind:-3})); t='전선을 끊었다. 스피커가 꺼지기 직전, 아이 목소리가 마지막 이름을 불렀다. 대답한 사람은 없었다.' } }
+  else if(k==='traps'){ const hit=ids.filter(()=>Math.random()<.4); all(id=>hit.includes(id)?{hp:-ri(10,20),xp:10}:{xp:14}); t=hit.length?`${hit.map(nameOf).join(', ')}이(가) 덫에 걸렸다. 녹슨 쇠이빨이 종아리를 물었다. 근처 건물 창문에서 누군가 커튼을 닫았다.`:'한 발 한 발 줄을 넘었다. 마지막 줄을 넘자 어디선가 박수 소리가 났다.' }
+  else if(k==='stalker'){ if(maj===0){ const r=Math.random(); if(r<.4){ all(()=>({xp:22,res:{food:R(3,5)}})); t='모퉁이에서 덮친 건 굶주린 소년이었다. 우리 가방을 노리고 있었다. 먹을 걸 쥐여 주자 녀석은 이 근처 창고 위치를 알려 주었다.' } else if(r<.75){ all(()=>({hp:-ri(10,18),xp:16})); t='그림자는 사람이 아니었다. 아니, 사람이었던 것이었다. 걸음걸이만 너무 멀쩡했다.' } else { all(()=>({mind:-6,xp:12})); t='아무도 모퉁이를 돌지 않았다. 고개를 내밀어 보니 길에는 우리 발자국만 있었다. 그리고 우리 수보다 하나 많았다.' } } else { all(()=>({hunger:-8,xp:6})); t='걸음을 재촉하자 그림자도 빨라졌다. 캠프 근처에 와서야 사라졌다. 우리 캠프를 알게 된 걸까.' } }
+  else if(k==='deal'){ ids.forEach(id=>{ per[id]=V[id].c===0?(Math.random()<.8?{res:{food:-5,med:R(1,2)},xp:10}:{res:{food:-5},xp:4}):{xp:3} }); t='거래는 조용히 끝났다. 떠나면서 그들 중 하나가 말했다. "우리 쪽 사람 하나가 사라졌어. 보면 알려 줘. 얼굴에 흉터 있는 놈이야."' }
+  else if(k==='surgery'){ if(maj===0){ const ok=Math.random()<.45; all(()=>ok?{res:{med:R(2,4)},item:'medkit',xp:30}:{hp:-ri(15,28),mind:-8,xp:18}); t=ok?'수술하던 건 늙은 수의사였다. 정신은 반쯤 나가 있었지만 손은 정확했다. 그는 수술대의 감염자를 "환자"라고 불렀다. 약품 상자를 내주며 다시는 오지 말라고 했다.':'수술복을 입은 놈이 메스를 든 채 돌아섰다. 수술대 위의 것은 아직 숨을 쉬고 있었다. 사람이었는지는 모르겠다.' } else { all(()=>({xp:4,mind:-3})); t='계단을 내려오는 동안 3층 불이 꺼졌다. 그리고 2층 불이 켜졌다.' } }
+  else if(k==='lullaby'){ if(maj===0){ const ok=Math.random()<.4; all(()=>ok?{xp:28,item:Math.random()<.5?'ampoule':'vitamin',mind:-4}:{hp:-ri(14,26),mind:-10,xp:16}); t=ok?'노래하던 건 오래된 오르골이었다. 그 앞에 누군가 남긴 쪽지와 약 상자가 있었다. "이 노래를 따라온 사람에게."':'노래 끝에 다다르자 흔들의자에 앉은 놈이 우리를 보고 웃었다. 입은 노래를 멈추지 않았다.' } else { all(()=>({mind:-5,xp:5})); t='귀를 막아도 노래는 머릿속에서 계속됐다. 캠프로 돌아가는 길을 정확히 알고 있는 노래였다.' } }
+  else if(k==='cage'){ if(maj===0){ const ok=Math.random()<.55; all(()=>ok?{xp:26,money:R(10,30),res:{scrap:R(2,4)}}:{hp:-ri(10,20),xp:14}); t=ok?'경비실 열쇠로 우리를 열었다. 남자는 자기 무리 창고 위치를 알려 주고 사라졌다.':'경비실엔 그 무리의 남은 사람이 있었다. 몸싸움 끝에 열쇠는 챙겼지만 피를 봤다.' } else if(maj===1){ all(()=>({hp:-ri(4,10),xp:18,res:{scrap:R(3,6)}})); t='쇠창살이 휘었다. 요란한 소리에 놈들이 모였지만 남자는 이미 달아난 뒤였다.' } else { all(()=>({mind:-6,xp:3})); t='등 뒤에서 남자가 우리 얼굴을 하나하나 외우듯 쳐다봤다.' } }
+  P.ev=null; P.nextEv=pSlot(); P.R.emit('pev',{type:'res',id:e.id,t,per,ch:Object.fromEntries(ids.map(id=>[id,V[id].c]))}).catch(()=>{}); setTimeout(()=>{ try{ pNxSend() }catch(x){} },300) };
+const _applyPR108=applyPR; applyPR=function(o,src){ const r=_applyPR108.apply(this,arguments); try{ if(o&&o.mind){ const x=mindAdd(o.mind|0); if(x) plog('내 결과: '+x,'me') } }catch(e){} return r };
+/* ---------- 3. 포로 생활과 탈출 ---------- */
+const CAP_G=[{n:'철조망 형제단',b:'외눈의 크로우',pl:'폐정비소'},{n:'붉은 손 약탈단',b:'도살자 마텐',pl:'옛 정육 공장'},{n:'구원자들',b:'목사라 불리는 남자',pl:'성당 지하'},{n:'톨게이트 무리',b:'징수원 루',pl:'고속도로 톨게이트 사무소'},{n:'하수도 사람들',b:'빛을 싫어하는 여자',pl:'하수 처리장'}];
+const capOn=()=>!!(S&&S.cap);
+const capG=()=>CAP_G[(S.cap&&S.cap.g)|0]||CAP_G[0];
+function capStart(why){ if(S.cap||rt.party) return false; if(S.scan) try{ finishScan(true) }catch(e){ S.scan=null } if(S.forage) S.forage=null; S.travel=null;
+  const g=ri(0,CAP_G.length-1), lv=lvlOf(S.xp); S.cap={g,t:Date.now(),key:0,wire:0,info:0,trust:0,alarm:25,fails:0,cd:{},need:{key:ri(2,4),info:ri(2,3),trust:ri(50,70)},nextEv:Date.now()+ri(100,170)*1000,ransom:250+lv*25,log:[]}; markSave();
+  const G=capG(); FXL.blackout(2600,why||'…머리에 자루가 씌워졌다',()=>{ whenFree(()=>{ if(!S.cap) return; rt.modalLock=true; openModal(`<div class="eyebrow warnc">CAPTIVE <span class="dash"></span> ${esc(G.n)}</div><h2>${esc(G.pl)}</h2><p style="margin:0;line-height:1.75">눈을 뜨니 손목이 철제 파이프에 묶여 있다. 기름 냄새, 녹 냄새, 그리고 그 밑에 깔린 피 냄새.<br>"${esc(G.b)}님이 쓸모를 정할 때까지 얌전히 있어." 문이 닫히고 빗장이 걸린다.<br>어딘가에서 다른 포로가 흐느낀다. 여기서 나가려면 방법을 찾아야 한다.</p><ul class="ev-eff"><li>지도 이동·조사가 막혔어요</li><li>지도 화면에서 탈출 조건을 채우세요</li></ul><button class="btn pri" id="capOk">주위를 살핀다</button>`); sfx('down'); FXL.tension(.7,6000); $('capOk').onclick=()=>{ rt.modalLock=false; closeModal(); setTab('map') } }) }); try{ slog(`${G.n}에게 붙잡혀 ${G.pl}에 갇혔다.`) }catch(e){} render(); return true }
+function capLog(x){ const C=S.cap; if(!C) return; C.log.unshift({t:Date.now(),x}); C.log=C.log.slice(0,8) }
+function capRoutes(){ const C=S.cap, N=C.need; return [
+  {k:'key',n:'창고 자물쇠 열기',d:`녹슨 열쇠 조각을 모아 뒷문 자물쇠를 연다. 경계가 낮을 때만 가능.`,ok:C.key>=N.key&&C.alarm<=50,p:[[`열쇠 조각 ${C.key}/${N.key}`,C.key/N.key],[`경계 ${Math.round(C.alarm)} (50 이하)`,C.alarm<=50?1:0]]},
+  {k:'shift',n:'교대 시간에 빠져나가기',d:'경비 교대 시간을 알아내고, 철사로 수갑을 푼다.',ok:C.info>=N.info&&C.wire>=1,p:[[`교대 정보 ${C.info}/${N.info}`,C.info/N.info],[`철사 ${C.wire}/1`,Math.min(1,C.wire)]]},
+  {k:'trust',n:'바깥 심부름에서 도망치기',d:'얌전히 일해 신뢰를 얻고, 바깥 심부름을 맡았을 때 달아난다.',ok:C.trust>=N.trust,p:[[`신뢰 ${Math.round(C.trust)}/${N.trust}`,C.trust/N.trust]]}] }
+const CAP_A={work:{n:'노역',d:'신뢰↑ · 가끔 철사',cd:50},search:{n:'몰래 뒤지기',d:'열쇠 조각·철사 · 들키면 경계↑',cd:40},listen:{n:'엿듣기',d:'교대 정보 · 들키면 경계↑',cd:60},talk:{n:'다른 포로와 이야기',d:'무슨 일이든',cd:90}};
+function capHtml(){ const C=S.cap, G=capG(), now=Date.now(), R=capRoutes(), bar=v=>`<i style="width:${Math.round(clamp(v,0,1)*100)}%"></i>`, any=R.some(r=>r.ok), left=Math.max(0,C.t+45*60000-now);
+  return `<section class="pcard capc"><div class="pc-h"><span class="tagx red">포로</span><h3>${esc(G.n)} · ${esc(G.pl)}</h3><span class="note">두목 ${esc(G.b)}</span></div>
+   <div class="capst"><div><span class="label">경계</span><div class="bar red">${bar(C.alarm/100)}</div><b class="num">${Math.round(C.alarm)}</b></div><div><span class="label">신뢰</span><div class="bar">${bar(C.trust/100)}</div><b class="num">${Math.round(C.trust)}</b></div><div><span class="label">숨긴 물건</span><b>열쇠 조각 ${C.key} · 철사 ${C.wire} · 정보 ${C.info}</b></div></div>
+   <p class="note">경계가 100이 되면 매질을 당하고 숨긴 물건을 빼앗겨요. ${mmss(left)} 뒤에는 쓸모없다며 내쫓겨요(돈·물자를 잃어요).</p>
+   <div class="caprt">${R.map(r=>`<div class="caprow${r.ok?' ok':''}"><b>${esc(r.n)}</b><small>${esc(r.d)}</small>${r.p.map(([l,v])=>`<div class="capp"><span>${esc(l)}</span><div class="bar">${bar(v)}</div></div>`).join('')}</div>`).join('')}</div>
+   <div class="capact">${Object.entries(CAP_A).map(([k,a])=>{ const w=Math.max(0,(C.cd[k]||0)-now); return `<button class="btn" data-act="capAct" data-k="${k}" ${w||hzLocked()?'disabled':''}><b>${a.n}</b><small>${w?mmss(w):a.d}</small></button>` }).join('')}</div>
+   <div class="row"><button class="btn ${any?'pri':'warn'}" data-act="capEsc" ${Date.now()<(C.escT||0)||hzLocked()?'disabled':''}>${any?'탈출한다 (조건 충족)':'무작정 탈출 시도 (매우 위험)'}${Date.now()<(C.escT||0)?' · '+mmss(C.escT-Date.now()):''}</button><button class="btn" data-act="capPay" ${(S.money||0)<C.ransom?'disabled':''}>무전으로 몸값 보내기 $${fmt(C.ransom)}</button></div>
+   ${C.log.length?`<div class="caplog">${C.log.map(x=>`<p><span class="num">${hhmm(x.t)}</span> ${esc(x.x)}</p>`).join('')}</div>`:''}</section>` }
+function capPunish(){ const C=S.cap; const h=Math.round(maxHp()*.2); S.hp=Math.max(1,S.hp-h); const lost=[]; if(C.key){ C.key=Math.max(0,C.key-ri(1,2)); lost.push('열쇠 조각') } if(C.wire){ C.wire=0; lost.push('철사') } C.alarm=45; C.trust=Math.max(0,C.trust-20); mindAdd(-8); sfx('hurt'); FXL.flash('rgba(200,0,0,.55)',500); FXL.shake(12,600);
+  capLog(`들켰다. 몽둥이가 쏟아졌다. 체력 -${h}${lost.length?' · 빼앗김: '+lost.join(', '):''}`); hzLock(20,'바닥에 웅크린 채 숨만 쉰다.') }
+const CAP_TX={
+ work:{ok:['녹슨 부품을 하루 종일 날랐다. 감시하던 놈이 고개를 끄덕였다.','감염자 시체를 구덩이로 끌었다. 손에서 냄새가 빠지지 않는다.','발전기 기름을 갈았다. 두목이 지나가며 이름을 물었다.'],find:['부품 더미 속에서 쓸 만한 철사 한 가닥을 소매에 숨겼다.']},
+ search:{key:['환풍구 틈에서 녹슨 열쇠 조각을 찾았다. 이빨 모양이 뒷문 자물쇠와 비슷하다.','죽은 포로의 신발 밑창에 열쇠 조각이 박혀 있었다.'],wire:['침상 스프링에서 철사 한 가닥을 뽑아냈다.'],fail:['서랍을 여는 순간 손전등 빛이 얼굴을 비췄다. "뭐 찾냐?"','발밑의 깡통을 찼다. 복도 끝에서 발소리가 멈췄다.']},
+ listen:{ok:['벽 너머에서 들었다. "자정 교대는 늘 늦어. 그 새끼 술 먹거든."','경비 둘이 담배를 피우며 투덜댔다. "새벽 네 시 개 밥 줄 땐 문 다 비우잖아."','무전기 소리를 엿들었다. 순찰 경로가 하나 빈다.'],fail:['벽에 귀를 대고 있다가 문이 벌컥 열렸다.','너무 가까이 갔다. 경비가 침을 뱉으며 노려봤다.']},
+ talk:['옆 칸의 노인이 속삭였다. "교대는 해 뜨기 전이야. 다들 졸지."','소녀 포로가 머리핀을 건넸다. "철사로 써. 난 이제 못 쓸 것 같아."','흉터 난 남자가 웃었다. "나도 도망치려다 이렇게 됐어." 그는 손가락이 세 개뿐이었다.','누군가 우리 대화를 경비에게 일러바쳤다. 다음 날 그 사람에게 빵이 하나 더 갔다.']};
+ACT.capAct=el=>{ const C=S.cap, k=el.dataset.k, A=CAP_A[k]; if(!C||!A) return; if(hzLocked()) return toast('지금은 움직일 수 없다.'); const now=Date.now(); if(now<(C.cd[k]||0)) return; C.cd[k]=now+A.cd*1000; let x='';
+  if(k==='work'){ const g=ri(6,12); C.trust=Math.min(100,C.trust+g); C.alarm=Math.max(0,C.alarm-5); S.hunger=Math.max(0,S.hunger-6); x=stPick(CAP_TX.work.ok)+` (신뢰 +${g})`; if(Math.random()<.25){ C.wire++; x+=' '+stPick(CAP_TX.work.find) } sfx('rummage') }
+  else if(k==='search'){ const p=clamp(.35+ST('per')*.04-C.alarm/300,.12,.8); if(Math.random()<p){ if(Math.random()<.6){ C.key++; x=stPick(CAP_TX.search.key) } else { C.wire++; x=stPick(CAP_TX.search.wire) } sfx('rummage') } else { const a=ri(15,25); C.alarm=Math.min(100,C.alarm+a); x=stPick(CAP_TX.search.fail)+` (경계 +${a})`; sfx('sting'); FXL.flicker() } }
+  else if(k==='listen'){ const p=clamp(.4+ST('cha')*.03+ST('per')*.02-C.alarm/400,.15,.85); if(Math.random()<p){ C.info++; x=stPick(CAP_TX.listen.ok) } else { C.alarm=Math.min(100,C.alarm+10); x=stPick(CAP_TX.listen.fail)+' (경계 +10)'; sfx('knock') } }
+  else if(k==='talk'){ const r=Math.random(); if(r<.35){ C.info++; x=CAP_TX.talk[0] } else if(r<.6){ C.wire++; x=CAP_TX.talk[1] } else if(r<.8){ mindAdd(-4); x=CAP_TX.talk[2]+' (정신 -4)' } else { C.alarm=Math.min(100,C.alarm+20); x=CAP_TX.talk[3]+' (경계 +20)'; sfx('sting') } }
+  capLog(x); toast(x); if(C.alarm>=100) capPunish(); markSave(); render() };
+function capFree(how){ const C=S.cap; if(!C) return; const G=capG(); S.cap=null; const cur=MAP[S.pos], lv=lvlOf(S.xp); const cand=Object.keys(MAP).filter(k=>k!==S.pos&&!MAP[k].home&&lv>=zoneD(k).lv&&Math.hypot(MAP[k].x-cur.x,MAP[k].y-cur.y)<30); if(cand.length&&how!=='pay') S.pos=stPick(cand); markSave(); try{ slog(`${G.n}에게서 ${how==='pay'?'몸값을 내고 풀려났다':how==='kick'?'내쫓겼다':'탈출했다'}.`) }catch(e){} render() }
+ACT.capPay=()=>{ const C=S.cap; if(!C) return; if((S.money||0)<C.ransom) return toast('돈이 모자라요.'); if(!rt.capPaySure||Date.now()-rt.capPaySure>5000){ rt.capPaySure=Date.now(); return toast(`정말 $${fmt(C.ransom)}을 낼까요? 한 번 더 누르세요.`) } rt.capPaySure=0; S.money-=C.ransom; capFree('pay'); openModal(`<div class="eyebrow">RELEASED</div><h2>풀려났다</h2><p style="margin:0;line-height:1.7">무전 너머 캠프 사람들이 돈을 모아 보냈다. 빗장이 풀리고, 자루가 다시 씌워졌다. 정신을 차려 보니 익숙한 길가였다.</p><ul class="ev-eff"><li>$-${fmt(C.ransom)}</li></ul><button class="btn pri" onclick="closeModal()">계속</button>`) };
+function capChase(G,route){ const txt=`=== 이벤트: ${G.pl} 탈출
+태그: ESCAPE
+--- 1
+분위기: 긴장
+소리: 심장 박동
+${route==='key'?'열쇠 조각을 맞춘 열쇠가 자물쇠 안에서 돌아갔다. 딸깍 소리가 천둥처럼 컸다.':route==='shift'?'교대 시간. 철사로 수갑을 풀었다. 복도엔 아무도 없다. 아직은.':route==='trust'?'심부름 수레를 끌고 정문을 나섰다. 감시하던 놈이 담배에 불을 붙이는 순간, 수레를 놓았다.':'틈이 보였다. 생각할 겨를도 없이 몸을 던졌다.'}
+등 뒤에서 누군가 외친다. "포로가 없어졌다!"
+
+> 쓰레기 더미 속에 숨는다 [체력]
+  성공: 썩은 냄새 속에서 숨을 참았다. 발소리가 바로 옆을 지나갔다. | 행동 불가 15 | 다음 2
+  실패: 기침이 터졌다. 손전등 빛이 쏟아졌다. | 전투 약탈자 | 다음 2
+> 담장으로 달린다 [민첩]
+  성공: 철조망을 넘었다. 손바닥이 찢어졌지만 멈추지 않았다. | 체력 -5 | 다음 2
+  실패: 철조망에 옷이 걸렸다. 개 짖는 소리가 가까워진다. | 체력 -14 | 다음 2
+
+--- 2
+분위기: 공포
+연출: 암전
+담 너머는 감염자 구역이었다. 어둠 속에서 신음이 겹친다.
+뒤에서는 손전등 불빛이 다가오고, 앞에서는 놈들이 깨어난다.
+
+> 숨을 죽이고 놈들 사이를 지나간다 [감각]
+  성공: 놈들 사이를 빠져나왔다. 뒤따르던 불빛이 비명과 함께 꺼졌다. | XP 45 | 끝
+  실패: 한 놈이 고개를 돌렸다. | 전투 달리는 감염자 | XP 30 | 끝
+> 돌을 던져 추격대 쪽으로 놈들을 유인한다
+  결과: 신음이 불빛 쪽으로 몰려갔다. 등 뒤에서 총성과 비명이 섞였다. 돌아보지 않았다. | 정신 -5 | XP 40 | 끝
+`; try{ const e=cevClean('capx',Object.assign({on:true},cevParse(txt).list[0].e)); if(e) runChain(cevChain(e)) }catch(x){} }
+ACT.capEsc=()=>{ const C=S.cap; if(!C) return; if(hzLocked()) return toast('지금은 움직일 수 없다.'); if(Date.now()<(C.escT||0)) return; const R=capRoutes(), r=R.find(x=>x.ok), G=capG();
+  if(!r&&(!rt.capEscSure||Date.now()-rt.capEscSure>5000)){ rt.capEscSure=Date.now(); return toast('조건 없이 달아나면 거의 실패해요. 한 번 더 누르면 시도해요.') } rt.capEscSure=0;
+  const p=r?clamp(.82-C.alarm/250+(r.k==='trust'?.05:0),.4,.92):clamp(.12-C.alarm/500,.04,.15);
+  if(Math.random()<p){ const xpb=r?40:80; capFree('escape'); addXp(xpb); sfx('alarm'); setTimeout(()=>capChase(G,r?r.k:'none'),300); return }
+  C.fails++; C.escT=Date.now()+120000; C.alarm=Math.min(100,C.alarm+30); const h=ri(10,20); S.hp=Math.max(1,S.hp-h); if(r&&r.k==='key') C.key=Math.max(0,C.key-1); if(r&&r.k==='shift') C.wire=Math.max(0,C.wire-1); if(r&&r.k==='trust') C.trust=Math.max(0,C.trust-30);
+  capLog(`탈출 실패. 붙잡혀 끌려왔다. 체력 -${h} · 경계 +30`); sfx('scream'); FXL.flash('rgba(200,0,0,.6)',500); FXL.shake(14,700); hzLock(25+C.fails*10,C.fails>=2?'독방. 빛 한 줄기 없는 곳에 던져졌다.':'끌려와 다시 묶였다. 손목이 부어오른다.'); if(C.alarm>=100) capPunish(); markSave(); render() };
+const CAP_EV=[
+ {t:'점호',b:['"전원 일렬로 서." 경비가 포로들 몸을 하나하나 뒤진다.','내 차례가 다가온다. 숨겨 둔 물건이 소매 안에서 차갑다.'],need:C=>C.key+C.wire>0,o:[{n:'입안에 숨긴다 [민첩]',f:C=>{ if(Math.random()<.45+ST('agi')*.04) return '혀 밑에 감춘 쇳조각이 피 맛을 냈다. 경비는 지나갔다.'; C.key=Math.max(0,C.key-1); C.wire=0; C.alarm=Math.min(100,C.alarm+20); return '경비가 턱을 잡아 벌렸다. 숨긴 걸 빼앗기고 뺨을 맞았다. (경계 +20)' }},{n:'바닥 틈에 떨어뜨린다',f:C=>{ if(C.wire) C.wire--; else C.key=Math.max(0,C.key-1); return '하나를 잃었지만 들키진 않았다.' }}]},
+ {t:'끌려 나가는 포로',b:['한밤중, 옆 칸 남자가 끌려 나간다. "제발, 제발 일 더 할게요!"','잠시 뒤 멀리서 짧은 비명. 그리고 개들이 뭔가를 먹는 소리.'],o:[{n:'귀를 막는다',f:C=>{ mindAdd(-6); return '귀를 막아도 들렸다. (정신 -6)' }},{n:'경비들 대화를 엿듣는다 [감각]',f:C=>{ if(Math.random()<.45+ST('per')*.04){ C.info++; return '끌고 간 놈들이 투덜댔다. "이 시간엔 정문에 둘뿐이라니까." (교대 정보 +1)' } C.alarm=Math.min(100,C.alarm+10); mindAdd(-4); return '창살에 얼굴을 대고 있다가 들켰다. (경계 +10)' }}]},
+ {t:'두목의 심문',b:[`두목이 의자를 끌고 와 마주 앉는다. "너, 어디서 왔지? 캠프에 몇 명 있어?"`,'칼끝이 탁자 위에서 천천히 원을 그린다.'],o:[{n:'고개를 숙이고 거짓 숫자를 댄다 [매력]',f:C=>{ if(Math.random()<.4+ST('cha')*.05){ C.trust=Math.min(100,C.trust+15); return '"쓸모 있는 놈이군." 그는 웃었다. (신뢰 +15)' } C.alarm=Math.min(100,C.alarm+15); return '"거짓말할 때 눈이 왼쪽으로 가네." 손등에 칼자국이 남았다. (경계 +15)' }},{n:'노려보고 입을 다문다',f:C=>{ const h=ri(8,14); S.hp=Math.max(1,S.hp-h); C.trust=Math.max(0,C.trust-5); return `주먹이 날아왔다. 그래도 아무 말도 하지 않았다. (체력 -${h})` }}]},
+ {t:'담을 넘은 놈들',b:['새벽, 경보가 울린다. 감염자 떼가 담장을 넘었다.','경비들이 뛰어나가고, 포로 우리 문이 덜컹거린다.'],o:[{n:'혼란을 틈타 숨긴 물건을 더 챙긴다',f:C=>{ C.key++; C.alarm=Math.max(0,C.alarm-25); return '아수라장 속에서 경비실 서랍을 뒤졌다. (열쇠 조각 +1 · 경계 -25)' }},{n:'경비를 도와 싸운다',f:C=>{ const h=ri(6,14); S.hp=Math.max(1,S.hp-h); C.trust=Math.min(100,C.trust+20); return `쇠파이프를 들고 같이 싸웠다. 두목이 그걸 봤다. (신뢰 +20 · 체력 -${h})` }}]},
+ {t:'굶주림',b:['이틀째 물만 나온다. 누군가 빵 한 덩이를 두고 싸우기 시작했다.'],o:[{n:'빵을 양보한다',f:C=>{ S.hunger=Math.max(0,S.hunger-15); C.info++; return '빵을 받은 노인이 귓속말을 했다. "뒷문 경비는 개 밥 줄 때 자리를 비워." (교대 정보 +1)' }},{n:'빵을 빼앗는다 [힘]',f:C=>{ if(Math.random()<.5+ST('str')*.04){ S.hunger=Math.min(100,S.hunger+20); mindAdd(-3); return '빵을 삼켰다. 노인의 눈을 보지 않으려 했다.' } C.alarm=Math.min(100,C.alarm+15); return '싸움 소리에 경비가 들어왔다. 둘 다 맞았다. (경계 +15)' }}]},
+];
+function capEvent(){ const C=S.cap; if(!C) return; const L=CAP_EV.filter(e=>!e.need||e.need(C)); const E=stPick(L); rt.modalLock=true; FXL.pre('threat');
+  openModal(`<div class="eyebrow warnc">CAPTIVE <span class="dash"></span> ${esc(capG().pl)}</div><h2>${esc(E.t)}</h2>${E.b.map(x=>`<p style="margin:0 0 6px;line-height:1.7">${esc(x)}</p>`).join('')}<div class="story-opts">${E.o.map((o,i)=>`<button class="btn opt" data-ce="${i}">${esc(o.n)}</button>`).join('')}</div>`);
+  $('mbox').querySelectorAll('[data-ce]').forEach(b=>b.onclick=()=>{ const C2=S.cap; if(!C2) return; const t=E.o[+b.dataset.ce].f(C2); capLog(t); $('mbox').innerHTML=`<div class="eyebrow warnc">CAPTIVE</div><h2>${esc(E.t)}</h2><p style="margin:0;line-height:1.7">${esc(t)}</p><button class="btn pri" id="ceOk">계속</button>`; $('ceOk').onclick=()=>{ rt.modalLock=false; closeModal(); if(S.cap&&S.cap.alarm>=100) capPunish(); markSave(); render() } }) }
+setInterval(()=>{ try{ if(!S||!S.cap) return; const C=S.cap, now=Date.now();
+  if(now>=C.t+45*60000){ const lm=Math.round((S.money||0)*.2); S.money-=lm; for(const k of ['food','water','scrap']) S.res[k]=Math.floor((S.res[k]||0)*.75); const G=capG(); capFree('kick'); whenFree(()=>openModal(`<div class="eyebrow">CAPTIVE</div><h2>내쫓겼다</h2><p style="margin:0;line-height:1.7">"쓸모없는 입이야." ${esc(G.n)}은(는) 가방을 털어 간 뒤 나를 길바닥에 던졌다.</p><ul class="ev-eff"><li>$-${fmt(lm)}</li><li>식량·물·고철 25% 잃음</li></ul><button class="btn pri" onclick="closeModal()">계속</button>`)); return }
+  if(now>=C.nextEv&&$('modal').hidden&&!hzLocked()&&!rt.enc){ C.nextEv=now+ri(150,260)*1000; capEvent() }
+  if(rt.tab==='map'&&$('modal').hidden&&!document.querySelector('.capc :focus')){ const b=document.querySelector('.capc'); if(b&&(now-(rt.capRT||0)>1000)){ rt.capRT=now; render() } } }catch(e){} },1000);
+/* 포로일 때 막기 · 지도 대신 포로 화면 */
+const _viewMap108=viewMap; viewMap=function(){ if(capOn()) return capHtml(); return _viewMap108.apply(this,arguments) };
+const _canAct108=canAct; canAct=function(){ return !capOn()&&_canAct108.apply(this,arguments) };
+const _whyCant108=whyCant; whyCant=function(){ if(capOn()) return '포로로 붙잡혀 있어요.'; return _whyCant108.apply(this,arguments) };
+const _mapGo108=ACT.mapGo; ACT.mapGo=function(el){ if(capOn()) return toast('포로로 붙잡혀 있다. 먼저 탈출해야 한다.'); return _mapGo108.apply(this,arguments) };
+const _npcP108=ACT.npcParty; ACT.npcParty=function(){ if(capOn()) return toast('포로로 붙잡혀 있어요.'); return _npcP108.apply(this,arguments) };
+const _partyOpen108=partyOpen; partyOpen=async function(){ if(capOn()){ toast('포로로 붙잡혀 있어 동행할 수 없어요.'); return } return _partyOpen108.apply(this,arguments) };
+/* 상단 알림 */
+setInterval(()=>{ try{ let el=$('capChip'); if(!S||!S.cap){ if(el) el.remove(); return } if(!el){ el=document.createElement('button'); el.id='capChip'; el.type='button'; el.onclick=()=>setTab('map'); document.body.append(el) } const v=`⛓ ${capG().n}에게 붙잡혀 있다 · 탈출 화면`; if(el.textContent!==v) el.textContent=v; el.hidden=rt.tab==='map' }catch(e){} },1000);
+/* 사건 글: '포로' */
+const _cevApplyNow108=cevApplyNow; cevApplyNow=function(r,e){ const o=_cevApplyNow108.apply(this,arguments); if(r&&r.cap) setTimeout(()=>capStart(),1200); return o };
+const _cevFinal108=cevFinal; cevFinal=function(r,e,fail){ const o=_cevFinal108.apply(this,arguments); if(r&&r.cap){ try{ o.fx=o.fx||[]; o.fx.push('다른 무리에 포로로 끌려감') }catch(x){} setTimeout(()=>capStart(),1500) } return o };
+/* 포로로 이어지는 이야기 · 긴장감 있는 기본 사건 */
+const CAP_TXT=`=== 이벤트: 도와 달라는 목소리
+태그: TRAP
+레벨: 3
+--- 1
+분위기: 사람
+소리: 흐느낌
+무너진 상가 안쪽에서 여자 목소리가 들린다. "다리가 깔렸어요… 제발…"
+가까이 갈수록 목소리가 너무 또렷하다. 깔린 사람치고는.
+
+> 목소리 쪽으로 들어간다
+  결과: 기둥 뒤에 있던 건 녹음기였다. 뒤통수에 둔탁한 충격. | 체력 -10 | 다음 2
+> 바깥에서 이름을 묻는다 [감각]
+  성공: 대답 대신 장전 소리가 들렸다. 등 뒤의 그림자를 먼저 봤다. 그대로 달렸다. | XP 25 | 끝
+  실패: "들어와서 직접 봐요." 돌아서는 순간 등 뒤에서 그물이 날아왔다. | 다음 2
+
+--- 2
+분위기: 위협
+연출: 암전
+흐릿한 시야 속에서 누군가 내 다리를 질질 끌고 간다.
+"이번 건 튼튼하네. 일 좀 시키겠어."
+
+> 발버둥 친다 [힘]
+  성공: 한 놈의 무릎을 걷어찼다. 끈이 풀린 틈에 굴러 나왔다. | 체력 -8 | XP 30 | 끝
+  실패: 개머리판이 관자놀이를 내리쳤다. | 포로 | 끝
+> 기절한 척한다
+  결과: 눈을 감고 숫자를 셌다. 끌려가는 길을 머릿속에 그렸다. | 포로 | XP 10 | 끝
+
+=== 이벤트: 검문소의 미소
+태그: CHECKPOINT
+레벨: 4
+--- 1
+분위기: 위협
+소리: 엔진
+불탄 버스로 막은 검문소. 웃는 얼굴의 남자가 손을 흔든다.
+"통행료는 가방 반. 아니면 여기서 일 좀 하고 가든가."
+
+> 가방 반을 내놓는다
+  결과: 남자는 가방을 뒤지며 휘파람을 불었다. "다음에도 이 길로 와." | 달러 -40 | XP 8 | 끝
+> 거절하고 돌아선다 [민첩]
+  성공: 버스 뒤로 몸을 날렸다. 총알이 차체를 두드렸다. | 체력 -6 | XP 25 | 끝
+  실패: 등 뒤에서 그물총 소리. 다리가 엉켰다. | 포로 | 끝
+> 남자의 웃음을 받아친다 [매력]
+  성공: "농담 좀 하는 놈이네." 그는 통행료를 반만 받았다. | 달러 -15 | XP 20 | 끝
+  실패: 웃음이 사라졌다. "데려가." | 포로 | 끝
+
+=== 이벤트: 냉동 트럭 안에서
+태그: HIDE
+레벨: 3
+--- 1
+분위기: 공포
+소리: 심장 박동
+연출: 붉은 테두리 (몇 초)
+떼다. 수백 마리. 숨을 곳은 문이 열린 냉동 트럭뿐이다.
+안으로 들어가 문을 당겼다. 바깥에서 발소리가 쏟아진다.
+
+> 문고리를 잡고 버틴다 [힘]
+  성공: 놈들이 문을 긁다 지나갔다. 손가락이 얼어붙을 때까지 놓지 않았다. | 행동 불가 40 | 체력 -5% | XP 30 | 끝
+  실패: 문이 덜컹 열렸다. 틈으로 손이 들어온다. | 행동 불가 10 | 전투 달리는 감염자 | 끝
+> 구석 비닐 포대 사이에 숨는다
+  결과: 포대 하나가 따뜻했다. 그리고 숨을 쉬었다. 비명을 삼킨 채 떼가 지나가길 기다렸다. | 행동 불가 35 | 정신 -10 | 환청 40 | XP 25 | 끝
+
+=== 이벤트: 아이의 그림
+태그: OMEN
+레벨: 2
+--- 1
+분위기: 미스터리
+연출: 지직거림
+빈집 벽에 크레용 그림이 가득하다. 마지막 그림은 오늘 날짜다.
+그림 속 사람은 나와 같은 옷을 입고, 지도 위의 한 곳을 가리키고 있다.
+
+> 그림이 가리키는 곳을 확인한다
+  결과: 그림이 가리킨 곳을 지도에서 찾는 순간, 지도가 지직거리며 꺼졌다. 정신을 차리니 그곳에 서 있었다. | 기절 이동 | 지도 먹통 3 | 정신 -6 | XP 20 | 끝
+> 그림을 찢는다
+  결과: 찢은 종이 뒤에 또 그림이 있었다. 그림 속 나는 울고 있었다. | 정신 -8 | 환청 30 | XP 10 | 끝
+
+=== 이벤트: 영안실의 번호표
+태그: MORGUE
+레벨: 4
+--- 1
+분위기: 공포
+소리: 째깍
+연출: 깜빡임
+병원 지하 영안실. 서랍마다 번호표가 붙어 있다. 그중 하나가 안에서 두드려진다.
+번호표에 적힌 이름은 내 이름이다.
+
+> 서랍을 연다
+  결과: 서랍 안엔 내 가방과 똑같은 가방이 있었다. 안을 뒤지는 동안 손이 멈추지 않았다. | 강제 조사 3 | 정신 -8 | XP 25 | 끝
+> 번호표를 떼고 뛰어나간다 [민첩]
+  성공: 계단을 오르는 내내 서랍 열리는 소리가 하나씩 늘었다. | XP 22 | 끝
+  실패: 미끄러진 바닥에 머리를 박았다. 눈을 떴을 때 시트에 덮여 있었다. | 행동 불가 30 | 체력 -10 | 끝
+`;
+let CAP_EVS=null; const capEvents=()=>{ if(CAP_EVS) return CAP_EVS; try{ CAP_EVS=cevParse(CAP_TXT).list.map(({e},i)=>cevClean('cx'+i,Object.assign({on:true},e))).filter(Boolean) }catch(e){ CAP_EVS=[] } return CAP_EVS };
+const _openStoryChain108=openStoryChain; openStoryChain=function(){ try{ if(!rt.party&&!capOn()&&lvlOf(S.xp)>=2&&Math.random()<.08){ const L=hzEvents().concat(capEvents()).filter(e=>lvlOf(S.xp)>=(e.lv||1)&&e.id!==S.hzLast); if(L.length){ const e=stPick(L); S.hzLast=e.id; return runChain(cevChain(e)) } } }catch(x){} return _openStoryChain108.apply(this,arguments) };
+(()=>{ const st=document.createElement('style'); st.textContent=`
+.capc{border-color:#7a1f1f}.capst{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:8px 0}.capst>div{display:grid;gap:4px}.capst .bar{height:6px}
+.caprt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}.caprow{border:1px solid var(--line);padding:8px 10px;display:grid;gap:4px}.caprow small{color:var(--muted);font-size:12px}.caprow.ok{border-color:#2a9d6a;box-shadow:inset 0 0 0 1px #2a9d6a}
+.capp{display:grid;grid-template-columns:1fr 70px;gap:6px;align-items:center;font-size:12.5px}.capp .bar{height:5px}
+.capact{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:8px 0}.capact .btn{display:grid;gap:2px;text-align:left;padding:8px 10px}.capact small{font-size:11.5px;color:var(--muted)}
+.caplog{margin-top:10px;border-top:1px solid var(--line);padding-top:6px;font-size:13px}.caplog p{margin:3px 0}
+#capChip{position:fixed;left:50%;transform:translateX(-50%);top:8px;z-index:60;background:#5a1414;color:#fff;border:0;padding:7px 14px;font-size:13px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+@media (max-width:760px){.caprt,.capst{grid-template-columns:1fr}.capact{grid-template-columns:repeat(2,minmax(0,1fr))}}`; document.head.append(st) })();
+
+
+npcAdd(NPC_KID,{danger:['쉿… 나 숨 참을 수 있어. 봐 봐.','저거 텔레비전에서 본 거랑 똑같아.','엄마가 이럴 땐 눈 감으랬어.','손 잡아 줘. 꽉.','나 안 울 거야. 진짜야.'],help:['저 사람 배고파 보여. 내 사탕 줄까?','우리도 누가 도와줬잖아.','불쌍해…'],loot:['반짝이는 거 있다!','이거 내가 들게, 응?','과자 있으면 좋겠다.']});
+npcAdd(NPC_OLD,{danger:['전쟁 때도 이런 소리는 못 들어 봤네.','무릎이 시큰거리는 걸 보니 비가 오겠군. 놈들도 오고.','뛰는 건 자네들한테 맡기지.','내가 미끼가 돼 줄 수도 있네. 늙은 고기라 맛은 없겠지만.'],help:['남 돕는 게 결국 나 돕는 일이야.','저 사람 눈빛, 우리 아들 닮았구먼.'],loot:['예전엔 이런 데서 장도 봤지.','쓸 만한 건 다 무거운 법이야.','버리는 것도 기술이라네.']});
+const _onPev108b=onPev; onPev=function(m){ try{ const P=rt.party, d=(m&&m.data)||{}; if(P&&P.npc&&m.by===P.leader&&d.type==='res'){ const v=Object.values(d.per||{}); P.npc.lastBad=v.some(x=>x&&((x.hp|0)<0||(x.mind|0)<0||(x.money|0)<0)) } }catch(e){} return _onPev108b.apply(this,arguments) };
+/* ================= p109: Lv.30부터 열리는 고급 시설 (전에는 숨김) · 열릴 때 공지 · 위탁 판매 수익 ================= */
+const BLD_HI={
+  boutique:{n:'명품 위탁 판매점',d:'명품관 물건을 위탁해 팔아요. 시간당 $60/단계 수익(최대 8시간 쌓임) · 얻는 돈 +2%/단계',base:{scrap:300,wood:200,elec:6},lv:30,hid:1},
+  blackmkt:{n:'암시장 중개소',d:'상점 할인 +2%/단계 · 시간당 $30/단계 중개 수수료',base:{scrap:350,fuel:10,elec:8},lv:35,hid:1},
+  lab:{n:'연구실',d:'얻는 경험치 +4%/단계',base:{scrap:300,med:20,elec:15},lv:40,hid:1},
+  armory:{n:'무기고',d:'공격력 +3%/단계',base:{scrap:500,fuel:15,elec:10},lv:45,hid:1},
+  generator:{n:'대형 발전기',d:'모든 일꾼 생산량 +10%/단계',base:{scrap:600,fuel:25,elec:20},lv:50,hid:1},
+  shelter:{n:'지하 벙커',d:'받는 피해 -2%/단계 · 내 파견대 습격 방어 +5%/단계',base:{scrap:800,wood:600,elec:25},lv:60,hid:1},
+};
+Object.assign(BLD,BLD_HI); Object.assign(BLD_NEW,BLD_HI);
+const bHi=k=>((S&&S.bld)||{})[k]||0;
+const _viewBuild109=viewBuild; viewBuild=function(){ const lv=lvlOf(S.xp), hide={}; for(const k in BLD_HI) if(lv<BLD_HI[k].lv){ hide[k]=BLD[k]; delete BLD[k] }
+  let h; try{ h=_viewBuild109.apply(this,arguments) } finally{ Object.assign(BLD,hide) }
+  const rate=bIncRate(); if(rate>0){ const v=bIncNow(); const box=`<section class="pcard bincc"><div class="pc-h"><span class="pemo">💼</span><h3>위탁 판매 · 중개 수익</h3><span class="note">시간당 $${fmt(rate)} · 최대 8시간까지 쌓여요</span></div><div class="row spread"><b class="num">$${fmt(v)}</b><button class="btn pri" data-act="bldInc" ${v<1?'disabled':''}>수익 받기</button></div></section>`; const i=h.indexOf('<div class="sec">'); h=i>=0?h.slice(0,i)+box+h.slice(i):box+h }
+  const nx=Object.entries(BLD_HI).filter(([k,b])=>lv<b.lv).sort((a,b)=>a[1].lv-b[1].lv)[0]; if(nx&&lv>=25) h+=`<p class="note">Lv.${nx[1].lv}이 되면 새로운 시설이 열려요.</p>`; return h };
+const bIncRate=()=>60*bHi('boutique')+30*bHi('blackmkt');
+function bIncNow(){ const r=bIncRate(); if(!r) return 0; if(!S.bInc) S.bInc=Date.now(); const hrs=Math.min(8,(Date.now()-S.bInc)/3600000); return Math.floor(r*hrs) }
+ACT.bldInc=()=>{ const v=bIncNow(); if(v<1) return; S.bInc=Date.now(); addMoney(v,'위탁 판매 수익'); sfx('coin'); toast(`위탁 판매 수익 $${fmt(v)}을 받았어요.`,true); markSave(); render() };
+const _build109=ACT.build; ACT.build=el=>{ const k=el&&el.dataset.k; if(BLD_HI[k]&&(k==='boutique'||k==='blackmkt')&&!bHi('boutique')&&!bHi('blackmkt')) S.bInc=Date.now(); if(BLD_HI[k]&&lvlOf(S.xp)<BLD_HI[k].lv) return toast(`Lv.${BLD_HI[k].lv}부터 지을 수 있어요.`); return _build109(el) };
+const _gearV109=gearV; gearV=function(k){ let v=_gearV109(k); try{ if(k==='atk') v+=.03*bHi('armory'); else if(k==='xp') v+=.04*bHi('lab'); else if(k==='disc') v+=.02*bHi('blackmkt'); else if(k==='money') v+=.02*bHi('boutique'); else if(k==='def') v=Math.min(.6,v+.02*bHi('shelter')); else if(k==='raidDef') v+=.05*bHi('shelter') }catch(e){} return v };
+const _prodMult109=prodMult; prodMult=function(){ return _prodMult109.apply(this,arguments)+.1*bHi('generator') };
+/* 열릴 때 공지 (이미 레벨이 넘은 사람도 한 번) */
+setInterval(()=>{ try{ if(!S||!S.intro||!$('modal').hidden||rt.enc||document.getElementById('intro')) return; const lv=lvlOf(S.xp); S.bldSeen=S.bldSeen||[]; const nw=Object.keys(BLD_HI).filter(k=>lv>=BLD_HI[k].lv&&!S.bldSeen.includes(k)); if(!nw.length) return;
+  S.bldSeen.push(...nw); markSave(); sfx('level'); rt.modalLock=true;
+  openModal(`<div class="eyebrow">NEW FACILITY <span class="dash"></span> Lv.${lv}</div><h2>새로운 시설을 건설할 수 있어요</h2><p class="ch-p">캠프가 커지면서 더 큰 일을 벌일 수 있게 됐어요. 증축 자원은 많이 들지만 효과도 커요.</p><div class="nbl">${nw.map(k=>`<div class="nbr"><b>${esc(BLD_HI[k].n)}</b><small>${esc(BLD_HI[k].d)}</small><span class="cost">${costHtml(costOf(BLD_HI[k].base,0))}</span></div>`).join('')}</div><div class="row"><button class="btn pri" id="nbGo" type="button">시설 보러 가기</button><button class="btn" id="nbX" type="button">나중에</button></div>`);
+  $('nbGo').onclick=()=>{ rt.modalLock=false; closeModal(); setTab('build') }; $('nbX').onclick=()=>{ rt.modalLock=false; closeModal() } }catch(e){} },3000);
+(()=>{ const st=document.createElement('style'); st.textContent=`.nbl{display:grid;gap:8px;margin:10px 0}.nbr{border:1px solid var(--line2);padding:10px 12px;display:grid;gap:4px}.nbr small{color:var(--muted);font-size:12.5px}.nbr .cost{font-size:12px}.bincc .num{font-size:20px}`; document.head.append(st) })();
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
