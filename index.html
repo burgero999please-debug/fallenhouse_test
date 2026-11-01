@@ -12332,17 +12332,20 @@ document.addEventListener('toggle',e=>{ const d=e.target; if(d&&d.id==='rvBox'){
 const _viewRoster120=viewRoster; viewRoster=function(){ const h=_viewRoster120.apply(this,arguments); try{ return rvHtml()+h }catch(e){ return h } };
 /* --- 결투: 6합 · 공격/강타/방어 수 싸움 --- */
 ACT.rvDuel=el=>{ const r=rvById(el.dataset.id); if(!r) return; if(rvDcd()) return; if(rt.enc||capOn()) return toast('지금은 결투할 수 없어요.'); if(S.hp<maxHp()*.25) return toast('몸 상태가 너무 나빠요. 먼저 회복하세요.');
-  const myMax=100, thMax=100, myAtk=Math.round(10+ST('str')*1.6+pAtk(false)*.35), thAtk=Math.round(10+r.st.str*1.6+r.lv*.5), myDef=clamp(.1+ST('end')*.02,0,.4), thDef=clamp(.1+r.st.end*.02,0,.4);
-  const s={r,me:myMax,th:thMax,rd:0,log:[`${rvNm(r)}이(가) 무기를 고쳐 쥔다. "덤벼."`]};
-  const ai=()=>{ const p={brag:[.5,.35,.15],cynic:[.35,.25,.4],calm:[.4,.2,.4],blunt:[.45,.3,.25]}[r.per]||[.4,.3,.3]; const x=Math.random(); return x<p[0]?'atk':x<p[0]+p[1]?'pow':'grd' };
+  const myLv=lvlOf(S.xp), thLv=r.lv|0, wB=Math.min(pAtk(false)*.22,myLv*.6+6);
+  const myAtk=Math.round(8+ST('str')*1.5+myLv*.7+wB), thAtk=Math.round(8+r.st.str*1.5+thLv*.7+thLv*.12+2);
+  const myMax=Math.round(80+myLv*1.5+ST('end')*4), thMax=Math.round(80+thLv*1.5+r.st.end*4), myDef=clamp(.05+ST('end')*.015,0,.3), thDef=clamp(.05+r.st.end*.015,0,.3);
+  const s={r,me:myMax,th:thMax,rd:0,hist:[],log:[`${rvNm(r)}이(가) 무기를 고쳐 쥔다. "덤벼."`]};
+  const smart=clamp(.18+(thLv-myLv)*.025+(r.per==='calm'||r.per==='cynic'?.05:0),.08,.6), CT={atk:'pow',pow:'grd',grd:'atk'};
+  const ai=()=>{ if(s.hist.length>=2&&Math.random()<smart){ const h=s.hist.slice(-3), f={}; h.forEach(x=>f[x]=(f[x]||0)+1); const pr=Object.keys(f).sort((a,b)=>f[b]-f[a])[0]; return CT[pr] } const p={brag:[.45,.4,.15],cynic:[.35,.25,.4],calm:[.4,.2,.4],blunt:[.45,.3,.25]}[r.per]||[.4,.3,.3]; const x=Math.random(); return x<p[0]?'atk':x<p[0]+p[1]?'pow':'grd' };
   const N={atk:'공격',pow:'강타',grd:'방어'};
-  const hit=(a,b,atk,def)=>{ if(a==='grd') return 0; let d=atk*(a==='pow'?1.8:1)*rand(.85,1.15); if(b==='grd') d*=a==='pow'?0:.3; return Math.round(d*(1-def)) };
-  const draw=()=>{ spDraw({eb:'DUEL',place:rvNm(r),t:`${r.nk}와(과)의 결투 · ${s.rd}/6합`,body:`<div class="spr"><span>나</span>${mtr(s.me)}<b class="num">${Math.max(0,s.me)}</b></div><div class="spr"><span>${esc(r.nk)}</span>${mtr(s.th,'red')}<b class="num">${Math.max(0,s.th)}</b></div><div class="splog">${s.log.slice(-4).map(x=>`<p>${esc(x)}</p>`).join('')}</div><p class="note">강타는 공격을 이기지만 방어에 막히면 빈틈을 찔려요. 방어는 공격을 줄이고 강타를 받아쳐요.</p>`,
+  const dmgOf=(a,b,atk,def)=>{ const v=rand(.85,1.15); let d=0; if(a==='atk') d=b==='grd'?atk*.45:b==='pow'?atk*.5:atk; else if(a==='pow') d=b==='grd'?0:b==='pow'?atk*1.3:atk*1.6; else if(a==='grd') d=b==='pow'?atk*.9:0; return Math.round(d*v*(1-def)) };
+  const draw=()=>{ spDraw({eb:'DUEL',place:rvNm(r),t:`${r.nk}와(과)의 결투 · ${s.rd}/6합`,body:`<div class="spr"><span>나 (Lv.${myLv})</span>${mtr(s.me/myMax*100)}<b class="num">${Math.max(0,s.me)}</b></div><div class="spr"><span>${esc(r.nk)} (Lv.${thLv})</span>${mtr(s.th/thMax*100,'red')}<b class="num">${Math.max(0,s.th)}</b></div><div class="splog">${s.log.slice(-4).map(x=>`<p>${esc(x)}</p>`).join('')}</div><p class="note">강타는 공격을 누르고, 방어는 강타를 받아치고, 공격은 방어를 조금씩 깎아요. 같은 수만 내면 상대가 읽어요. 강한 상대일수록 더 잘 읽어요.</p>`,
     btns:['atk','pow','grd'].map(k=>({t:N[k],f:()=>turn(k)}))}) };
-  const turn=k=>{ s.rd++; const e=ai(); let dm=hit(k,e,myAtk,thDef), dt=hit(e,k,thAtk,myDef); if(k==='pow'&&e==='grd') dt+=Math.round(thAtk*.9); if(e==='pow'&&k==='grd') dm+=Math.round(myAtk*.9);
-    s.th-=dm; s.me-=dt; sfx(dm>dt?'hit':'hurt'); if(dt>15) FXL.shake(6,300); s.log.push(`${s.rd}합 · 나: ${N[k]} / ${r.nk}: ${N[e]} → 내가 ${dm} 입힘 · ${dt} 받음`);
-    if(s.th<=0||s.me<=0||s.rd>=6){ S.rvDT=Date.now()+10*60000; const win=s.th<=0&&s.me>0||(s.rd>=6&&s.me>s.th&&s.th>0)||(s.th<=0&&s.me<=0&&s.me>s.th);
-      if(win){ r.grudge=(r.grudge||0)+1; const m=Math.round(40+r.lv*6); markSave(); return spEnd('결투 승리',`${r.nk}이(가) 무릎을 꿇었다. "…오늘은 네가 이겼다." 그의 무리가 침묵 속에 판돈을 던졌다.`,{$:m,xp:30+r.lv*2},true) }
+  const turn=k=>{ s.rd++; const e=ai(); s.hist.push(k); const dm=dmgOf(k,e,myAtk,thDef), dt=dmgOf(e,k,thAtk,myDef);
+    s.th-=dm; s.me-=dt; sfx(dm>dt?'hit':dt?'hurt':'click'); if(dt>15) FXL.shake(6,300); s.log.push(`${s.rd}합 · 나: ${N[k]} / ${r.nk}: ${N[e]} → 내가 ${dm} 입힘 · ${dt} 받음${k==='grd'&&e==='grd'?' (서로 노려본다)':''}`);
+    if(s.th<=0||s.me<=0||s.rd>=6){ S.rvDT=Date.now()+10*60000; const myP=s.me/myMax, thP=s.th/thMax; const win=(s.th<=0&&s.me>0)||(s.th>0&&s.me>0&&myP>thP)||(s.th<=0&&s.me<=0&&myP>thP);
+      if(win){ r.grudge=(r.grudge||0)+1; const m=Math.round(40+thLv*6+Math.max(0,thLv-myLv)*15); markSave(); return spEnd('결투 승리',`${r.nk}이(가) 무릎을 꿇었다. "…오늘은 네가 이겼다." 그의 무리가 침묵 속에 판돈을 던졌다.`,{$:m,xp:30+thLv*2},true) }
       const h=Math.round(maxHp()*.2), lm=Math.round((S.money||0)*.08); markSave(); return spEnd('결투 패배',`흙바닥에 얼굴을 박았다. ${r.nk}이(가) 내 주머니를 털며 웃었다.`,{hp:-h,$:-lm,xp:10},false) }
     draw() };
   rt.modalLock=true; openModal('<div></div>'); SPS={place:rvNm(r)}; draw() };
@@ -12390,8 +12393,8 @@ function offFake(id){ rt.offOK={id,until:Date.now()+5*60000}; const s=rt.online;
 setInterval(()=>{ try{ if(rt.offOK&&Date.now()<rt.offOK.until) offFake(rt.offOK.id) }catch(e){} },1000);
 const ago=t=>{ const m=Math.round((Date.now()-t)/6e4); return m<60?`${m}분 전`:m<1440?`${Math.round(m/60)}시간 전`:`${Math.round(m/1440)}일 전` };
 function offHtml(){ if(rt.solo) return ''; const L=offList(); if(!L.length) return ''; const dcd=rvDcd();
-  return `<details class="pcard rvbox" id="offBox" ${S.offFold?'':'open'}><summary class="pc-h"><span class="pemo">📻</span><h3>오프라인 생존자</h3><span class="note">마지막 접속 3일 이내 · 남긴 기록으로 상대해요</span></summary><div class="rvl">${L.map(([id,p])=>{ const crew=(Array.isArray(p.crewAway)?p.crewAway:[]).filter(c=>c&&c.name&&(+c.e||0)>Date.now()), pet=p.pet&&PETS[p.pet.k]?p.pet:null;
-    return `<div class="rvc"><div class="rvh"><b>${esc(String(p.nick).slice(0,20))}</b><small>Lv.${clamp(p.lvl|0,1,999)} · ${ago(+p.t||0)} 접속</small></div><p class="note">파견 중인 대원 ${crew.length}명${pet?` · 펫 ${petE(pet.k)} ${esc(String(pet.n||PETS[pet.k].n).slice(0,12))}`:''}</p><div class="row"><button class="btn sm" data-act="offDuel" data-id="${esc(id)}" ${dcd?'disabled':''}>${dcd?'결투 '+mmss(dcd):'그림자 결투'}</button><button class="btn sm" data-act="offCrew" data-id="${esc(id)}" ${crew.length?'':'disabled'}>파견 대원 노리기</button><button class="btn sm" data-act="offPet" data-id="${esc(id)}" ${pet&&!(S.pets||{})[pet.k]?'':'disabled'}>펫 노리기</button></div></div>` }).join('')}</div></details>` }
+  return `<details class="pcard rvbox" id="offBox" ${S.offFold?'':'open'}><summary class="pc-h"><span class="pemo">📻</span><h3>오프라인 생존자</h3><span class="note">남긴 기록으로 상대해요</span></summary><div class="rvl">${L.map(([id,p])=>{ const crew=(Array.isArray(p.crewAway)?p.crewAway:[]).filter(c=>c&&c.name&&(+c.e||0)>Date.now()), pet=p.pet&&PETS[p.pet.k]?p.pet:null;
+    return `<div class="rvc"><div class="rvh"><b>${esc(String(p.nick).slice(0,20))}</b><small>Lv.${clamp(p.lvl|0,1,999)}</small></div><p class="note">파견 중인 대원 ${crew.length}명${pet?` · 펫 ${petE(pet.k)} ${esc(String(pet.n||PETS[pet.k].n).slice(0,12))}`:''}</p><div class="row"><button class="btn sm" data-act="offDuel" data-id="${esc(id)}" ${dcd?'disabled':''}>${dcd?'결투 '+mmss(dcd):'그림자 결투'}</button><button class="btn sm" data-act="offCrew" data-id="${esc(id)}" ${crew.length?'':'disabled'}>파견 대원 노리기</button><button class="btn sm" data-act="offPet" data-id="${esc(id)}" ${pet&&!(S.pets||{})[pet.k]?'':'disabled'}>펫 노리기</button></div></div>` }).join('')}</div></details>` }
 document.addEventListener('toggle',e=>{ const d=e.target; if(d&&d.id==='offBox'){ const f=!d.open; if(!!S.offFold!==f){ S.offFold=f; markSave() } } },true);
 const _viewRoster121=viewRoster; viewRoster=function(){ const h=_viewRoster121.apply(this,arguments); try{ const o=offHtml(); if(!o) return h; const i=h.indexOf('</details>'); return i>=0?h.slice(0,i+10)+o+h.slice(i+10):o+h }catch(e){ return h } };
 ACT.offDuel=el=>{ const id=el.dataset.id, p=rt.players.get(id); if(!p) return; const lv=clamp(p.lvl|0,1,999), R=seedOf(id), st=()=>clamp(Math.round(3+lv/12+R()*3),2,10);
@@ -12549,6 +12552,9 @@ setInterval(()=>{ try{ if(!S||!S.intro||rt.enc||rt.party||!$('modal').hidden||do
   const L=crewAlive().filter(c=>c.state==='idle').map(crewInfo2).filter(c=>(c.aff||0)<35); if(!L.length||Math.random()>.35) return; lowAsk(stPick(L)) }catch(e){} },20000);
 const _cevListDraw127=cevListDraw; cevListDraw=function(){ _cevListDraw127.apply(this,arguments); const b=$('spxTest'); if(!b||b.querySelector('.latest')) return; const d=document.createElement('div'); d.className='spxtb latest'; d.innerHTML=`<b style="width:100%;font-size:12.5px">대원이 먼저 다가오기</b><button type="button" class="btn sm" data-lat="low">친밀도 낮은 대원 (놀이·설렘·꿍꿍이)</button><button type="button" class="btn sm" data-lat="high">친한 대원의 부탁</button>`; b.append(d);
   d.querySelectorAll('[data-lat]').forEach(x=>x.onclick=()=>{ const L=crewAlive().filter(c=>c.state==='idle').map(crewInfo2); if(!L.length) return toast('대기 중인 대원이 없어요.'); rt.modalLock=false; closeModal(); const c=stPick(L); setTimeout(()=>x.dataset.lat==='low'?lowAsk(c):crewAsk(c),250) }) };
+
+/* ================= p128: 생존자 명단 순서 — 임시 동행 → 근처의 다른 무리 → 오프라인 생존자 → 접속자 명단 ================= */
+viewRoster=function(){ let a='',b='',c=''; try{ a=partyCard() }catch(e){} try{ b=rvHtml() }catch(e){} try{ c=offHtml() }catch(e){} return a+b+c+viewRoster0() };
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
