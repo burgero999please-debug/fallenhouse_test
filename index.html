@@ -1687,7 +1687,7 @@ function inkTransition(){
 
 function badges(){
   const ready=S.exp.filter(x=>Date.now()>=x.e).length, gifts=myGifts().length, unread=rt.tab==='radio'?0:unreadChat();
-  return {char:S.statPts>0?[S.statPts,'hot']:null,ready,gifts,unread,map:ready?[ready,'hot']:null,mail:gifts?[gifts,'hot']:null,radio:unread?[unread>99?'99+':unread,'hot']:null,roster:[rt.solo?1:rt.players.size||1,''],crew:(()=>{const k=(S.missions||[]).filter(m=>Date.now()>=m.e).length+(S.crew||[]).filter(c=>c.state==='infected').length; return k?[k,'hot']:null})()};
+  return {char:S.statPts>0?[S.statPts,'hot']:null,ready,gifts,unread,map:ready?[ready,'hot']:null,mail:gifts?[gifts,'hot']:null,radio:unread?[unread>99?'99+':unread,'hot']:null,roster:S.showOnline?[rt.solo?1:rt.players.size||1,'']:null,crew:(()=>{const k=(S.missions||[]).filter(m=>Date.now()>=m.e).length+(S.crew||[]).filter(c=>c.state==='infected').length; return k?[k,'hot']:null})()};
 }
 function renderNav(){
   const B=badges(); let h='', i=0;
@@ -1713,7 +1713,7 @@ function renderNav(){
   tc.querySelector('em').hidden=!B.unread; tc.querySelector('em').textContent=B.unread>99?'99+':B.unread;
   $('setBtn').innerHTML=icon('gear'); $('themeBtn').innerHTML=icon(themeIcon()); $('themeBtn').title='테마: '+themeLabel();
   $('crumb').textContent=viewOf(rt.tab).n;
-  $('connPill').innerHTML=`<i class="${rt.solo?'off':''}"></i>${rt.solo?'단독 운영':`접속 ${onlineCount()}명`}`;
+  $('connPill').innerHTML=`<i class="${rt.solo?'off':''}"></i>${rt.solo?'단독 운영':S.showOnline?`접속 ${onlineCount()}명`:'무전 연결됨'}`;
   const v=viewOf(rt.tab); $('clView').textContent=v.eb; 
 }
 
@@ -1790,7 +1790,7 @@ function heroCard(){
   </div><div class="hero-r">
     <div class="cubebox"><canvas id="cubeCv" aria-hidden="true"></canvas><span class="clabel" style="left:2%;top:58%">${esc(MAP[S.pos]?.n||"")}</span><span class="clabel" style="right:2%;top:24%">${esc(zoneD(S.pos).en)}</span><span class="clabel" style="left:50%;top:40%">IDENTITY</span></div>
     <div class="clock num"><small>${now.getFullYear()}</small>${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}</div>
-    <div class="hstat"><span>현재 시각</span><b id="heroTime">${hhmm(Date.now())}</b><span>접속 생존자</span><b>${rt.solo?'단독':onlineCount()+'명'}</b><span>습격 진행</span><b>${total>=raidHp()?'격퇴됨':Math.round(total/raidHp()*100)+'%'}</b><span>다음 보급</span><b id="heroDrop">${mmss((dropId()+1)*DROP_MS-Date.now())}</b></div>
+    <div class="hstat"><span>현재 시각</span><b id="heroTime">${hhmm(Date.now())}</b>${S.showOnline?`<span>접속 생존자</span><b>${rt.solo?'단독':onlineCount()+'명'}</b>`:''}<span>습격 진행</span><b>${total>=raidHp()?'격퇴됨':Math.round(total/raidHp()*100)+'%'}</b><span>다음 보급</span><b id="heroDrop">${mmss((dropId()+1)*DROP_MS-Date.now())}</b></div>
   </div></section>`;
 }
 /* 표지 큐브: 와이어프레임 안에 하프톤으로 찍힌 형체 */
@@ -1891,7 +1891,7 @@ function msgEl(m){
   d.append(document.createTextNode(m.x)); return d;
 }
 function recentCard(){
-  return `<section class="pcard"><div class="pc-h">${icon('chat')}<h3>최근 무전</h3><span class="muted">${rt.solo?'단독':`접속 ${onlineCount()}명`}</span></div><div class="mini" id="miniLog"></div>
+  return `<section class="pcard"><div class="pc-h">${icon('chat')}<h3>최근 무전</h3><span class="muted">${rt.solo?'단독':S.showOnline?`접속 ${onlineCount()}명`:''}</span></div><div class="mini" id="miniLog"></div>
     <button class="linkbtn" data-act="go" data-view="radio">무전실로 ${icon('arrow')}</button></section>`;
 }
 
@@ -1929,7 +1929,7 @@ function viewBuild(){
 }
 function viewOps(){ return evBar()+`<div class="cols">${raidCard()}${dropCard()}</div>`+(campOpen()?gateCard()+renderDefense().replace(/^[\s\S]*?(<div class="sec"><div class="sec-head"><h2>금고 따기)/,'$1'):renderDefense()) }
 function viewRadio(){
-  return `<section class="pcard chatcard"><div class="pc-h">${icon('chat')}<h3>공용 주파수 147.7</h3><span class="muted">${rt.solo?'단독 운영':`접속 ${onlineCount()}명`}</span></div>
+  return `<section class="pcard chatcard"><div class="pc-h">${icon('chat')}<h3>공용 주파수 147.7</h3><span class="muted">${rt.solo?'단독 운영':S.showOnline?`접속 ${onlineCount()}명`:''}</span></div>
     <div class="chatlog" id="chatlog" aria-live="polite"></div>
     <form class="chatform" id="chatform"><input id="chatIn" maxlength="140" placeholder="${rt.solo?'공유 서버에 연결되면 보낼 수 있습니다':'무전 보내기 (최대 140자)'}" autocomplete="off" ${rt.solo?'disabled':''}><button class="btn pri" type="submit" ${rt.solo?'disabled':''}>송신</button></form></section>`;
 }
@@ -7024,7 +7024,7 @@ const BRAT=[
 ];
 const BRAT_A={soothe:['달랜다','cha'],firm:['단호하게 나간다','str'],ignore:['못 들은 척한다',null],logic:['논리로 반박한다','per']};
 const WARE=['통조림 상자','붕대 꾸러미','배터리 묶음','밧줄','손전등','정수 알약','라이터','담요','전선 뭉치','소독약','건전지 라디오','성냥갑','삽','식수 통'];
-const jobPay=(J,f)=>Math.max(1,Math.round(J.pay*(1+lvlOf(S.xp)*.1)*f));
+const jobPay=(J,f)=>Math.max(1,Math.round(J.pay*1.5*(1+lvlOf(S.xp)*.12)*f));
 function jobEnd(J,f,t,fx,ok){ fx=fx||[]; if(f>0){ const m=jobPay(J,f), b=S.money||0; addMoney(m); fx.unshift(`$${(S.money||0)-b}`); addXp(10+Math.round(J.pay/6)) } S.jobT=Date.now()+JOB_CD; hx('job'); if(f>=1.2) hx('jobPerfect'); if(J.mind&&ok){ mindAdd(J.mind); fx.push(`정신 +${J.mind}`) } markSave(); rt.modalLock=false; outcome({n:J.n},ok?'일 끝':'일이 꼬였다',t,fx,ok) }
 function jobOpen(html){ rt.modalLock=true; openModal(html) }
 /* 요리 조합 맞추기 */
@@ -10887,13 +10887,13 @@ function homeEnhHtml(){ const w=curWeapon(), l=w.k==='fist'?0:wLv(w.k), tools=['
 
 /* ================= p89: 무기 내구 — 30% 남으면 알림 · 0이 된 뒤 두 번 더 쓰면 부서져 사라짐 ================= */
 wear=function(w,n){ const m=WSP(w).dur; if(!m||!w||w.k==='fist') return; S.wd=S.wd||{}; S.wBrk=S.wBrk||{}; const b=wDur(w);
-  if(b<=0){ S.wBrk[w.k]=(S.wBrk[w.k]||0)+1; if(S.wBrk[w.k]>=2) return wDestroy(w); toast(`${w.n}이(가) 부서지기 직전이다! 한 번 더 쓰면 사라진다.`,true); sfx('bang'); return }
+  if(b<=0){ S.wBrk[w.k]=(S.wBrk[w.k]||0)+1; if(S.wBrk[w.k]>=2) return wDestroy(w); wAlert('break1',w,`${w.n}이(가) 부서지기 직전이다!`,'손잡이가 덜렁거린다. 수리하지 않고 한 번만 더 쓰면 완전히 박살 나서 사라진다.'); sfx('bang'); return }
   S.wd[w.k]=Math.max(0,b-n); S.wBrk[w.k]=0;
-  if(S.wd[w.k]<=0){ toast(`${w.n}의 내구도가 0이 됐다. 위력이 크게 떨어지고, 수리하지 않고 두 번 더 쓰면 부서진다.`,true); slog(`${w.n} 내구도 0`); sfx('bang') }
-  else if(b>m*.3&&S.wd[w.k]<=m*.3){ toast(`${w.n} 내구도 ${Math.round(S.wd[w.k]/m*100)}% 남음 · 수리해 주세요 (생존 화면 무기 칸)`,true); slog(`${w.n} 내구도 30% 이하`) } };
+  if(S.wd[w.k]<=0){ wAlert('zero',w,`${w.n} 내구도 0`,'날이 다 상했다. 위력이 크게 떨어지고, 수리하지 않고 두 번 더 쓰면 부서져서 사라진다.'); slog(`${w.n} 내구도 0`); sfx('bang') }
+  else if(b>m*.3&&S.wd[w.k]<=m*.3){ wAlert('low',w,`${w.n} 내구도 ${Math.round(S.wd[w.k]/m*100)}% 남음`,'금이 가기 시작했다. 생존 화면 무기 칸에서 수리해 주세요. 내구도가 0이 되면 위력이 크게 떨어지고, 그 뒤 두 번 더 쓰면 부서져요.'); slog(`${w.n} 내구도 30% 이하`) } };
 function wDestroy(w){ const k=w.k; S.wBrk[k]=0; delete S.wd[k]; if(S.wLv) delete S.wLv[k];
-  if((S.wExtra||{})[k]>0){ S.wExtra[k]--; toast(`${w.n}이(가) 부서져 없어졌다. 예비로 가진 ${w.n}을(를) 꺼내 들었다. (강화 단계는 사라짐)`,true) }
-  else { delete S.weapons[k]; if(S.weapon===k) S.weapon='fist'; toast(`${w.n}이(가) 완전히 부서져 없어졌다.`,true) }
+  if((S.wExtra||{})[k]>0){ S.wExtra[k]--; wAlert('gone',w,`${w.n}이(가) 박살 났다`,`손안에서 산산조각 났다. 예비로 가진 ${w.n}을(를) 꺼내 들었다. 강화 단계는 사라졌다.`) }
+  else { delete S.weapons[k]; if(S.weapon===k) S.weapon='fist'; wAlert('gone',w,`${w.n}이(가) 박살 났다`,'손안에서 산산조각 났다. 이제 이 무기는 없다. 강화 단계도 함께 사라졌다.') }
   slog(`${w.n} 파괴`); sfx('bang'); try{ FXL.shake(6,300) }catch(e){} markSave(); try{ render() }catch(e){} }
 
 /* ================= p90: 동행 채팅 입력칸을 다시 그리지 않는 고정 칸으로 (사건·기록이 쌓여도 한글 입력이 끊기지 않게) · PC는 원래 배치 ================= */
@@ -12096,7 +12096,7 @@ const _exRow115=exRow; exRow=function(e){ exFix(e); return _exRow115.apply(this,
 /* ================= p116: 조사 중 구역별 특수 사건 (직접 조작하는 미니 게임 10종) ================= */
 const SPX={}; let SPS=null;
 function spDraw(o){ /* o:{eb,t,body,btns:[{t,cls,dis,f,sub}]} */ rt.modalLock=true; if($('modal').hidden) openModal('<div></div>');
-  $('mbox').innerHTML=`<div class="eyebrow">${o.eb||'SPECIAL'} <span class="dash"></span> ${esc(o.place||'')}</div><h2>${esc(o.t)}</h2><div class="spx">${o.body||''}</div><div class="story-opts spxb">${(o.btns||[]).map((b,i)=>`<button class="btn opt ${b.cls||''}" data-sx="${i}" ${b.dis?'disabled':''}>${esc(b.t)}${b.sub?` <small class="optlv">${esc(b.sub)}</small>`:''}</button>`).join('')}</div>`;
+  $('mbox').innerHTML=`<div class="eyebrow">${o.eb||'SPECIAL'} <span class="dash"></span> ${esc(o.place||'')}</div><h2>${esc(o.t)}</h2><div class="spx">${josa(o.body||'')}</div><div class="story-opts spxb">${(o.btns||[]).map((b,i)=>`<button class="btn opt ${b.cls||''}" data-sx="${i}" ${b.dis?'disabled':''}>${esc(b.t)}${b.sub?` <small class="optlv">${esc(b.sub)}</small>`:''}</button>`).join('')}</div>`;
   $('mbox').querySelectorAll('[data-sx]').forEach(x=>x.onclick=()=>{ const b=o.btns[+x.dataset.sx]; if(b&&!b.dis) b.f() }) }
 function spGive(o){ const fx=[]; for(const k in o.res||{}){ const v=Math.round(o.res[k]); if(v>0){ gain(k,v); fx.push(`${RES[k].n} +${v}`) } else if(v<0){ const q=Math.min(S.res[k]||0,-v); S.res[k]-=q; if(q) fx.push(`${RES[k].n} -${q}`) } }
   if(o.$){ if(o.$>0) addMoney(o.$); else S.money=Math.max(0,(S.money||0)+o.$); fx.push(`$${o.$>0?'':'-'}${fmt(Math.abs(o.$))}`) }
@@ -12210,7 +12210,7 @@ const _pendNext116=ACT.pendNext; ACT.pendNext=function(){ const p=(S.pend||[])[0
 /* ================= p117: 관리자 — 구역 특수 사건을 바로 해 보기 ================= */
 const _cevListDraw117=cevListDraw; cevListDraw=function(){ _cevListDraw117.apply(this,arguments); const el=$('cevList'); if(!el||!rt.isAdmin) return; if($('spxTest')) return;
   const box=document.createElement('details'); box.id='spxTest'; box.className='spxtest'; if(rt.spxOpen) box.open=true;
-  box.innerHTML=`<summary>🎲 구역 특수 사건 바로 해 보기 (관리자 시험용 · 실제 보상·피해가 적용돼요)</summary><div class="spxtb">${Object.keys(SPX_N).map(k=>`<button type="button" class="btn sm" data-spx="${k}">${esc(ZTYPE[k]?ZTYPE[k].n:k)} · ${esc(SPX_N[k])}</button>`).join('')}</div>`;
+  box.innerHTML=`<summary>🎲 구역 특수 사건 바로 해 보기 (관리자 시험용 · 실제 보상·피해가 적용돼요)</summary><div class="spxtb">${Object.keys(SPX_N).map(k=>`<button type="button" class="btn sm" data-spx="${k}">${esc(ZTYPE[k]?ZTYPE[k].n:'어디서나')} · ${esc(SPX_N[k])}</button>`).join('')}</div>`;
   box.addEventListener('toggle',()=>{ rt.spxOpen=box.open });
   box.querySelectorAll('[data-spx]').forEach(b=>b.onclick=()=>{ const t=b.dataset.spx, z=Object.keys(MAP).filter(k=>MAP[k].t===t&&!MAP[k].home); rt.modalLock=false; closeModal(); setTimeout(()=>spxRun(t,z.length?stPick(z):S.pos),250) });
   const pk=$('cevPeekBar')||el; pk.insertAdjacentElement('beforebegin',box) };
@@ -12306,6 +12306,249 @@ setInterval(()=>{ try{ if(!S||!S.intro||!S.pet||rt.enc||rt.party||!$('modal').hi
 /* 관리자 시험 버튼에 펫 사건도 */
 const _cevListDraw118=cevListDraw; cevListDraw=function(){ _cevListDraw118.apply(this,arguments); const b=$('spxTest'); if(!b||b.querySelector('.ptest')) return; const d=document.createElement('div'); d.className='spxtb ptest'; d.innerHTML=`<b style="width:100%;font-size:12.5px">펫 사건 (지금 데리고 다니는 펫으로)</b>${PEV2.map(e=>`<button type="button" class="btn sm" data-pev2="${e.k}">${({lost:'사라졌다',gift:'물어 왔다',warn:'밤중 경고',ill:'아프다',rival:'대치',play:'놀아 줘',trick:'재주 배우기',buyer:'탐내는 사람',dream:'악몽',scout:'하늘 정찰(새)',carry:'짐 나르기(큰 동물)',shed:'허물(파충류)'})[e.k]||e.k}</button>`).join('')}`; b.append(d);
   d.querySelectorAll('[data-pev2]').forEach(x=>x.onclick=()=>{ if(!S.pet) return toast('데리고 다니는 펫이 없어요.'); rt.modalLock=false; closeModal(); setTimeout(()=>{ if(!petEv2(true,x.dataset.pev2)) toast('이 펫 종류에는 없는 사건이에요.') },250) }) };
+
+/* ================= p119: 접속자 수·다른 사람 소식은 기본으로 숨김 (설정에서 켤 수 있어요) ================= */
+setInterval(()=>{ try{ if(S&&S.intro&&!S.quietV){ S.quietV=1; S.hideFeed=true; S.showOnline=false; markSave(); try{ renderChat(true) }catch(e){} render() } }catch(e){} },2000);
+const _settings119=ACT.settings; ACT.settings=()=>{ _settings119(); const L=$('mbox').querySelector('.setlist'); if(!L) return;
+  L.insertAdjacentHTML('beforeend',`<label class="setrow"><span><b>접속자 수 보기</b><small>상단·무전실·생존자 명단에 지금 접속한 사람 수를 보여 줘요.</small></span><input type="checkbox" id="setOnline" ${S.showOnline?'checked':''}></label><label class="setrow"><span><b>무전실에서 다른 사람 소식 보기</b><small>다른 생존자의 합류·발견 같은 소식을 무전실에 함께 보여 줘요.</small></span><input type="checkbox" id="setFeed" ${S.hideFeed?'':'checked'}></label>`);
+  $('setOnline').onchange=e=>{ S.showOnline=e.target.checked; markSave(); try{ renderNav() }catch(x){} render() }; $('setFeed').onchange=e=>{ S.hideFeed=!e.target.checked; markSave(); try{ renderChat(true) }catch(x){} } };
+
+/* ================= p120: 근처의 다른 무리(NPC) — 접속자가 없어도 결투·대원 빼앗기·펫 빼앗기 ================= */
+const RV_NM=[['쇠갈퀴','철조망 형제단'],['붉은 모자','붉은 손 약탈단'],['목사','구원자들'],['징수원','톨게이트 무리'],['쥐잡이','하수도 사람들'],['외눈','고철 시장파'],['백발','기차역 무리'],['쌍둥이','옥상 정원회']];
+const RV_PER=['brag','cynic','calm','blunt'];
+function rvMake(i){ const lv=Math.max(1,lvlOf(S.xp)+ri(-3,4)), [nk,g]=RV_NM[i%RV_NM.length], st=()=>clamp(Math.round(3+lv/12+ri(-1,3)),2,10);
+  const crew=Array.from({length:ri(2,4)},()=>{ const c=makeCrew(`${g} 소속`,null); crewInfo(c); return {id:c.id,name:c.name,sex:c.sex,age:c.age,per:c.per,st:c.st,origin:`${g}에게서 데려옴`} });
+  const pets=Object.keys(PETS).filter(k=>k!=='human'&&k!=='ghost'); return {id:'rv'+i,nk,g,lv,st:{str:st(),agi:st(),end:st(),cha:st()},per:RV_PER[i%RV_PER.length],crew,pet:Math.random()<.75?stPick(pets):'',grudge:0,t:Date.now()} }
+function rvList(){ const d=new Date().toDateString(); if(!Array.isArray(S.rivals)||S.rivalsD!==d){ const old=S.rivals||[]; S.rivals=Array.from({length:5},(_,i)=>{ const o=old.find(x=>x.id==='rv'+i); const n=rvMake(i); if(o){ n.grudge=Math.max(0,(o.grudge||0)-1); if(o.crew&&o.crew.length) n.crew=o.crew.concat(n.crew).slice(0,4) } return n }); S.rivalsD=d; markSave() } S.rivals.forEach(r=>{ const lv=lvlOf(S.xp); if(r.lv<lv-5) r.lv=lv-ri(1,3) }); return S.rivals }
+const rvById=id=>(S.rivals||[]).find(r=>r.id===id);
+const rvCd=()=>Math.max(0,(S.rvT||0)-Date.now()), rvDcd=()=>Math.max(0,(S.rvDT||0)-Date.now());
+const rvNm=r=>`${r.nk} (${r.g})`;
+function rvHtml(){ const L=rvList(), cd=rvCd(), dcd=rvDcd();
+  return `<details class="pcard rvbox" id="rvBox" ${S.rvFold?'':'open'}><summary class="pc-h"><span class="pemo">⚔</span><h3>근처의 다른 무리</h3><span class="note">접속자가 없어도 상대할 수 있어요 · 매일 바뀌어요</span></summary>
+   <div class="rvl">${L.map(r=>`<div class="rvc"><div class="rvh"><b>${esc(r.nk)}</b><small>${esc(r.g)} · Lv.${r.lv}${r.grudge?` · <span class="warnc">원한 ${r.grudge}</span>`:''}</small></div><p class="note">힘 ${r.st.str} · 민첩 ${r.st.agi} · 체력 ${r.st.end} · 매력 ${r.st.cha}<br>대원 ${r.crew.length}명${r.pet&&PETS[r.pet]?` · 펫 ${petE(r.pet)} ${esc(PETS[r.pet].n)}`:''}</p>
+     <div class="row"><button class="btn sm" data-act="rvDuel" data-id="${r.id}" ${dcd?'disabled':''}>${dcd?'결투 '+mmss(dcd):'결투 신청'}</button><button class="btn sm" data-act="rvCrew" data-id="${r.id}" ${cd||!r.crew.length?'disabled':''}>대원 빼앗기</button><button class="btn sm" data-act="rvPet" data-id="${r.id}" ${cd||!r.pet||!PETS[r.pet]?'disabled':''}>펫 빼앗기</button></div></div>`).join('')}</div>
+   ${cd?`<p class="note">다음 빼앗기까지 ${mmss(cd)}</p>`:''}</details>` }
+document.addEventListener('toggle',e=>{ const d=e.target; if(d&&d.id==='rvBox'){ const f=!d.open; if(!!S.rvFold!==f){ S.rvFold=f; markSave() } } },true);
+const _viewRoster120=viewRoster; viewRoster=function(){ const h=_viewRoster120.apply(this,arguments); try{ return rvHtml()+h }catch(e){ return h } };
+/* --- 결투: 6합 · 공격/강타/방어 수 싸움 --- */
+ACT.rvDuel=el=>{ const r=rvById(el.dataset.id); if(!r) return; if(rvDcd()) return; if(rt.enc||capOn()) return toast('지금은 결투할 수 없어요.'); if(S.hp<maxHp()*.25) return toast('몸 상태가 너무 나빠요. 먼저 회복하세요.');
+  const myMax=100, thMax=100, myAtk=Math.round(10+ST('str')*1.6+pAtk(false)*.35), thAtk=Math.round(10+r.st.str*1.6+r.lv*.5), myDef=clamp(.1+ST('end')*.02,0,.4), thDef=clamp(.1+r.st.end*.02,0,.4);
+  const s={r,me:myMax,th:thMax,rd:0,log:[`${rvNm(r)}이(가) 무기를 고쳐 쥔다. "덤벼."`]};
+  const ai=()=>{ const p={brag:[.5,.35,.15],cynic:[.35,.25,.4],calm:[.4,.2,.4],blunt:[.45,.3,.25]}[r.per]||[.4,.3,.3]; const x=Math.random(); return x<p[0]?'atk':x<p[0]+p[1]?'pow':'grd' };
+  const N={atk:'공격',pow:'강타',grd:'방어'};
+  const hit=(a,b,atk,def)=>{ if(a==='grd') return 0; let d=atk*(a==='pow'?1.8:1)*rand(.85,1.15); if(b==='grd') d*=a==='pow'?0:.3; return Math.round(d*(1-def)) };
+  const draw=()=>{ spDraw({eb:'DUEL',place:rvNm(r),t:`${r.nk}와(과)의 결투 · ${s.rd}/6합`,body:`<div class="spr"><span>나</span>${mtr(s.me)}<b class="num">${Math.max(0,s.me)}</b></div><div class="spr"><span>${esc(r.nk)}</span>${mtr(s.th,'red')}<b class="num">${Math.max(0,s.th)}</b></div><div class="splog">${s.log.slice(-4).map(x=>`<p>${esc(x)}</p>`).join('')}</div><p class="note">강타는 공격을 이기지만 방어에 막히면 빈틈을 찔려요. 방어는 공격을 줄이고 강타를 받아쳐요.</p>`,
+    btns:['atk','pow','grd'].map(k=>({t:N[k],f:()=>turn(k)}))}) };
+  const turn=k=>{ s.rd++; const e=ai(); let dm=hit(k,e,myAtk,thDef), dt=hit(e,k,thAtk,myDef); if(k==='pow'&&e==='grd') dt+=Math.round(thAtk*.9); if(e==='pow'&&k==='grd') dm+=Math.round(myAtk*.9);
+    s.th-=dm; s.me-=dt; sfx(dm>dt?'hit':'hurt'); if(dt>15) FXL.shake(6,300); s.log.push(`${s.rd}합 · 나: ${N[k]} / ${r.nk}: ${N[e]} → 내가 ${dm} 입힘 · ${dt} 받음`);
+    if(s.th<=0||s.me<=0||s.rd>=6){ S.rvDT=Date.now()+10*60000; const win=s.th<=0&&s.me>0||(s.rd>=6&&s.me>s.th&&s.th>0)||(s.th<=0&&s.me<=0&&s.me>s.th);
+      if(win){ r.grudge=(r.grudge||0)+1; const m=Math.round(40+r.lv*6); markSave(); return spEnd('결투 승리',`${r.nk}이(가) 무릎을 꿇었다. "…오늘은 네가 이겼다." 그의 무리가 침묵 속에 판돈을 던졌다.`,{$:m,xp:30+r.lv*2},true) }
+      const h=Math.round(maxHp()*.2), lm=Math.round((S.money||0)*.08); markSave(); return spEnd('결투 패배',`흙바닥에 얼굴을 박았다. ${r.nk}이(가) 내 주머니를 털며 웃었다.`,{hp:-h,$:-lm,xp:10},false) }
+    draw() };
+  rt.modalLock=true; openModal('<div></div>'); SPS={place:rvNm(r)}; draw() };
+/* --- 대원 빼앗기: 힘으로(내 가장 강한 대원) 또는 꾀어내기(매력) --- */
+ACT.rvCrew=el=>{ const r=rvById(el.dataset.id); if(!r||!r.crew.length) return; if(rvCd()) return; const mine=crewAlive().filter(c=>c.state==='idle').map(crewInfo2).sort((a,b)=>power(b)-power(a))[0];
+  const pwr=c=>Math.round((c.st.str||3)*1.2+(c.st.end||3)*.8+(c.st.agi||3)*.6);
+  const pF=t=>mine?clamp(.35+(power(mine)-pwr(t))*.05-(r.grudge||0)*.03,.08,.85):0, pC=t=>clamp(.3+(ST('cha')-((t.st||{}).cha||4))*.06+Math.max(0,gearV('human'))*.2-(r.grudge||0)*.03,.08,.85);
+  rt.modalLock=true; openModal('<div></div>'); SPS={place:rvNm(r)};
+  spDraw({eb:'RAID',place:rvNm(r),t:`${r.g}의 대원`,body:`<p class="ch-p">${esc(r.g)}의 대원들이 물을 길러 나왔다. 누구를 노릴까? 힘으로 빼앗으면 내 대원 중 가장 강한 ${mine?esc(crewNm(mine)):'(대기 중인 대원 없음)'}이(가) 나가요.</p><div class="rvcl">${r.crew.map((t,i)=>{ const d={sex:t.sex,age:t.age}; return `<div class="rvcr"><b>${esc(t.name)}</b><small>${esc(crewDesc(Object.assign({id:t.id,per:t.per},d)))} · ${esc((PERS[t.per]||{}).n||'')} · 힘 ${t.st.str} 민첩 ${t.st.agi} 체력 ${t.st.end} 매력 ${t.st.cha}</small><div class="row"><button class="btn sm" data-rvf="${i}" ${mine?'':'disabled'}>힘으로 · ${Math.round(pF(t)*100)}%</button><button class="btn sm" data-rvc="${i}">꾀어내기 · ${Math.round(pC(t)*100)}%</button></div></div>` }).join('')}</div>`,btns:[{t:'그만둔다',f:()=>{ rt.modalLock=false; closeModal(); SPS=null }}]});
+  const go=(i,how)=>{ const t=r.crew[i]; if(!t) return; S.rvT=Date.now()+10*60000; const p=how==='f'?pF(t):pC(t); markSave();
+    if(Math.random()<p){ if(crewAlive().length>=CREW_MAX()) return spEnd('자리가 없다',`${t.name}은(는) 넘어오겠다고 했지만, 탐험대에 자리가 없었다.`,{xp:8},false);
+      const c=addCrew(`${r.g}에게서 ${how==='f'?'빼앗은':'꾀어 온'} 대원`,null,{id:'c'+Date.now().toString(36)+ri(100,999),name:t.name,sex:t.sex,age:t.age,per:t.per,origin:t.origin,st:Object.assign({},t.st),hp:how==='f'?60:85,state:'idle',infT:0,t:Date.now(),loy:how==='f'?22:35,aff:how==='f'?0:8});
+      r.crew.splice(i,1); r.grudge=(r.grudge||0)+(how==='f'?2:1); if(Math.random()<.35+r.grudge*.08) S.rvRev={id:r.id,at:Date.now()+ri(25,70)*60000,who:t.name}; markSave(); hx&&hx('charm');
+      return spEnd(how==='f'?'빼앗았다':'넘어왔다',how==='f'?`${mine?crewNm(mine):'내 대원'}이(가) 상대를 쓰러뜨리고 ${t.name}의 팔을 끌고 왔다. ${t.name}은(는) 아직 나를 노려본다.`:`${t.name}은(는) 한참 망설이더니 ${r.g} 쪽을 한 번 돌아보고 내 쪽으로 걸어왔다.`,{xp:30},true) }
+    if(how==='f'&&mine){ mine.hp=Math.max(5,(mine.hp||80)-35); r.grudge=(r.grudge||0)+1; markSave(); return spEnd('밀렸다',`${crewNm(mine)}이(가) 얻어맞고 돌아왔다. ${r.g} 놈들이 휘파람을 불었다.`,{xp:8},false) }
+    const lm=Math.min(S.money||0,ri(10,30)); return spEnd('통하지 않았다',`${t.name}은(는) 코웃음을 치고 ${r.nk}에게 일렀다. 도망치다 주머니가 털렸다.`,{$:-lm,xp:6},false) };
+  $('mbox').querySelectorAll('[data-rvf]').forEach(b=>b.onclick=()=>go(+b.dataset.rvf,'f')); $('mbox').querySelectorAll('[data-rvc]').forEach(b=>b.onclick=()=>go(+b.dataset.rvc,'c')) };
+/* --- 펫 빼앗기 --- */
+ACT.rvPet=el=>{ const r=rvById(el.dataset.id); if(!r||!r.pet||!PETS[r.pet]) return; if(rvCd()) return; const k=r.pet, own=!!(S.pets||{})[k], price=Math.round(150+r.lv*15);
+  const pS=clamp(.3+(ST('agi')-r.st.agi)*.06-(r.grudge||0)*.03,.08,.8), pL=clamp(.4+(ST('cha')-3)*.04,.1,.8);
+  rt.modalLock=true; openModal('<div></div>'); SPS={place:rvNm(r)};
+  spDraw({eb:'PET',place:rvNm(r),t:`${r.nk}의 ${petE(k)} ${PETS[k].n}`,body:`<p class="ch-p">${esc(r.nk)}의 ${esc(PETS[k].n)}이(가) 무리 뒤편에 묶여 있다.${own?' 나도 같은 종류를 이미 키우고 있다.':''}</p>`,btns:[
+   {t:'몰래 끈을 끊고 데려온다',sub:`민첩 · ${Math.round(pS*100)}%`,dis:own,f:()=>pgo(Math.random()<pS,'sneak')},
+   {t:'먹을 걸로 꾀어낸다',sub:`식량 5 · ${Math.round(pL*100)}%`,dis:own||(S.res.food||0)<5,f:()=>{ S.res.food-=5; pgo(Math.random()<pL,'lure') }},
+   {t:`$${fmt(price)}에 사겠다고 한다`,dis:own||(S.money||0)<price,f:()=>{ if(r.per==='brag'&&Math.random()<.4) return spEnd('거절당했다',`"이 녀석이 돈으로 살 수 있는 놈으로 보여?" ${r.nk}이(가) 침을 뱉었다.`,{xp:4},false); S.money-=price; pgo(true,'buy') }},
+   {t:'그만둔다',f:()=>{ rt.modalLock=false; closeModal(); SPS=null }}]});
+  const pgo=(ok,how)=>{ S.rvT=Date.now()+10*60000; markSave();
+    if(ok){ const g=gainPet(k); if(g){ S.petFrom=S.petFrom||{}; S.petFrom[k]=r.nk; r.pet=''; if(how!=='buy'){ r.grudge=(r.grudge||0)+1; if(Math.random()<.3+r.grudge*.08) S.rvRev={id:r.id,at:Date.now()+ri(25,70)*60000,who:PETS[k].n} } markSave(); return spEnd('데려왔다',how==='buy'?`${r.nk}이(가) 돈을 세며 끈을 넘겼다. "잘 키워."`:how==='lure'?`${PETS[k].n}이(가) 먹이를 따라 졸졸 따라왔다. 뒤에서 아무도 눈치채지 못했다.`:`끈을 끊는 순간 ${PETS[k].n}이(가) 내 품으로 뛰어들었다. 그대로 달렸다.`,{xp:25},true) } return spEnd('데려오지 못했다','이미 같은 펫이 있다.',{xp:4},false) }
+    r.grudge=(r.grudge||0)+1; const h=ri(8,16); markSave(); return spEnd('들켰다',`${PETS[k].n}이(가) 짖는 바람에 들켰다. ${r.g} 놈들에게 쫓기다 넘어졌다.`,{hp:-h,xp:6},false) } };
+/* --- 원한: 빼앗긴 쪽이 되찾으러 온다 --- */
+setInterval(()=>{ try{ const V=S&&S.rvRev; if(!V||Date.now()<V.at||!$('modal').hidden||rt.enc||rt.party||capOn()) return; const r=rvById(V.id); S.rvRev=null; markSave(); if(!r) return;
+  rt.modalLock=true; openModal('<div></div>'); SPS={place:rvNm(r)}; sfx('knock'); FXL.pre('threat'); const pay=Math.round(80+r.lv*8);
+  spDraw({eb:'REVENGE',place:rvNm(r),t:`${r.g}이(가) 찾아왔다`,body:`<p class="ch-p">캠프 철문 앞에 ${esc(r.nk)}과(와) 무리가 서 있다. "${esc(V.who)}, 돌려받으러 왔다. 아니면 그만한 값을 내든가."</p>`,btns:[
+   {t:'맞서 싸운다',f:()=>{ rt.modalLock=false; closeModal(); SPS=null; toast(`${r.g}과(와) 싸움이 붙었다!`,true); setTimeout(()=>startEnc({z:ZOMBIES.enforcer?'enforcer':'raider',src:'fol',queue:['raider']}),300) }},
+   {t:`$${fmt(pay)}을(를) 주고 돌려보낸다`,dis:(S.money||0)<pay,f:()=>{ r.grudge=Math.max(0,(r.grudge||0)-2); spEnd('돌려보냈다',`${r.nk}이(가) 돈을 받아 들고 침을 뱉었다. "다음엔 이걸로 안 끝나."`,{$:-pay,xp:5},false) }},
+   {t:'문을 잠그고 버틴다',f:()=>{ const fx=folLose(.08); S.hp=Math.max(1,S.hp-8); spEnd('밤새 버텼다',`철문을 두드리는 소리가 새벽까지 이어졌다. 아침에 보니 창고 자물쇠가 부서져 있었다. (${fx.join(', ')})`,{hp:0,xp:6},false) }}]}) }catch(e){} },20000);
+(()=>{ const st=document.createElement('style'); st.textContent=`.rvbox>summary{cursor:pointer;list-style:none}.rvbox>summary::-webkit-details-marker{display:none}.rvl{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;margin-top:8px}.rvc{border:1px solid var(--line);padding:10px 12px;display:grid;gap:6px}.rvh{display:grid;gap:2px}.rvh small{color:var(--muted);font-size:12px}.rvc .row{gap:6px;flex-wrap:wrap}.rvcl{display:grid;gap:8px;margin:8px 0}.rvcr{border:1px solid var(--line);padding:8px 10px;display:grid;gap:4px}.rvcr small{color:var(--muted);font-size:12px}.rvcr .row{gap:6px}`; document.head.append(st) })();
+
+/* ================= p121: 오프라인 생존자 상대하기 · 조사 중 다른 플레이어의 흔적 사건 ================= */
+/* --- 결투 엔진을 다른 무리·오프라인 생존자가 함께 쓰도록 --- */
+const _rvDuel121=ACT.rvDuel; ACT.rvDuel=el=>{ if(el&&el.rv){ S.rivals=S.rivals||[]; const tmp=el.rv; S.rivals.push(tmp); try{ _rvDuel121({dataset:{id:tmp.id}}) } finally{ S.rivals=S.rivals.filter(x=>x!==tmp) } return } return _rvDuel121(el) };
+const offOk=(p)=>p&&typeof p.nick==='string'&&Date.now()-(+p.t||0)<3*864e5;
+function offList(){ const L=[]; for(const [id,p] of rt.players){ if(id===rt.myId||(rt.online.__h?rt.online.__h(id):rt.online.has(id))||!offOk(p)) continue; L.push([id,p]) } return L.sort((a,b)=>(+b[1].t||0)-(+a[1].t||0)).slice(0,12) }
+function offFake(id){ rt.offOK={id,until:Date.now()+5*60000}; const s=rt.online; if(s&&!s.__off){ const h=s.has.bind(s); s.__h=h; s.has=x=>h(x)||!!(rt.offOK&&rt.offOK.id===x&&Date.now()<rt.offOK.until); s.__off=1 } }
+setInterval(()=>{ try{ if(rt.offOK&&Date.now()<rt.offOK.until) offFake(rt.offOK.id) }catch(e){} },1000);
+const ago=t=>{ const m=Math.round((Date.now()-t)/6e4); return m<60?`${m}분 전`:m<1440?`${Math.round(m/60)}시간 전`:`${Math.round(m/1440)}일 전` };
+function offHtml(){ if(rt.solo) return ''; const L=offList(); if(!L.length) return ''; const dcd=rvDcd();
+  return `<details class="pcard rvbox" id="offBox" ${S.offFold?'':'open'}><summary class="pc-h"><span class="pemo">📻</span><h3>오프라인 생존자</h3><span class="note">마지막 접속 3일 이내 · 남긴 기록으로 상대해요</span></summary><div class="rvl">${L.map(([id,p])=>{ const crew=(Array.isArray(p.crewAway)?p.crewAway:[]).filter(c=>c&&c.name&&(+c.e||0)>Date.now()), pet=p.pet&&PETS[p.pet.k]?p.pet:null;
+    return `<div class="rvc"><div class="rvh"><b>${esc(String(p.nick).slice(0,20))}</b><small>Lv.${clamp(p.lvl|0,1,999)} · ${ago(+p.t||0)} 접속</small></div><p class="note">파견 중인 대원 ${crew.length}명${pet?` · 펫 ${petE(pet.k)} ${esc(String(pet.n||PETS[pet.k].n).slice(0,12))}`:''}</p><div class="row"><button class="btn sm" data-act="offDuel" data-id="${esc(id)}" ${dcd?'disabled':''}>${dcd?'결투 '+mmss(dcd):'그림자 결투'}</button><button class="btn sm" data-act="offCrew" data-id="${esc(id)}" ${crew.length?'':'disabled'}>파견 대원 노리기</button><button class="btn sm" data-act="offPet" data-id="${esc(id)}" ${pet&&!(S.pets||{})[pet.k]?'':'disabled'}>펫 노리기</button></div></div>` }).join('')}</div></details>` }
+document.addEventListener('toggle',e=>{ const d=e.target; if(d&&d.id==='offBox'){ const f=!d.open; if(!!S.offFold!==f){ S.offFold=f; markSave() } } },true);
+const _viewRoster121=viewRoster; viewRoster=function(){ const h=_viewRoster121.apply(this,arguments); try{ const o=offHtml(); if(!o) return h; const i=h.indexOf('</details>'); return i>=0?h.slice(0,i+10)+o+h.slice(i+10):o+h }catch(e){ return h } };
+ACT.offDuel=el=>{ const id=el.dataset.id, p=rt.players.get(id); if(!p) return; const lv=clamp(p.lvl|0,1,999), R=seedOf(id), st=()=>clamp(Math.round(3+lv/12+R()*3),2,10);
+  ACT.rvDuel({rv:{id:'off_'+id,nk:String(p.nick).slice(0,20),g:'남겨진 기록',lv,st:{str:st(),agi:st(),end:st(),cha:st()},per:['brag','cynic','calm','blunt'][Math.floor(R()*4)],crew:[],pet:'',grudge:0}}); };
+ACT.offCrew=el=>{ const id=el.dataset.id; offFake(id); ACT.raidPick({dataset:{id}}) };
+ACT.offPet=el=>{ const id=el.dataset.id; offFake(id); ACT.petPick({dataset:{id}}) };
+/* --- 조사 중: 다른 플레이어가 남긴 흔적 --- */
+function trPick(){ const L=[]; for(const [id,p] of rt.players){ if(id===rt.myId||!offOk(p)) continue; L.push([id,p]) } if(L.length) return {id:stPick(L)[0],p:null,real:1}; const r=stPick(rvList()); return {id:null,nk:r.nk,real:0} }
+SPX.trace=()=>{ const T=trPick(), p=T.id?rt.players.get(T.id):null, nk=p?String(p.nick).slice(0,20):T.nk, s=SPS={place:spPl()}; const note=x=>{ if(T.real&&T.id&&typeof sendNoteTo==='function'){ try{ sendNoteTo(T.id,x); return `${nk}에게 쪽지가 전해졌다` }catch(e){} } return '' };
+  const crew=p&&Array.isArray(p.crewAway)?p.crewAway.filter(c=>c&&c.name):[], chat=p&&Array.isArray(p.chat)?p.chat.filter(c=>c&&typeof c.x==='string'&&c.x.trim()).slice(-1)[0]:null;
+  const V=['cache','graffiti']; if(chat) V.push('tape','tape'); if(crew.length) V.push('hurt','hurt'); const v=stPick(V);
+  if(v==='cache') return spDraw({eb:'TRACE',place:s.place,t:`${nk}의 표식`,body:`<p class="ch-p">무너진 계단 밑에 상자 하나. 뚜껑에 페인트로 "${esc(nk)}"라고 적혀 있다. 누군가 나중에 쓰려고 숨겨 둔 보급품이다.</p>`,btns:[
+    {t:'다 가져간다',f:()=>spEnd('챙겼다',`${nk}에겐 미안하지만, 살아남는 게 먼저다.`,{res:{food:ri(4,8),water:ri(3,6),scrap:ri(3,6)},$:ri(20,40),mind:-2,xp:15},true)},
+    {t:'절반만 챙기고 쪽지를 남긴다',f:()=>{ const n=note(`${MAP[spZ()].n}에 숨겨 둔 상자, 절반만 빌려 갔어요. 고마워요. - ${S.nick}`); spEnd('절반만 챙겼다','상자 안에 "고마워. 절반만 가져갈게."라고 적은 종이를 넣었다.'+(n?` (${n})`:''),{res:{food:ri(2,4),water:ri(2,3)},mind:3,xp:18},true) }},
+    {t:'손대지 않고 내 물건을 하나 넣어 둔다',dis:!(S.inv.bandage>0),f:()=>{ S.inv.bandage--; const n=note(`${MAP[spZ()].n} 상자에 붕대 하나 넣어 뒀어요. 살아남아요. - ${S.nick}`); spEnd('붕대를 넣어 두었다','누군지 모르지만, 이 사람도 오늘을 버티고 있을 것이다.'+(n?` (${n})`:''),{mind:6,xp:20},true) }}]});
+  if(v==='graffiti') return spDraw({eb:'TRACE',place:s.place,t:'벽의 낙서',body:`<p class="ch-p">건물 벽에 숯으로 쓴 글씨. <b>"${esc(nk)} 다녀감. 여긴 비었음. 북쪽으로 감."</b> 그 아래에 날짜가 지워져 있다. 다른 이름들도 줄줄이 적혀 있다. 대부분은 줄이 그어져 있다.</p>`,btns:[
+    {t:'내 이름도 적는다',f:()=>spEnd('이름을 남겼다',`${nk} 이름 아래에 내 이름을 적었다. 누군가 이걸 보고 혼자가 아니라는 걸 알았으면 좋겠다.`,{mind:5,xp:10},true)},
+    {t:'북쪽 길을 따라가 본다',f:()=>Math.random()<.6?spEnd('흔적을 따라갔다',`${nk}이(가) 지나간 길에는 놈들이 정리돼 있었다. 덕분에 안전하게 몇 군데를 더 뒤졌다.`,{res:{scrap:ri(4,8),food:ri(2,5)},xp:20},true):spEnd('길이 막혀 있었다','길 끝에서 놈들이 기다리고 있었다.',{xp:10},false,spFight(null,1))},
+    {t:`${nk} 이름에 줄을 긋는다`,f:()=>spEnd('줄을 그었다',`괜한 짓을 했다. 손이 시커매졌다. 이 이름의 주인은 아직 살아 있을지도 모르는데.`,{mind:-4,xp:4},false)}]});
+  if(v==='tape') return spDraw({eb:'TRACE',place:s.place,t:`${nk}의 무전 녹음`,body:`<p class="ch-p">버려진 무전기에 녹음된 목소리가 남아 있다. 지직거리는 잡음 사이로 들리는 건 ${esc(nk)}의 목소리다.</p><blockquote class="exq">"${esc(chat.x.slice(0,120))}"</blockquote>`,btns:[
+    {t:'답장을 녹음해 남긴다',f:()=>{ const n=note(`${MAP[spZ()].n}에서 당신 무전 녹음 들었어요. "${chat.x.slice(0,40)}" …저도 버티고 있어요. - ${S.nick}`); spEnd('답장을 남겼다','짧게 답장을 녹음했다. 언젠가 이 무전기를 다시 집어 들 누군가를 위해.'+(n?` (${n})`:''),{mind:5,xp:12},true) }},
+    {t:'배터리만 빼 간다',f:()=>spEnd('배터리를 챙겼다','목소리가 뚝 끊겼다.',{res:{elec:1},xp:8},true)},
+    {t:'녹음을 끝까지 듣는다',f:()=>Math.random()<.5?spEnd('위치가 들렸다',`녹음 끝에 ${nk}이(가) 물자가 남은 곳을 말했다. 그대로 찾아갔다.`,{res:{food:ri(3,6),med:1},xp:15},true):spEnd('뒤쪽은 비명이었다',`녹음 끝은 비명과 잡음이었다. ${nk}은(는) 무사할까.`,{mind:-5,xp:8},false)}]});
+  const c=stPick(crew); return spDraw({eb:'TRACE',place:s.place,t:'쓰러진 사람',body:`<p class="ch-p">골목에 다친 사람이 기대 앉아 있다. 팔에 "${esc(nk)} 탐험대"라고 쓴 천이 묶여 있다. 파견 나온 ${esc(c.name)}이다. "…우리 대장한테… 전해 줘…"</p>`,btns:[
+    {t:'붕대를 감아 주고 보내 준다',dis:!(S.inv.bandage>0),f:()=>{ S.inv.bandage--; const n=note(`${MAP[spZ()].n}에서 다친 ${c.name} 만나서 붕대 감아 보냈어요. 걱정 마요. - ${S.nick}`); spEnd('돌려보냈다',`${c.name}이(가) 절뚝이며 일어섰다. "${nk} 대장이 꼭 갚을 거예요."`+(n?` (${n})`:''),{mind:6,xp:25},true) }},
+    {t:'물과 먹을 걸 나눠 준다',dis:(S.res.food||0)<3,f:()=>{ S.res.food-=3; const n=note(`${c.name} 만났어요. 먹을 거 좀 나눠 줬어요. - ${S.nick}`); spEnd('나눠 줬다',`${c.name}은(는) 허겁지겁 먹고 고개를 숙였다.`+(n?` (${n})`:''),{mind:4,xp:18},true) }},
+    {t:'가방만 챙기고 지나간다',f:()=>spEnd('가방을 챙겼다',`${c.name}의 가방을 들고 돌아섰다. 등 뒤의 목소리가 점점 작아졌다.`,{res:{food:ri(3,6),scrap:ri(3,6)},$:ri(15,35),mind:-8,xp:10},false)}]}) };
+SPX_N.trace='다른 생존자의 흔적';
+const _scanOnce121=scanOnce; scanOnce=function(z,at){ const r=_scanOnce121.apply(this,arguments); try{ const n=MAP[z]; if(n&&!n.home&&lvlOf(S.xp)>=2&&!capOn()&&Date.now()-(S.trT||0)>10*60000&&Math.random()<.03){ S.pend=S.pend||[]; if(S.pend.length<PEND_MAX&&!S.pend.some(x=>x.k==='zsp'&&x.tr)){ S.pend.push({k:'zsp',z,t:at,tr:1}); S.trT=Date.now(); try{ toast(`${n.n}에서 다른 생존자의 흔적을 발견했다`,true) }catch(e){} } } }catch(e){} return r };
+const _pendNext121=ACT.pendNext; ACT.pendNext=function(){ const p=(S.pend||[])[0]; if(p&&p.k==='zsp'&&p.tr){ if(rt.enc) return toast('지금 전투 중입니다.'); if(!$('modal').hidden) return; S.pend.shift(); markSave(); return spxRun('trace',p.z) } return _pendNext121.apply(this,arguments) };
+
+/* ================= p122: 무기 내구도 경고 — 공지처럼 크게 ================= */
+rt.wq=rt.wq||[];
+function wAlert(kind,w,title,body){ rt.wq.push({kind,title,body,w:w&&w.k}); try{ sfx(kind==='gone'||kind==='break1'?'bang':'alert') }catch(e){} wAlertTry() }
+function wAlertTry(){ if(!rt.wq.length||rt.enc||!$('modal').hidden||document.getElementById('intro')) return; const it=rt.wq.shift(), red=it.kind==='gone'||it.kind==='break1'||it.kind==='zero';
+  rt.modalLock=true; openModal(`<div class="wnote ${red?'red':''}"><div class="wn-ic">${it.kind==='gone'?'💥':red?'⚠':'🔧'}</div><div class="eyebrow ${red?'warnc':''}">WEAPON <span class="dash"></span> ${it.kind==='gone'?'파괴':it.kind==='low'?'내구도 경고':'위험'}</div><h2>${esc(it.title)}</h2><p style="margin:0;line-height:1.7">${esc(it.body)}</p><div class="row">${it.kind!=='gone'?'<button class="btn pri" id="wnFix" type="button">수리하러 가기</button>':''}<button class="btn" id="wnOk" type="button">확인</button></div></div>`);
+  if(red){ try{ FXL.flash('rgba(200,0,0,.35)',500); FXL.shake(6,350) }catch(e){} }
+  const done=()=>{ rt.modalLock=false; closeModal(); setTimeout(wAlertTry,300) }; $('wnOk').onclick=done; const f=$('wnFix'); if(f) f.onclick=()=>{ done(); setTab('survive') } }
+setInterval(()=>{ try{ wAlertTry() }catch(e){} },1500);
+(()=>{ const st=document.createElement('style'); st.textContent=`.wnote{display:grid;gap:8px;text-align:left}.wnote .wn-ic{font-size:42px;line-height:1}.wnote.red h2{color:#c33}.wnote .row{gap:8px;margin-top:6px}`; document.head.append(st) })();
+
+/* ================= p123: 내가 없는 사이 들어온 그림자 결투 — 접속하면 알려 주기 ================= */
+const _offDuel123=ACT.offDuel; ACT.offDuel=el=>{ const id=el&&el.dataset.id; rt.offDuelT=id?{id,t:Date.now()}:null; return _offDuel123(el) };
+const _spEnd123=spEnd; spEnd=function(t,text,o,ok,after){ try{ const D=rt.offDuelT; if(D&&/^결투 (승리|패배)/.test(t)&&Date.now()-D.t<10*60000){ rt.offDuelT=null; S.sduels=(S.sduels||[]).concat({id:'d'+Date.now().toString(36)+ri(10,99),to:D.id,w:ok?1:0,t:Date.now(),lv:lvlOf(S.xp)}).slice(-12); markSave(); try{ schedulePub(1500) }catch(e){} } }catch(e){} return _spEnd123.apply(this,arguments) };
+const _pubDoc123=pubDoc; pubDoc=function(){ const d=_pubDoc123(); d.sduels=(S.sduels||[]).slice(-12); return d };
+function sdIn(){ if(!rt.myId||!S.intro) return []; S.sdSeen=S.sdSeen||[]; const L=[]; for(const [id,p] of rt.players){ if(id===rt.myId||!p||!Array.isArray(p.sduels)) continue; for(const d of p.sduels){ if(!d||d.to!==rt.myId||typeof d.id!=='string'||S.sdSeen.includes(d.id)) continue; if(Date.now()-(+d.t||0)>7*864e5) continue; L.push({by:id,nick:String(p.nick||'생존자').slice(0,20),w:!!d.w,t:+d.t||0,id:d.id}) } } return L.sort((a,b)=>a.t-b.t) }
+setInterval(()=>{ try{ if(!S||!S.intro||!$('modal').hidden||rt.enc||document.getElementById('intro')) return; const L=sdIn(); if(!L.length) return; S.sdSeen=(S.sdSeen||[]).concat(L.map(x=>x.id)).slice(-200); const held=L.filter(x=>!x.w).length, gain=held*Math.round(20+lvlOf(S.xp)*3); if(gain) addMoney(gain); markSave();
+  rt.modalLock=true; sfx('alert'); openModal(`<div class="eyebrow">DUEL <span class="dash"></span> 내가 없는 사이</div><h2>결투 신청이 ${L.length}번 있었어요</h2><p class="ch-p">자리를 비운 동안 내 그림자(남겨진 기록)가 대신 싸웠어요.${gain?` 그림자가 지켜 낸 판돈 $${fmt(gain)}을 받았어요.`:''}</p><div class="sdl">${L.map(x=>`<div class="sdr"><span><b>${esc(x.nick)}</b><small>${ago(x.t)}</small></span><span class="${x.w?'warnc':'okc'}">${x.w?'그림자가 졌다':'그림자가 이겼다'}</span>${rt.players.has(x.by)?`<button class="btn sm" data-sdr="${esc(x.by)}" type="button">복수 결투</button>`:''}</div>`).join('')}</div><button class="btn pri" id="sdOk" type="button">확인</button>`);
+  $('sdOk').onclick=()=>{ rt.modalLock=false; closeModal(); render() }; $('mbox').querySelectorAll('[data-sdr]').forEach(b=>b.onclick=()=>{ if(rvDcd()) return toast(`다음 결투까지 ${mmss(rvDcd())}`); rt.modalLock=false; closeModal(); setTimeout(()=>ACT.offDuel({dataset:{id:b.dataset.sdr}}),250) }) }catch(e){} },8000);
+(()=>{ const st=document.createElement('style'); st.textContent=`.sdl{display:grid;gap:6px;margin:10px 0}.sdr{display:flex;align-items:center;gap:10px;border:1px solid var(--line);padding:8px 10px}.sdr>span:first-child{flex:1;display:grid;gap:2px}.sdr small{color:var(--muted);font-size:12px}.sdr .okc{color:#2a9d6a}`; document.head.append(st) })();
+
+/* ================= p124: 다른 플레이어의 흔적·마주침 사건 더 — 선택지에 실제 이름이 들어가요 ================= */
+function trPlayers(n){ const L=[]; for(const [id,p] of rt.players){ if(id===rt.myId||!p||typeof p.nick!=='string'||Date.now()-(+p.t||0)>5*864e5) continue; L.push({id,p,nk:String(p.nick).slice(0,20),on:rt.online.has(id)}) } L.sort(()=>Math.random()-.5); return L.slice(0,n||1) }
+function trNote(T,x){ if(T&&T.id&&typeof sendNoteTo==='function'){ try{ sendNoteTo(T.id,x); return `${T.nk}에게 쪽지가 전해졌다` }catch(e){} } return '' }
+const plc=()=>MAP[spZ()]?MAP[spZ()].n:'어딘가';
+const TRV={
+ /* 두 사람 중 한 명의 상자만 */
+ two:{need:()=>trPlayers(2).length>=2,run:()=>{ const [A,B]=trPlayers(2); spDraw({eb:'TRACE',place:spPl(),t:'두 개의 상자',body:`<p class="ch-p">무너진 버스 안에 상자 두 개가 나란히 있다. 하나엔 "${esc(A.nk)}", 하나엔 "${esc(B.nk)}"라고 적혀 있다. 둘 다 들고 가기엔 버스 지붕이 곧 무너질 것 같다.</p>`,btns:[
+   {t:`${A.nk}의 상자를 연다`,f:()=>{ const n=trNote(B,`${plc()} 버스에서 당신 상자는 건드리지 않았어요. 대신 ${A.nk} 거 가져갔어요. - ${S.nick}`); spEnd(`${A.nk}의 상자`,`${A.nk}이(가) 아껴 둔 것들이 들어 있었다.`+(n?` (${n})`:''),{res:{food:ri(4,8),scrap:ri(3,6)},$:ri(15,40),xp:15},true) }},
+   {t:`${B.nk}의 상자를 연다`,f:()=>{ const n=trNote(A,`${plc()} 버스에서 당신 상자는 건드리지 않았어요. 대신 ${B.nk} 거 가져갔어요. - ${S.nick}`); spEnd(`${B.nk}의 상자`,`${B.nk}이(가) 숨겨 둔 약과 탄약이 있었다.`+(n?` (${n})`:''),{res:{med:1,water:ri(3,6)},items:[stPick(['bandage','ammo','flare'].filter(k=>ITEMS[k]))],xp:15},true) }},
+   {t:'둘 다 두고 쪽지만 남긴다',f:()=>{ trNote(A,`${plc()} 무너지는 버스에 당신 상자 있어요. 빨리 가 봐요. - ${S.nick}`); trNote(B,`${plc()} 무너지는 버스에 당신 상자 있어요. 빨리 가 봐요. - ${S.nick}`); spEnd('쪽지를 남겼다',`${A.nk}과(와) ${B.nk}에게 위치를 알렸다. 버스 지붕이 무너지는 소리를 등 뒤로 들으며 나왔다.`,{mind:6,xp:18},true) }}]}) }},
+ /* 혼자 돌아다니는 남의 펫 */
+ pet:{need:()=>trPlayers(8).some(x=>x.p.pet&&PETS[x.p.pet.k]),run:()=>{ const T=trPlayers(8).find(x=>x.p.pet&&PETS[x.p.pet.k]), P=T.p.pet, pn=String(P.n||PETS[P.k].n).slice(0,12);
+   spDraw({eb:'TRACE',place:spPl(),t:`${pn}이(가) 혼자 있다`,body:`<p class="ch-p">${petE(P.k)} 낯익은 ${esc(PETS[P.k].n)} 한 마리가 쓰레기통을 뒤지고 있다. 목줄에 "${esc(T.nk)}의 ${esc(pn)}"이라고 적혀 있다. 주인을 잃고 헤매는 걸까.</p>`,btns:[
+    {t:`${T.nk}에게 위치를 알려 준다`,f:()=>{ const n=trNote(T,`${plc()}에서 당신 ${pn} 봤어요. 쓰레기통 근처에 있었어요. 데리러 가요. - ${S.nick}`); spEnd('알려 줬다',`${pn}에게 물을 조금 주고 ${T.nk}에게 소식을 보냈다.`+(n?` (${n})`:''),{mind:5,xp:15},true) }},
+    {t:'먹이를 주고 잠깐 놀아 준다',dis:(S.res.food||0)<2,f:()=>{ S.res.food-=2; spEnd('잠깐의 친구',`${pn}이(가) 손바닥을 핥았다. 목줄 안쪽에서 작은 쪽지가 나왔다. "이 아이를 보면 ${T.nk}에게." 녀석은 어딘가로 뛰어갔다.`,{mind:7,xp:12},true) }},
+    {t:'목줄에 달린 주머니만 뒤진다',f:()=>spEnd('주머니를 털었다',`목줄 주머니에 비상금이 들어 있었다. ${pn}이(가) 짖으며 따라오다 돌아갔다.`,{$:ri(15,40),mind:-5,xp:6},false)}]}) }},
+ /* 다친 흔적 */
+ blood:{need:()=>trPlayers(8).some(x=>Array.isArray(x.p.sts)&&x.p.sts.length),run:()=>{ const T=trPlayers(8).find(x=>Array.isArray(x.p.sts)&&x.p.sts.length), st=String(T.p.sts[0]).slice(0,10);
+   spDraw({eb:'TRACE',place:spPl(),t:'핏자국',body:`<p class="ch-p">벽을 짚고 지나간 핏자국이 이어진다. 바닥에 떨어진 신분증엔 ${esc(T.nk)}. 메모가 붙어 있다. "${esc(st)}… 버틸 수 있어."</p>`,btns:[
+    {t:`${T.nk}에게 약을 남겨 둔다`,sub:'약품 1',dis:(S.res.med||0)<1,f:()=>{ S.res.med--; const n=trNote(T,`${plc()}에 약 하나 숨겨 뒀어요. ${st}에 쓰세요. 버텨요. - ${S.nick}`); spEnd('약을 남겼다',`신분증 옆에 약을 놓고, 잘 보이게 돌로 눌러 두었다.`+(n?` (${n})`:''),{mind:6,xp:22},true) }},
+    {t:'핏자국을 따라간다',f:()=>Math.random()<.55?spEnd('피를 쫓던 놈들',`핏자국 끝에서 그 냄새를 쫓던 놈들과 마주쳤다. ${T.nk}은(는) 이미 떠난 뒤였다.`,{xp:10},false,spFight(null,2)):spEnd('버려진 짐',`핏자국 끝에 ${T.nk}이(가) 버리고 간 짐이 있었다. 무거워서 버린 모양이다.`,{res:{scrap:ri(4,8),wood:ri(3,6)},xp:15},true)},
+    {t:'신분증만 챙긴다',f:()=>spEnd('챙겼다',`언젠가 ${T.nk}을(를) 만나면 돌려줄 수 있을지도 모른다.`,{xp:6},true)}]}) }},
+ /* 깃발 */
+ flag:{need:()=>trPlayers(1).length>=1,run:()=>{ const T=trPlayers(1)[0], ttl=T.p.title?String(T.p.title).slice(0,20):'';
+   spDraw({eb:'TRACE',place:spPl(),t:`${T.nk}의 깃발`,body:`<p class="ch-p">옥상 안테나에 찢어진 천이 묶여 있다. 굵은 글씨로 <b>"${esc(T.nk)}${ttl?` · ${esc(ttl)}`:''} · Lv.${clamp(T.p.lvl|0,1,999)} · 여기는 내 구역"</b>.</p>`,btns:[
+    {t:`옆에 내 깃발을 꽂아 ${T.nk}에게 도전장을 보낸다`,f:()=>{ const n=trNote(T,`${plc()} 옥상, 당신 깃발 옆에 내 깃발 꽂았어요. 결투로 정하죠. - ${S.nick}`); spEnd('도전장',`내 이름을 적은 천을 나란히 묶었다. 바람에 두 깃발이 엉켜 펄럭였다.`+(n?` (${n})`:''),{xp:15},true,()=>{ if(!rvDcd()) ACT.offDuel({dataset:{id:T.id}}) }) }},
+    {t:`${T.nk}의 깃발을 뽑아 간다`,f:()=>{ const n=trNote(T,`${plc()} 옥상 깃발, 내가 가져갔어요. 찾으러 와요. - ${S.nick}`); spEnd('깃발을 뽑았다',`천을 풀어 가방에 쑤셔 넣었다. 깃발 아래 숨겨진 물자도 함께.`+(n?` (${n})`:''),{res:{scrap:ri(3,6)},$:ri(20,45),xp:15},true) }},
+    {t:'경례하고 지나간다',f:()=>spEnd('지나갔다',`누군가 이 도시를 아직 지키고 있다는 게 이상하게 위안이 됐다.`,{mind:5,xp:8},true)}]}) }},
+ /* 직접 마주침 */
+ meet:{need:()=>trPlayers(1).length>=1,run:()=>{ const T=trPlayers(1)[0], lv=clamp(T.p.lvl|0,1,999), at=T.p.at?String(T.p.at).slice(0,20):'';
+   spDraw({eb:'ENCOUNTER',place:spPl(),t:`${T.nk}과(와) 마주쳤다`,body:`<p class="ch-p">교차로 건너편에서 사람 그림자가 멈춰 선다. 무전기 너머로 들어 본 목소리. <b>${esc(T.nk)}</b>(Lv.${lv})이다.${at?` ${esc(at)} 쪽에서 오는 길인 것 같다.`:''} 서로 무기를 내리지도, 들지도 않는다.</p>`,btns:[
+    {t:`${T.nk}에게 손을 흔든다`,f:()=>{ const n=trNote(T,`${plc()} 교차로에서 봤어요. 손 흔든 거 저예요. - ${S.nick}`); spEnd('손을 흔들었다',`${T.nk}도 잠시 망설이다 손을 들었다. 그리고 각자 길을 갔다.`+(n?` (${n})`:''),{mind:8,xp:10},true) }},
+    {t:`${T.nk}과(와) 물자를 바꾼다`,sub:'식량 5 → 고철·약',dis:(S.res.food||0)<5,f:()=>{ S.res.food-=5; const n=trNote(T,`${plc()}에서 물물교환 고마웠어요. - ${S.nick}`); spEnd('물물교환',`식량 꾸러미를 던지자 ${T.nk}이(가) 고철 뭉치와 약 한 병을 굴려 보냈다.`+(n?` (${n})`:''),{res:{scrap:ri(6,10),med:1},xp:15},true) }},
+    {t:`${T.nk}의 뒤를 밟는다`,sub:'민첩',f:()=>Math.random()<.4+ST('agi')*.05?spEnd('은신처를 찾았다',`${T.nk}이(가) 들른 은신처를 찾아냈다. 남겨 둔 물자를 챙겼다.`,{res:{food:ri(4,7),water:ri(3,6)},$:ri(20,40),mind:-3,xp:18},true):(()=>{ const n=trNote(T,`${plc()}에서 누가 당신 뒤를 밟았어요. …나였어요. 미안. - ${S.nick}`); spEnd('들켰다',`${T.nk}이(가) 돌아서서 총구를 겨눴다. 손을 들고 물러났다.`,{hp:-8,xp:6},false) })()},
+    {t:`${T.nk}에게 결투를 신청한다`,dis:!!rvDcd(),f:()=>{ rt.modalLock=false; closeModal(); SPS=null; setTimeout(()=>ACT.offDuel({dataset:{id:T.id}}),250) }}]}) }},
+ /* 살아 있는 사람의 무덤 */
+ grave:{need:()=>trPlayers(1).length>=1,run:()=>{ const T=trPlayers(1)[0];
+   spDraw({eb:'TRACE',place:spPl(),t:'이름이 적힌 무덤',body:`<p class="ch-p">공원 구석의 흙무덤. 나무 판자에 <b>"${esc(T.nk)}"</b>라고 적혀 있다. 그런데 ${esc(T.nk)}은(는) ${T.on?'지금도 무전에 접속해 있다':'며칠 전까지 무전에 있었다'}. 누가 묻힌 걸까.</p>`,btns:[
+    {t:`판자에 "${T.nk}, 아직 살아 있음"이라고 적는다`,f:()=>{ const n=trNote(T,`${plc()} 공원에 당신 이름 적힌 무덤 있어요. "아직 살아 있음"이라고 적어 뒀어요. - ${S.nick}`); spEnd('적어 두었다','누군가는 이걸 보고 웃을 것이다. 아니면 울거나.'+(n?` (${n})`:''),{mind:4,xp:12},true) }},
+    {t:'무덤을 파 본다',f:()=>{ const r=Math.random(); if(r<.5) return spEnd('빈 무덤',`안에는 시체 대신 상자가 있었다. 무덤처럼 꾸민 비밀 창고였다.`,{res:{food:ri(4,8),med:ri(1,2)},$:ri(20,50),xp:20},true); return spEnd('무덤이었다',`진짜 무덤이었다. 같은 이름을 가진 다른 누군가의. 흙을 다시 덮었다.`,{mind:-8,xp:8},false) }},
+    {t:'모른 척 지나간다',f:()=>spEnd('지나갔다','등 뒤가 오래 서늘했다.',{mind:-2,xp:4},false)}]}) }},
+ /* 구조 요청 무전 (실제 채팅 한 줄) */
+ call:{need:()=>trPlayers(8).some(x=>Array.isArray(x.p.chat)&&x.p.chat.some(c=>c&&typeof c.x==='string'&&c.x.trim().length>3)),run:()=>{ const T=trPlayers(8).find(x=>Array.isArray(x.p.chat)&&x.p.chat.some(c=>c&&typeof c.x==='string'&&c.x.trim().length>3)), c=T.p.chat.filter(c=>c&&typeof c.x==='string'&&c.x.trim().length>3).slice(-1)[0];
+   spDraw({eb:'RADIO',place:spPl(),t:`${T.nk}의 목소리`,body:`<p class="ch-p">허리춤의 무전기에서 갑자기 목소리가 튀어나온다. 엉뚱한 주파수에 섞여 들어온 ${esc(T.nk)}의 목소리다.</p><blockquote class="exq">"${esc(c.x.slice(0,120))}"</blockquote><p class="note">잡음이 심해 언제 한 말인지는 모르겠다.</p>`,btns:[
+    {t:`${T.nk}에게 응답한다`,f:()=>{ const n=trNote(T,`엉뚱한 주파수로 당신 목소리 들렸어요. "${c.x.slice(0,40)}" 잘 지내요? - ${S.nick}`); spEnd('응답했다','잡음 너머로 내 목소리가 닿기를 바랐다.'+(n?` (${n})`:''),{mind:6,xp:10},true) }},
+    {t:'주파수를 추적한다',f:()=>Math.random()<.5?spEnd('신호의 근원',`신호가 시작된 곳엔 ${T.nk}이(가) 쓰던 중계기가 있었다. 부품을 챙겼다.`,{res:{elec:1,scrap:ri(3,6)},xp:15},true):spEnd('신호가 끊겼다','추적하는 사이 신호가 끊겼다. 대신 내 무전기 배터리가 다 됐다.',{xp:6},false)},
+    {t:'끈다',f:()=>spEnd('껐다','갑자기 조용해진 거리가 더 무서웠다.',{mind:-2,xp:2},false)}]}) }},
+};
+const _trace124=SPX.trace; SPX.trace=()=>{ const L=Object.entries(TRV).filter(([k,v])=>{ try{ return v.need() }catch(e){ return false } }); S.trLast=S.trLast||[]; const P=L.filter(([k])=>!S.trLast.includes(k)); const pool=P.length?P:L;
+  if(!pool.length||Math.random()<.3) return _trace124(); const [k,v]=stPick(pool); S.trLast=[k].concat(S.trLast).slice(0,4); markSave(); return v.run() };
+
+/* ================= p125: 시설 증축을 더 어렵게 — 5단계부터 기본 자원 1.25배 · 4단계부터 전자부품·연료 · 8단계부터 약품 ================= */
+costOf=function(base,l){ const c={}; const mul=Math.pow(1.5,l)*(l>=5?1.25:1); for(const k in base) c[k]=Math.ceil(base[k]*mul); if(l>=4){ c.elec=(c.elec||0)+(l-2)*2; c.fuel=(c.fuel||0)+(l-3) } if(l>=8) c.med=(c.med||0)+(l-6)*2; return c };
+
+/* ================= p126: 공중 보급·좀비 습격(공동) 보상 올리기 ================= */
+const _dropReward126=dropReward; dropReward=function(){ _dropReward126.apply(this,arguments); try{ const lv=lvlOf(S.xp), dm=curEv().def.drop2?2:1, out=[]; const m=Math.round((120+lv*10+ri(0,150))*dm); addMoney(m); out.push(`$${m}`);
+    const o={food:Math.round((6+lv*.4)*dm),water:Math.round((6+lv*.4)*dm),scrap:Math.round((10+lv*.6)*dm)}; if(Math.random()<.5) o.elec=ri(1,2)*dm; for(const k in o) gain(k,o[k]); out.push(lootText(o));
+    const pool=['medkit','ammo','ampoule','adrenaline','antibio','gasmask','molotov','tonic','hone','toolkit'].filter(k=>ITEMS[k]); const it=stPick(pool); S.inv[it]=(S.inv[it]||0)+1; out.push(ITEMS[it].n);
+    if(Math.random()<.08){ try{ const g=gainGear(null,'공중 보급'); if(g) out.push('장비 '+GEAR[g].n) }catch(e){} }
+    addXp(25+Math.round(lv*.8)); markSave(); setTimeout(()=>toast('보급 상자 추가 보상: '+out.join(', '),true),600) }catch(e){} };
+const _raidClaim126=ACT.raidClaim; ACT.raidClaim=function(){ const rid=raidId(), before=!!S.raidClaimed[rid]; const r=_raidClaim126.apply(this,arguments); if(before||!S.raidClaimed[rid]) return r;
+  try{ const lv=lvlOf(S.xp), share=Math.min(1,S.raid.dmg/raidHp()), out=[]; const m=Math.round(300+lv*20+share*1500); addMoney(m); out.push(`$${fmt(m)}`);
+    const o={food:Math.round(15+lv*.6+share*30),water:Math.round(15+lv*.6+share*30),scrap:Math.round(20+lv+share*60),wood:Math.round(15+lv*.6+share*40)}; for(const k in o) gain(k,o[k]); out.push(lootText(o));
+    const pool=['medkit','ammo','ampoule','adrenaline','hone','toolkit','antibio'].filter(k=>ITEMS[k]); const n=1+(share>=.2?1:0)+(share>=.5?1:0); for(let i=0;i<n;i++){ const it=stPick(pool); S.inv[it]=(S.inv[it]||0)+1; out.push(ITEMS[it].n) }
+    if(Math.random()<.12+share*.3){ try{ const g=gainGear(null,'습격 전리품'); if(g) out.push('장비 '+GEAR[g].n) }catch(e){} }
+    const xp=Math.round(60+lv*2+share*200); addXp(xp); out.push(`XP +${xp}`); markSave();
+    whenFree(()=>outcome({n:'좀비 습격'},'격퇴 보상',`습격 무리를 막아 냈다. 기여도 ${Math.round(share*100)}%만큼 전리품을 나눠 받았다.`,out,true)) }catch(e){} return r };
+
+/* ================= p127: 친밀도가 낮은 대원이 먼저 다가온다 — 아이·청소년은 놀아 달라고, 어른은 설렘 또는 꿍꿍이 ================= */
+const LOW_PLAY={어린이:[['숨바꼭질 해 줘! 내가 숨을게, 열까지 세!','(벽장 안에서 킥킥대는 소리가 새어 나온다)'],['그림 그렸어. …대장 얼굴이야. 안 닮았지?','종이에는 웃는 얼굴이 그려져 있다'],['공기놀이 할 줄 알아? 나 다섯 개까지 할 수 있어!','작은 돌멩이 다섯 개를 내민다'],['밤에 별 보러 옥상 가면 안 돼? 혼자는 무서워…','옥상 문 앞에서 기다리고 있다']],
+ 청소년:[['…대장, 카드 할 줄 알아요? 다들 바빠서 칠 사람이 없어서요.','낡은 트럼프를 섞고 있다'],['옥상에 깡통으로 농구 골대 만들었는데, 한 판 할래요?','팔짱을 끼고 아닌 척 기다린다'],['기타 줄 하나 찾았어요. 맞춰 볼 건데 들어 줄래요?','줄 다섯 개짜리 기타를 안고 있다'],['저도 정찰 따라가고 싶은데… 일단 지도 보는 법부터 알려 주면 안 돼요?','구겨진 지도를 펼쳐 들고 있다']]};
+const CRUSH={warm:['대장, 손 시리죠? 이 목도리… 제가 떠 놓은 건데, 남아서요.','오늘 하늘 봤어요? 대장한테 보여 주고 싶었는데.'],timid:['저… 대장 옆에 앉아도 돼요? 그냥… 여기가 제일 안 무서워서요.','(오늘따라 자꾸 눈이 마주친다. 마주칠 때마다 먼저 피한다)'],chatty:['대장! 그거 알아요? 전 대장 웃는 거 처음 봤을 때—아, 아니에요. 아무것도.','대장은 예전에 좋아하던 사람 있었어요? 그냥 궁금해서요. 진짜 그냥.'],brag:['오늘 나 좀 멋있었지? …너한테 보여 주려고 그런 거 아니야. 진짜로.','다음에 위험한 데 가면 나랑 붙어 다녀. 다른 놈 말고.'],blunt:['…이거. 너 주려고 챙겼다. 이유는 묻지 마.','(말없이 내 컵에 따뜻한 물을 채워 주고 간다)'],cynic:['이 세상에 마음 같은 거 둘 데가 어딨냐고 했는데… 너 보면 헷갈린다.','쓸데없는 얘긴데. 너 다치는 건 싫더라.'],calm:['…대장. 사적인 말씀 하나 드려도 되겠습니까. 대장 곁이 편합니다.','근무 끝나고 잠깐 같이 걸으시겠습니까. 할 말이 있는 건 아닙니다.'],pious:['기도할 때마다 대장 이름이 먼저 나와요. 이상하죠?','오늘 밤은 대장 곁에서 기도하고 싶어요.']};
+const SCHEME={cynic:[['창고 열쇠, 오늘만 나한테 맡겨 봐. 밤에 재고 정리 좀 해 두려고.','key'],['다른 무리에서 괜찮은 제안이 왔어. 우리 둘만 넘어가면 대접받을 텐데, 어때?','defect']],brag:[['오늘 내 몫 좀 더 줘. 다른 놈들보다 내가 훨씬 많이 일하잖아.','ration'],['저 신입 말이야, 밤에 창고 근처에서 어슬렁거리던데. 내보내는 게 좋을걸.','frame']],blunt:[['오늘 밤 경계는 나 혼자 선다. 다른 놈은 필요 없다.','watch']],chatty:[['대장, 대장~ 혹시 비상금 어디 숨겨 놨어요? 아니 그냥, 털릴까 봐 걱정돼서요!','stash']],warm:[['다들 지쳐 보여서요. 오늘 배급은 제가 나눠 줄게요. 열쇠만 주세요.','key']],timid:[['저… 오늘 경계 혼자 서 보고 싶어요. 저도 쓸모 있다는 거 보여 주고 싶어서요.','watch']],calm:[['보급 기록을 제가 관리하겠습니다. 장부와 열쇠를 넘겨주십시오.','key']],pious:[['헌금함을 만들자고요. 모두의 물자를 한곳에 모아 두면 공평하잖아요.','stash']]};
+const CRUSH_R={warm:['"…고마워요. 이렇게 봐 줘서."','"에이, 농담인 거 알죠?" 웃는데 눈이 촉촉했다.','"…알겠어요. 그래도 목도리는 가져요."'],timid:['"저, 저… 아무것도 아니에요…!" 말과 달리 자리를 뜨지 않았다.','"헤, 헤헤… 그렇죠, 농담이죠…"','"죄, 죄송해요… 제가 괜히…"'],chatty:['"…와, 저 지금 처음으로 할 말이 없어요."','"아 진짜! 놀리지 마요!" 그래도 웃고 있었다.','"아, 넵! 알겠습니다! …괜찮아요, 진짜로요."'],brag:['"…그렇게 보지 마. 쑥스럽잖아."','"하, 웃어? 다음엔 진짜 멋있는 거 보여 준다."','"…그래. 대장은 대장이지."'],blunt:['"…그래." 그 한 마디가 이상하게 따뜻했다.','"…웃지 마."','"…알았다." 그 뒤로 그 얘기는 꺼내지 않았다.'],cynic:['"이 나이에 이게 뭔 꼴이냐." 그래도 자리를 지켰다.','"그래, 웃어라. 나도 웃기다."','"역시. 기대한 내가 바보지."'],calm:['"…감사합니다. 이 말씀, 오래 기억하겠습니다."','"…실례했습니다." 귀가 붉었다.','"알겠습니다. 선을 넘지 않겠습니다."'],pious:['"이것도 뜻이겠지요." 두 손을 모으고 웃었다.','"주님도 웃으시겠네요."','"…기도로 마음을 다스릴게요."']};
+const SCH_REAL={cynic:.6,brag:.5,blunt:.35,chatty:.4,warm:.2,timid:.25,calm:.3,pious:.35};
+function lowAsk(c){ crewInfo2(c); const kid=c.age==='어린이'||c.age==='청소년'; rt.modalLock=true; try{ sfx('knock') }catch(e){}
+  const eb=`<div class="eyebrow">CREW <span class="dash"></span> ${esc(crewDesc(c))} · ${esc((PERS[c.per]||{}).n||'')} · ${esc(lvN(AFF_N,c.aff))}</div>`;
+  const fin=(t,fx)=>{ markSave(); $('mbox').innerHTML=`<div class="eyebrow">CREW</div><h2>${esc(crewNm(c))}</h2><p style="margin:0;line-height:1.7">${esc(t)}</p>${fx.length?`<ul class="ev-eff">${fx.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}<button class="btn pri" id="laOk">확인</button>`; $('laOk').onclick=()=>{ rt.modalLock=false; closeModal(); render() } };
+  const opts=(L)=>{ $('mbox').querySelectorAll('[data-la]').forEach(b=>b.onclick=()=>L[+b.dataset.la]()) };
+  if(kid){ const [say,act]=crPick(c,(LOW_PLAY[c.age]||LOW_PLAY.어린이).map(x=>x[0]+'|'+x[1])).split('|');
+    openModal(`${eb}<h2>${esc(crewNm(c)+'이(가)')} 쭈뼛거리며 다가왔다</h2><p style="margin:0;line-height:1.7">"${esc(say)}"</p><p class="note">${esc(act)}</p><div class="story-opts"><button class="btn opt" data-la="0">같이 논다</button><button class="btn opt" data-la="1">잠깐만 놀아 준다</button><button class="btn opt" data-la="2">"어른들 일 하는 중이야."</button></div>`);
+    return opts([()=>{ cAdd(c,'aff',8); cAdd(c,'loy',4); mindAdd(5); S.hunger=Math.max(0,S.hunger-8); fin(c.age==='어린이'?'해가 질 때까지 놀았다. 오랜만에 아이 웃음소리가 캠프에 울렸다.':'처음엔 시큰둥하던 녀석이 끝날 무렵엔 한 판만 더 하자고 졸랐다.',['친밀도 +8','충성도 +4','정신 +5','허기 -8']) },
+      ()=>{ cAdd(c,'aff',4); mindAdd(2); fin('잠깐이었지만 녀석의 얼굴이 환해졌다.',['친밀도 +4','정신 +2']) },
+      ()=>{ cAdd(c,'aff',-5); cAdd(c,'loy',-2); fin(c.age==='어린이'?'"…응." 아이는 장난감을 등 뒤로 숨기고 돌아섰다.':'"그럴 줄 알았어요." 녀석은 이어폰을 꽂고 사라졌다.',['친밀도 -5','충성도 -2']) }]) }
+  const schemeP=SCH_REAL[c.per]||.35, crushW=['warm','timid','pious','chatty'].includes(c.per)?.65:.4;
+  if(Math.random()<crushW){ const say=crPick(c,CRUSH[c.per]||CRUSH.blunt);
+    openModal(`${eb}<h2>${esc(crewNm(c)+'이(가)')} 다가왔다</h2><p style="margin:0;line-height:1.7">"${esc(say)}"</p><p class="note">평소엔 말도 잘 안 섞던 사이다. 오늘따라 분위기가 이상하다.</p><div class="story-opts"><button class="btn opt" data-la="0">진지하게 마주 본다</button><button class="btn opt" data-la="1">웃어넘긴다</button><button class="btn opt" data-la="2">선을 긋는다</button></div>`);
+    return opts([()=>{ cAdd(c,'aff',10); cAdd(c,'loy',5); mindAdd(4); c.crush=(c.crush||0)+1; fin(`${crewNm(c)}이(가) 한참 나를 보다가 고개를 숙였다. ${(CRUSH_R[c.per]||CRUSH_R.blunt)[0]} 모닥불 옆자리가 오늘은 조금 가까웠다.`,['친밀도 +10','충성도 +5','정신 +4']) },
+      ()=>{ cAdd(c,'aff',4); fin(`${(CRUSH_R[c.per]||CRUSH_R.blunt)[1]}`,['친밀도 +4']) },
+      ()=>{ cAdd(c,'aff',-3); cAdd(c,'loy',3); fin(`${(CRUSH_R[c.per]||CRUSH_R.blunt)[2]}`,['친밀도 -3','충성도 +3']) }]) }
+  const [say,kind]=(SCHEME[c.per]||SCHEME.cynic)[ri(0,(SCHEME[c.per]||SCHEME.cynic).length-1)], real=Math.random()<schemeP;
+  const other=crewAlive().filter(x=>x!==c&&x.state==='idle')[0];
+  openModal(`${eb}<h2>${esc(crewNm(c)+'이(가)')} 웃으며 다가왔다</h2><p style="margin:0;line-height:1.7">"${esc(say.replace('저 신입',other?crewNm(other):'저 신입'))}"</p><p class="note">평소답지 않게 다정하다. 눈은 웃지 않는 것 같기도 하고.</p><div class="story-opts"><button class="btn opt" data-la="0">믿고 들어준다</button><button class="btn opt" data-la="1">눈을 들여다본다 <small class="optlv">감각</small></button><button class="btn opt" data-la="2">거절한다</button></div>`);
+  const betray=()=>{ const lost=folLose(.15); S.crew=S.crew.filter(x=>x!==c); rt.crewWhy[c.id]='betray'; return lost };
+  return opts([()=>{ if(!real){ cAdd(c,'aff',6); cAdd(c,'loy',6); return fin(kind==='frame'?'알고 보니 정말로 그 대원이 창고를 기웃거리고 있었다. 미리 막았다.':`${crewNm(c)}은(는) 맡긴 일을 깔끔하게 해냈다. 의심했던 게 미안해졌다.`,['친밀도 +6','충성도 +6']) }
+      if(kind==='defect'||kind==='watch'||kind==='key'){ const lost=betray(); sfx('sting'); return fin(kind==='defect'?`다음 날 아침, ${crewNm(c)}은(는) 혼자 넘어갔다. 창고 물자 일부와 함께.`:kind==='watch'?`경계를 맡긴 밤, ${crewNm(c)}은(는) 철문을 열어 둔 채 사라졌다. 창고가 털려 있었다.`:`열쇠를 넘긴 다음 날, 창고 자물쇠는 멀쩡한데 안은 비어 있었다. ${crewNm(c)}도 없었다.`,['대원 이탈 (배신)',...lost]) }
+      if(kind==='frame'&&other){ S.crew=S.crew.filter(x=>x!==other); rt.crewWhy[other.id]='kick'; cAdd(c,'loy',-5); return fin(`${crewNm(other)}을(를) 내보냈다. 며칠 뒤, 사라진 물자는 ${crewNm(c)}의 침낭 밑에서 나왔다.`,[`${crewNm(other)} 쫓겨남`,'뒤늦게 진실을 알았다']) }
+      const lost=folLose(.08); cAdd(c,'loy',-4); return fin(kind==='ration'?`몫을 더 줬다. 그날 밤 ${crewNm(c)}이(가) 다른 대원들 몫까지 챙겨 먹는 걸 봤다.`:`비상금 위치를 알려 줬다. 다음 날 비상금이 줄어 있었다. ${crewNm(c)}은(는) 모른 척했다.`,lost) },
+    ()=>{ const see=Math.random()<.35+ST('per')*.06; if(!see){ cAdd(c,'aff',-2); return fin(`아무것도 읽히지 않았다. ${crewNm(c)}이(가) 어깨를 으쓱하고 돌아갔다.`,['친밀도 -2']) }
+      if(real){ cAdd(c,'loy',8); cAdd(c,'aff',-4); mindAdd(-2); return fin(`눈이 흔들렸다. "…알았어, 알았다고. 그냥 해 본 소리야." ${crewNm(c)}은(는) 한동안 내 눈치를 볼 것이다.`,['꿍꿍이를 꿰뚫어 봤다','충성도 +8','친밀도 -4']) }
+      cAdd(c,'aff',5); return fin(`눈에 거짓은 없었다. 그냥 서툰 사람이었다. ${crewNm(c)}의 부탁을 들어줬다.`,['친밀도 +5']) },
+    ()=>{ if(real){ cAdd(c,'loy',-3); return fin(`"…쳇." ${crewNm(c)}이(가) 혀를 차고 돌아섰다. 다음엔 다른 방법을 찾을지도 모른다.`,['충성도 -3']) } cAdd(c,'aff',-5); cAdd(c,'loy',-2); return fin(`${crewNm(c)}이(가) 서운한 얼굴로 돌아섰다. 진심이었던 것 같다.`,['친밀도 -5','충성도 -2']) }]) }
+setInterval(()=>{ try{ if(!S||!S.intro||rt.enc||rt.party||!$('modal').hidden||document.getElementById('intro')||capOn()||hzLocked()) return; const now=Date.now(); if(now<(S.lowAskT||0)) return; S.lowAskT=now+ri(8,15)*60000;
+  const L=crewAlive().filter(c=>c.state==='idle').map(crewInfo2).filter(c=>(c.aff||0)<35); if(!L.length||Math.random()>.35) return; lowAsk(stPick(L)) }catch(e){} },20000);
+const _cevListDraw127=cevListDraw; cevListDraw=function(){ _cevListDraw127.apply(this,arguments); const b=$('spxTest'); if(!b||b.querySelector('.latest')) return; const d=document.createElement('div'); d.className='spxtb latest'; d.innerHTML=`<b style="width:100%;font-size:12.5px">대원이 먼저 다가오기</b><button type="button" class="btn sm" data-lat="low">친밀도 낮은 대원 (놀이·설렘·꿍꿍이)</button><button type="button" class="btn sm" data-lat="high">친한 대원의 부탁</button>`; b.append(d);
+  d.querySelectorAll('[data-lat]').forEach(x=>x.onclick=()=>{ const L=crewAlive().filter(c=>c.state==='idle').map(crewInfo2); if(!L.length) return toast('대기 중인 대원이 없어요.'); rt.modalLock=false; closeModal(); const c=stPick(L); setTimeout(()=>x.dataset.lat==='low'?lowAsk(c):crewAsk(c),250) }) };
 
 /* ================= 시작 ================= */
 {const l=loadLocal(); rt.hadLocal=!!l; rt.localT=l&&l.t||0; S=fixSave(l)}
